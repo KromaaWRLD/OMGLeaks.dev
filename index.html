@@ -16,22 +16,6 @@
       width: 72px;
     }
 
-    /* Header Container Alignment */
-    .header-container {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      min-height: 72px;
-      width: 100%;
-      position: relative;
-      transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    #sidebar.collapsed .header-container {
-      padding: 12px 0;
-      justify-content: center;
-    }
-
     /* Navigation Item Base */
     .nav-item {
       position: relative;
@@ -54,7 +38,7 @@
       flex-shrink: 0;
     }
 
-    /* Fast, Smooth Text Fade (Mask Position & Opacity) */
+    /* Base Text Mask Fade Container */
     .fade-text-container {
       white-space: nowrap;
       overflow: hidden;
@@ -65,14 +49,22 @@
       mask-size: 200% 100%;
       -webkit-mask-position: 0% 0;
       mask-position: 0% 0;
-      transition: -webkit-mask-position 0.15s cubic-bezier(0.4, 0, 1, 1),
-                  mask-position 0.15s cubic-bezier(0.4, 0, 1, 1),
-                  opacity 0.15s ease;
+      transition: -webkit-mask-position 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  mask-position 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.2s ease;
       opacity: 1;
     }
 
+    /* Faster Fade for COLD WINTERS Brand Title */
+    .brand-text-container {
+      transition: -webkit-mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
+                  mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
+                  opacity 0.12s ease;
+    }
+
     /* Collapsed: Quick mask wipe to prevent text cutoff visibility */
-    #sidebar.collapsed .fade-text-container {
+    #sidebar.collapsed .fade-text-container,
+    #sidebar.collapsed .brand-text-container {
       -webkit-mask-position: 100% 0;
       mask-position: 100% 0;
       opacity: 0;
@@ -85,6 +77,16 @@
       margin: 0 auto;
     }
 
+    /* Header Container Positioning */
+    .header-container {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      min-height: 72px;
+      width: 100%;
+      position: relative;
+    }
+
     /* Bell Button Animation */
     #bell-btn {
       transition: opacity 0.15s ease, transform 0.25s ease;
@@ -95,7 +97,7 @@
       pointer-events: none;
     }
 
-    /* Support Us Border Styling */
+    /* Support Us Permanent Border Styling */
     .support-item {
       border: 1px solid #27272a;
     }
@@ -103,7 +105,7 @@
       border-color: transparent !important;
     }
 
-    /* Separator line smooth collapse */
+    /* Separator Line */
     .separator {
       transition: opacity 0.25s ease, margin 0.35s ease, height 0.35s ease;
       opacity: 1;
@@ -117,7 +119,7 @@
       margin: 0;
     }
 
-    /* Base Colors & Hover States */
+    /* Base Styling */
     .no-select {
       user-select: none;
       -webkit-user-select: none;
@@ -201,7 +203,7 @@
             </div>
           </div>
           
-          <div class="fade-text-container pl-1">
+          <div class="fade-text-container brand-text-container pl-1">
             <span class="font-bold text-sm tracking-wider text-white">
               COLD WINTERS
             </span>
