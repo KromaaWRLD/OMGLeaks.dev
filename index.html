@@ -16,58 +16,62 @@
       width: 72px;
     }
 
-    /* Navigation Item Wrapper */
+    /* Header Container Alignment */
+    .header-container {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      min-height: 72px;
+      width: 100%;
+      position: relative;
+      transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #sidebar.collapsed .header-container {
+      padding: 12px 0;
+      justify-content: center;
+    }
+
+    /* Navigation Item Base */
     .nav-item {
       position: relative;
       display: flex;
       align-items: center;
-      height: 44px;
+      height: 48px;
       width: 100%;
       border-radius: 0.5rem;
       color: #a7a7a7;
-      transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: background-color 0.2s ease, border-color 0.2s ease, width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Pinned Icon Box: Locks icons strictly 12px from the left edge */
+    /* Proportional Centered Icon Wrapper */
     .icon-wrapper {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 24px;
-      height: 24px;
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
 
-    /* Brand Logo Container Fixed Position */
-    #brand-group .icon-wrapper {
-      left: 12px;
-      width: 40px;
-      height: 40px;
-    }
-
-    /* Stationary Text Container with Right-to-Left Edge Wipe Mask */
+    /* Fast, Smooth Text Fade (Mask Position & Opacity) */
     .fade-text-container {
-      margin-left: 56px;
       white-space: nowrap;
       overflow: hidden;
-      -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
-      mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+      display: inline-block;
+      -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
       -webkit-mask-size: 200% 100%;
       mask-size: 200% 100%;
       -webkit-mask-position: 0% 0;
       mask-position: 0% 0;
-      transition: -webkit-mask-position 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                  mask-position 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: -webkit-mask-position 0.15s cubic-bezier(0.4, 0, 1, 1),
+                  mask-position 0.15s cubic-bezier(0.4, 0, 1, 1),
+                  opacity 0.15s ease;
       opacity: 1;
     }
 
-    /* Collapsed State: Shifts the gradient mask to wipe text smoothly */
+    /* Collapsed: Quick mask wipe to prevent text cutoff visibility */
     #sidebar.collapsed .fade-text-container {
       -webkit-mask-position: 100% 0;
       mask-position: 100% 0;
@@ -75,9 +79,15 @@
       pointer-events: none;
     }
 
-    /* Notification Bell Fade */
+    /* Collapsed Nav Item Centering */
+    #sidebar.collapsed .nav-item {
+      width: 48px;
+      margin: 0 auto;
+    }
+
+    /* Bell Button Animation */
     #bell-btn {
-      transition: opacity 0.2s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity 0.15s ease, transform 0.25s ease;
     }
     #sidebar.collapsed #bell-btn {
       opacity: 0;
@@ -85,7 +95,7 @@
       pointer-events: none;
     }
 
-    /* Support Us Permanent Border Adjustment */
+    /* Support Us Border Styling */
     .support-item {
       border: 1px solid #27272a;
     }
@@ -95,7 +105,7 @@
 
     /* Separator line smooth collapse */
     .separator {
-      transition: opacity 0.35s ease, margin 0.35s ease, height 0.35s ease;
+      transition: opacity 0.25s ease, margin 0.35s ease, height 0.35s ease;
       opacity: 1;
       height: 1px;
       margin-top: 6px;
@@ -107,7 +117,7 @@
       margin: 0;
     }
 
-    /* Base Nav Item Hover States */
+    /* Base Colors & Hover States */
     .no-select {
       user-select: none;
       -webkit-user-select: none;
@@ -181,7 +191,7 @@
     <div class="flex flex-col">
       
       <!-- HEADER / LOGO BAR -->
-      <div class="flex items-center justify-between px-3 py-4 border-b border-[#1e1e1e] no-select relative min-h-[72px] w-full">
+      <div class="header-container border-b border-[#1e1e1e] no-select">
         
         <!-- Logo & Title Group -->
         <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative shrink-0">
@@ -191,7 +201,7 @@
             </div>
           </div>
           
-          <div class="fade-text-container">
+          <div class="fade-text-container pl-1">
             <span class="font-bold text-sm tracking-wider text-white">
               COLD WINTERS
             </span>
@@ -218,7 +228,7 @@
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
           </div>
-          <div class="fade-text-container">
+          <div class="fade-text-container pl-1">
             <span class="text-sm font-medium">Home</span>
           </div>
           <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
@@ -233,7 +243,7 @@
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
           </div>
-          <div class="fade-text-container">
+          <div class="fade-text-container pl-1">
             <span class="text-sm font-medium">Artists</span>
           </div>
           <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
@@ -251,7 +261,7 @@
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           </div>
-          <div class="fade-text-container">
+          <div class="fade-text-container pl-1">
             <span class="text-sm font-medium">Support Us</span>
           </div>
           <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
