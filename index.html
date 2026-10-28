@@ -111,12 +111,18 @@
       color: #ffffff !important;
     }
 
-    /* Support Button Icon Override */
+    /* Support Us Permanent Border & Pink Icon */
+    .support-item {
+      border: 1px solid #27272a; /* Permanent thin gray border */
+    }
+    .support-item:hover {
+      border-color: #3f3f46;
+    }
     .pink-icon {
       color: #ec4899;
       transition: color 0.15s ease;
     }
-    .nav-item:hover .pink-icon {
+    .support-item:hover .pink-icon {
       color: #ffffff !important;
     }
 
@@ -140,9 +146,9 @@
       <!-- HEADER / LOGO BAR -->
       <div class="flex items-center justify-between px-3 py-4 border-b border-[#1e1e1e] no-select relative min-h-[72px] w-full">
         
-        <!-- Logo & Title Group -->
-        <div id="brand-group" class="has-tooltip flex items-center gap-3 cursor-pointer overflow-hidden shrink-0 relative flex-1">
-          <!-- CW Purple Logo Box -->
+        <!-- Logo & Title Group (Clickable to Collapse) -->
+        <div id="brand-group" class="has-tooltip flex items-center gap-3 cursor-pointer overflow-hidden shrink-0 relative flex-1 min-w-0">
+          <!-- CW Purple Logo Box (Fixed 40x40 Square) -->
           <div class="w-10 h-10 min-w-[40px] max-w-[40px] h-10 min-h-[40px] rounded-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-xs tracking-wider shadow-md shadow-purple-900/30 shrink-0">
             CW
           </div>
@@ -161,11 +167,9 @@
         <!-- Header Controls (Notification Bell) -->
         <div class="flex items-center shrink-0 ml-1">
           <button id="bell-btn" aria-label="What's New" class="relative w-8 h-8 min-w-[32px] rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] transition-all shrink-0">
-            <!-- Modern Bell Icon -->
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
             </svg>
-            <!-- Unread Dot Badge -->
             <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full ring-2 ring-[#121212]"></span>
           </button>
         </div>
@@ -197,8 +201,8 @@
           </div>
         </a>
 
-        <!-- Support Us Button (Standard Nav Style with Pink Icon) -->
-        <a href="#support" class="nav-item has-tooltip flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group w-full cursor-pointer relative">
+        <!-- Support Us Button (With Permanent Thin Gray Border) -->
+        <a href="#support" class="nav-item support-item has-tooltip flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group w-full cursor-pointer relative">
           <svg class="nav-icon pink-icon w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
