@@ -1,22 +1,29 @@
 [
   {
-    "version": "v1.2.0",
+    "id": "v1.3.0",
+    "version": "v1.3.0",
     "date": "October 28, 2026",
-    "title": "Changelog Drawer & UI Refinements",
+    "title": "Specialized Support Button & Pure White Theme",
+    "author": "Cold Winters Dev Team",
+    "summary": "This update introduces a high-profile Support Us card alongside live news polling and full-screen release note reading.",
     "changes": [
-      "Integrated live news.json changelog slide-out drawer.",
-      "Fixed collapsed hover state icon colors to white.",
-      "Added smooth floating tooltips when collapsed."
-    ]
+      "Converted Support Us link into a glowing pink card.",
+      "Switched standard active states to pure white.",
+      "Implemented dynamic news reading modal overlays."
+    ],
+    "fullArticle": "We have overhauled the layout based on community feedback. The Support Us section now has a high-visibility sponsor badge and glow effect. Standard navigation tabs now feature high-contrast pure white highlights. You can now also click any news item to open its full article modal view."
   },
   {
-    "version": "v1.1.0",
+    "id": "v1.2.0",
+    "version": "v1.2.0",
     "date": "October 15, 2026",
-    "title": "Cold Winters Rebrand",
+    "title": "Changelog Drawer Launch",
+    "author": "Cold Winters Lead",
+    "summary": "Added a live side drawer that fetches release notes directly from JSON.",
     "changes": [
-      "Updated main title branding to Cold Winters.",
-      "Updated active state tab color to Emerald Green.",
-      "Added dedicated pink Support Us button."
-    ]
+      "Added header bell icon indicator.",
+      "Integrated live polling and local read tracking."
+    ],
+    "fullArticle": "Our live news system allows instant site updates without requiring full platform reloads."
   }
 ]
