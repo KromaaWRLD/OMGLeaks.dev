@@ -1,56 +1,32 @@
 [
-    {
-    "id": "v1.6.0",
-    "version": "v1.6.0",
-    "date": "October 28, 2026",
-    "title": "testtt",
-    "author": "Cold Winters Lead",
-    "summary": "just testing",
-    "changes": [
-      "added bugs",
-      "added herobrine"
-    ],
-    "fullArticle": "hello"
-  },
   {
     "id": "v1.4.0",
+    "group": "This Week",
     "version": "v1.4.0",
     "date": "October 28, 2026",
-    "title": "Live Test Release: Permanent Support Border",
+    "title": "Smooth Edge Masking & Active Live Polling",
     "author": "Cold Winters Lead",
-    "summary": "Testing real-time update polling and verification of permanent button borders.",
+    "summary": "Added dynamic section headers for changelogs and smooth right-to-left sidebar edge fading.",
     "changes": [
-      "Added permanent thin gray border to Support Us button.",
-      "Fixed collapsed logo width squishing.",
-      "Verified background polling synchronization."
+      "Added group section headers in news.json drawer renderer.",
+      "Fixed background active polling with cache-busting timestamp queries.",
+      "Implemented seamless CSS mask gradient text wiping."
     ],
-    "fullArticle": "This is the live test entry! Saving this file will trigger the pink unread dot on your bell icon within 5 seconds without refreshing the page. Clicking the bell will clear the dot and mark this version as read in your local storage."
+    "fullArticle": "This release updates our sidebar animation logic to use CSS linear gradient masks for smooth text clipping, while standardizing section formatting for all news updates."
   },
   {
     "id": "v1.3.0",
+    "group": "Earlier Releases",
     "version": "v1.3.0",
     "date": "October 20, 2026",
-    "title": "Specialized Support Button & Pure White Theme",
+    "title": "Pure White Theme & Unread Notification Logic",
     "author": "Cold Winters Dev Team",
-    "summary": "This update introduces layout refinements alongside live news polling.",
+    "summary": "Switched navigation icon active highlights to pure white and integrated local read tracking.",
     "changes": [
       "Standardized nav highlights to pure white.",
       "Integrated dynamic modal reading view.",
       "Refined icon proportions and tooltip animations."
     ],
     "fullArticle": "We overhauled the layout based on community feedback. Standard navigation tabs now feature high-contrast pure white highlights, and clicking any news item opens its full article modal view."
-  },
-  {
-    "id": "v1.2.0",
-    "version": "v1.2.0",
-    "date": "October 15, 2026",
-    "title": "Changelog Drawer Launch",
-    "author": "Cold Winters Lead",
-    "summary": "Added a live side drawer that fetches release notes directly from JSON.",
-    "changes": [
-      "Added header bell icon indicator.",
-      "Integrated live polling and local read tracking."
-    ],
-    "fullArticle": "Our live news system allows instant site updates without requiring full platform reloads."
   }
 ]
