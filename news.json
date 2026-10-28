@@ -1,0 +1,22 @@
+[
+  {
+    "version": "v1.2.0",
+    "date": "October 28, 2026",
+    "title": "Changelog Drawer & UI Refinements",
+    "changes": [
+      "Integrated live news.json changelog slide-out drawer.",
+      "Fixed collapsed hover state icon colors to white.",
+      "Added smooth floating tooltips when collapsed."
+    ]
+  },
+  {
+    "version": "v1.1.0",
+    "date": "October 15, 2026",
+    "title": "Cold Winters Rebrand",
+    "changes": [
+      "Updated main title branding to Cold Winters.",
+      "Updated active state tab color to Emerald Green.",
+      "Added dedicated pink Support Us button."
+    ]
+  }
+]
