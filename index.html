@@ -23,8 +23,7 @@
 
     /* Hide text cleanly when collapsed */
     #sidebar.collapsed .brand-text,
-    #sidebar.collapsed .nav-text,
-    #sidebar.collapsed .support-badge {
+    #sidebar.collapsed .nav-text {
       opacity: 0;
       max-width: 0;
       pointer-events: none;
@@ -32,7 +31,7 @@
       margin: 0;
     }
 
-    /* Center standard navigation items when collapsed */
+    /* Center navigation items when collapsed */
     #sidebar.collapsed .nav-item {
       justify-content: center;
       padding-left: 0;
@@ -42,16 +41,7 @@
       margin: 0 auto;
     }
 
-    /* Center Support Button when collapsed */
-    #sidebar.collapsed .support-btn {
-      justify-content: center;
-      padding: 0;
-      width: 48px;
-      height: 48px;
-      margin: 0 auto;
-    }
-
-    /* Hide header buttons when collapsed to clean up view */
+    /* Hide bell button when collapsed */
     #sidebar.collapsed #bell-btn {
       opacity: 0;
       pointer-events: none;
@@ -121,18 +111,13 @@
       color: #ffffff !important;
     }
 
-    /* Specialized Support Button Styling */
-    .support-btn {
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(159, 18, 57, 0.2) 100%);
-      border: 1px solid rgba(236, 72, 153, 0.35);
-      color: #f472b6;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Support Button Icon Override */
+    .pink-icon {
+      color: #ec4899;
+      transition: color 0.15s ease;
     }
-    .support-btn:hover {
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(159, 18, 57, 0.35) 100%);
-      border-color: rgba(236, 72, 153, 0.6);
-      color: #ffffff;
-      box-shadow: 0 0 16px rgba(236, 72, 153, 0.25);
+    .nav-item:hover .pink-icon {
+      color: #ffffff !important;
     }
 
     /* Drawer & Modal Transitions */
@@ -155,7 +140,7 @@
       <!-- HEADER / LOGO BAR -->
       <div class="flex items-center justify-between px-3 py-4 border-b border-[#1e1e1e] no-select relative min-h-[72px] w-full">
         
-        <!-- Logo & Title Group (Clickable to Toggle Collapse) -->
+        <!-- Logo & Title Group -->
         <div id="brand-group" class="has-tooltip flex items-center gap-3 cursor-pointer overflow-hidden shrink-0 relative flex-1">
           <!-- CW Purple Logo Box -->
           <div class="w-10 h-10 min-w-[40px] max-w-[40px] h-10 min-h-[40px] rounded-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-xs tracking-wider shadow-md shadow-purple-900/30 shrink-0">
@@ -212,19 +197,14 @@
           </div>
         </a>
 
-        <!-- Specialized Support Us Button -->
-        <a href="#support" class="support-btn has-tooltip flex items-center justify-between px-3 py-2.5 rounded-xl group w-full cursor-pointer relative mt-2">
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 shrink-0 fill-current text-pink-400 group-hover:text-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-            </svg>
-            <span class="nav-text text-sm font-semibold max-w-[110px] truncate">Support Us</span>
-          </div>
-          <span class="support-badge text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">
-            Sponsor
-          </span>
-          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-pink-300 text-xs font-semibold px-2.5 py-1.5 rounded-md border border-pink-500/30 shadow-xl whitespace-nowrap z-50">
-            Support Us ❤️
+        <!-- Support Us Button (Standard Nav Style with Pink Icon) -->
+        <a href="#support" class="nav-item has-tooltip flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group w-full cursor-pointer relative">
+          <svg class="nav-icon pink-icon w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <span class="nav-text text-sm font-medium max-w-[140px] truncate">Support Us</span>
+          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
+            Support Us
           </div>
         </a>
 
@@ -234,11 +214,8 @@
 
   </aside>
 
-  <!-- MAIN CONTENT AREA -->
-  <main class="flex-1 p-8">
-    <h1 class="text-2xl font-bold text-white mb-2">Welcome to Cold Winters</h1>
-    <p class="text-zinc-400 text-sm">Click the CW logo to collapse or expand the sidebar. Click the bell icon to view live updates.</p>
-  </main>
+  <!-- CLEAN MAIN CONTENT AREA -->
+  <main class="flex-1 p-8"></main>
 
   <!-- CHANGELOG DRAWER -->
   <div id="news-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
@@ -321,7 +298,7 @@
       });
     });
 
-    // Elements
+    // Drawer Elements
     const bellBtn = document.getElementById('bell-btn');
     const unreadDot = document.getElementById('unread-dot');
     const closeDrawerBtn = document.getElementById('close-drawer-btn');
@@ -335,7 +312,6 @@
 
     let newsDataCache = [];
 
-    // Open/Close Drawer
     function openDrawer() {
       newsDrawer.classList.remove('translate-x-full');
       newsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
@@ -351,7 +327,6 @@
     closeDrawerBtn.addEventListener('click', closeDrawer);
     newsBackdrop.addEventListener('click', closeDrawer);
 
-    // Read Tracking in LocalStorage
     function markNewsAsRead() {
       if (newsDataCache.length > 0) {
         const latestId = newsDataCache[0].id || newsDataCache[0].version;
@@ -392,7 +367,6 @@
       }
     }
 
-    // Render Cards in Drawer
     function renderNewsCards(items) {
       newsContent.innerHTML = items.map((item, index) => `
         <div onclick="openArticleModal(${index})" class="bg-[#18181b] hover:bg-[#202024] border border-[#27272a] hover:border-purple-500/40 rounded-xl p-3.5 transition-all cursor-pointer group flex flex-col gap-1.5 shadow-sm">
@@ -409,7 +383,6 @@
       `).join('');
     }
 
-    // Modal Functions
     window.openArticleModal = function(index) {
       const item = newsDataCache[index];
       if (!item) return;
@@ -439,7 +412,6 @@
       if (e.target === articleModalBackdrop) closeArticleModal();
     });
 
-    // Initial load & poll every 5 seconds
     fetchNews();
     setInterval(fetchNews, 5000);
   </script>
