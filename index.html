@@ -6,241 +6,287 @@
   <title>Cold Winters</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 11. Page Loader Transitions */
-    #page-loader {
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-
-    /* Core Sidebar Transitions */
+    /* Smooth sidebar width transition */
     #sidebar {
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    /* Smooth Text Removal */
-    .nav-text, .brand-text {
-      transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, transform 0.3s ease;
-      white-space: nowrap;
-      overflow: hidden;
-      transform: translateX(0);
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Collapsed sidebar dimensions */
+    #sidebar.collapsed {
+      width: 72px;
+    }
+
+    /* Standard nav flex layout */
     .nav-item, #brand-group {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      gap: 12px;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
     }
 
-    /* Collapsed State */
-    #sidebar.collapsed { width: 72px; }
+    /* Text Mask Fade Effect (Right-to-Left Edge Wipe) */
+    .fade-text-container {
+      transition: opacity 0.25s ease, max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 150px;
+      overflow: hidden;
+      white-space: nowrap;
+      -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+    }
 
-    #sidebar.collapsed .brand-text,
-    #sidebar.collapsed .nav-text {
+    /* Smooth fade and wipe as sidebar closes */
+    #sidebar.collapsed .fade-text-container {
+      max-width: 0px;
       opacity: 0;
-      max-width: 0 !important;
-      margin: 0;
-      padding: 0;
       pointer-events: none;
-      transform: translateX(-10px);
+      -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%);
     }
 
-    #sidebar.collapsed .nav-item,
-    #sidebar.collapsed #brand-group { gap: 0; }
-
-    .header-container { transition: padding 0.3s ease, justify-content 0.3s ease; }
-    #sidebar.collapsed .header-container { padding: 0; justify-content: center; }
-
+    /* Center navigation items when collapsed */
     #sidebar.collapsed .nav-item {
       justify-content: center;
-      padding-left: 0; padding-right: 0;
-      width: 48px; height: 48px;
+      padding-left: 0;
+      padding-right: 0;
+      width: 48px;
+      height: 48px;
       margin: 0 auto;
     }
 
-    #bell-btn { transition: opacity 0.2s ease, transform 0.3s ease; }
+    /* Smoothly fade bell button out on collapse */
+    #bell-btn {
+      transition: opacity 0.2s ease, transform 0.3s ease;
+    }
     #sidebar.collapsed #bell-btn {
-      opacity: 0; transform: scale(0.8); pointer-events: none;
+      opacity: 0;
+      transform: scale(0.85);
+      pointer-events: none;
     }
 
-    .support-item { border: 1px solid #27272a; }
-    #sidebar.collapsed .support-item { border-color: transparent; }
+    /* Permanent border on Support Us in expanded mode; transparent when collapsed */
+    .support-item {
+      border: 1px solid #27272a;
+      transition: border-color 0.2s ease, background-color 0.15s ease;
+    }
+    #sidebar.collapsed .support-item {
+      border-color: transparent !important;
+    }
 
+    /* Separator line smooth collapse */
     .separator {
       transition: opacity 0.3s ease, margin 0.3s ease, height 0.3s ease;
-      opacity: 1; height: 1px; margin-top: 6px; margin-bottom: 6px;
+      opacity: 1;
+      height: 1px;
+      margin-top: 6px;
+      margin-bottom: 6px;
     }
-    #sidebar.collapsed .separator { opacity: 0; height: 0; margin: 0; }
-
-    /* Utilities */
-    .logo-box {
-      width: 40px; height: 40px; min-width: 40px; max-width: 40px; flex-shrink: 0;
+    #sidebar.collapsed .separator {
+      opacity: 0;
+      height: 0;
+      margin: 0;
     }
-    .no-select { user-select: none; -webkit-user-select: none; }
-    .nav-item { color: #a7a7a7; }
-    .nav-item:hover { background-color: #1f1f1f; color: #ffffff; }
-    .nav-item.active { background-color: #282828; color: #ffffff; }
-    
-    .default-icon { color: #a7a7a7; transition: color 0.15s ease; }
-    .nav-item:hover .default-icon, .nav-item.active .default-icon { color: #ffffff !important; }
-    .support-item:hover { border-color: #3f3f46; }
-    .pink-icon { color: #ec4899; transition: color 0.15s ease; }
-    .support-item:hover .pink-icon { color: #ffffff !important; }
 
-    /* 23. Dynamic Tooltips */
+    /* Base Nav Styling */
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .nav-item {
+      color: #a7a7a7;
+    }
+    .nav-item:hover {
+      background-color: #1f1f1f;
+      color: #ffffff;
+    }
+    .nav-item.active {
+      background-color: #282828;
+      color: #ffffff;
+    }
+
+    .default-icon {
+      color: #a7a7a7;
+      transition: color 0.15s ease;
+    }
+    .nav-item:hover .default-icon,
+    .nav-item.active .default-icon {
+      color: #ffffff !important;
+    }
+
+    .pink-icon {
+      color: #ec4899;
+      transition: color 0.15s ease;
+    }
+    .support-item:hover .pink-icon {
+      color: #ffffff !important;
+    }
+
+    /* Custom Floating Tooltips for Collapsed Mode */
     .tooltip {
-      opacity: 0; visibility: hidden;
+      opacity: 0;
+      visibility: hidden;
       transform: translateX(-8px) translateY(-50%);
       transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
       pointer-events: none;
-      top: 50%;
-    }
-    .tooltip.flip-bottom {
-      top: 100%; transform: translateX(-8px) translateY(8px);
     }
     #sidebar.collapsed .has-tooltip:hover .tooltip {
-      opacity: 1; visibility: visible;
+      opacity: 1;
+      visibility: visible;
       transform: translateX(0) translateY(-50%);
     }
-    #sidebar.collapsed .has-tooltip:hover .tooltip.flip-bottom {
-      transform: translateX(0) translateY(8px);
-    }
     .tooltip::before {
-      content: ''; position: absolute; left: -4px; top: 50%;
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: 50%;
       transform: translateY(-50%) rotate(45deg);
-      width: 8px; height: 8px;
-      background-color: #18181b; border-left: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .tooltip.flip-bottom::before {
-      top: -4px; left: 50%; transform: translateX(-50%) rotate(135deg);
+      width: 8px;
+      height: 8px;
+      background-color: #18181b;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    #news-drawer, #article-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    #news-backdrop, #article-modal-backdrop { transition: opacity 0.3s ease; }
-
-    /* 179. Toast Animations */
-    .toast-enter { animation: slideInRight 0.3s ease forwards; }
-    .toast-leave { animation: slideOutRight 0.3s ease forwards; }
-    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    /* Drawer & Modal Transitions */
+    #news-drawer, #article-modal-panel {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #news-backdrop, #article-modal-backdrop {
+      transition: opacity 0.3s ease;
+    }
   </style>
 </head>
 <body class="bg-[#09090b] text-white flex min-h-screen font-sans antialiased overflow-x-hidden">
 
-  <!-- Custom Page Loader -->
-  <div id="page-loader" class="fixed inset-0 bg-[#09090b] z-[100] flex items-center justify-center">
-    <div class="w-10 h-10 border-4 border-zinc-800 border-t-purple-500 rounded-full animate-spin"></div>
-  </div>
-
-  <!-- Toast Container -->
-  <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
-
-  <!-- SIDEBAR -->
-  <aside id="sidebar" class="w-[250px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 z-20">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside id="sidebar" class="w-[250px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-visible z-20">
+    
     <div class="flex flex-col">
-      <div class="header-container flex items-center px-3 py-4 border-b border-[#1e1e1e] no-select relative min-h-[72px] w-full">
-        <!-- Logo without tooltip -->
-        <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative">
-          <div class="logo-box rounded-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-xs tracking-wider shadow-md">CW</div>
-          <span class="brand-text font-bold text-sm tracking-wider text-white max-w-[140px]">COLD WINTERS</span>
+      
+      <!-- HEADER / LOGO BAR -->
+      <div class="flex items-center justify-between px-3 py-4 border-b border-[#1e1e1e] no-select relative min-h-[72px] w-full">
+        
+        <!-- Logo & Title Group -->
+        <div id="brand-group" class="flex items-center gap-3 cursor-pointer overflow-hidden relative shrink-0">
+          <div class="w-10 h-10 min-w-[40px] max-w-[40px] h-10 min-h-[40px] rounded-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-xs tracking-wider shadow-md shadow-purple-900/30 shrink-0">
+            CW
+          </div>
+          
+          <div class="fade-text-container">
+            <span class="font-bold text-sm tracking-wider text-white">
+              COLD WINTERS
+            </span>
+          </div>
         </div>
-        <button id="bell-btn" class="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+
+        <!-- Notification Bell -->
+        <button id="bell-btn" aria-label="What's New" class="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+          </svg>
           <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full ring-2 ring-[#121212]"></span>
         </button>
+
       </div>
 
+      <!-- NAVIGATION LINKS -->
       <nav class="flex flex-col p-2 no-select" id="nav-menu" style="gap: 6px;">
-        <a href="#home" class="nav-item has-tooltip active flex items-center px-3 py-2.5 rounded-lg group w-full cursor-pointer relative">
-          <svg class="nav-icon default-icon w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          <span class="nav-text text-sm font-medium flex-1">Home</span>
-          <div class="tooltip absolute left-[56px] bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">Home</div>
-        </a>
-        <a href="#artists" class="nav-item has-tooltip flex items-center px-3 py-2.5 rounded-lg group w-full cursor-pointer relative">
-          <svg class="nav-icon default-icon w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          <span class="nav-text text-sm font-medium flex-1">Artists</span>
-          <!-- 11. Badge Counters -->
-          <span class="nav-text bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
-          <div class="tooltip absolute left-[56px] bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">Artists (3)</div>
+        
+        <!-- Home Item -->
+        <a href="#home" class="nav-item has-tooltip active flex items-center gap-3 px-3 py-2.5 rounded-lg group w-full cursor-pointer relative">
+          <svg class="nav-icon default-icon w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+          <div class="fade-text-container flex-1">
+            <span class="text-sm font-medium">Home</span>
+          </div>
+          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
+            Home
+          </div>
         </a>
 
+        <!-- Artists Item (Badge removed) -->
+        <a href="#artists" class="nav-item has-tooltip flex items-center gap-3 px-3 py-2.5 rounded-lg group w-full cursor-pointer relative">
+          <svg class="nav-icon default-icon w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          <div class="fade-text-container flex-1">
+            <span class="text-sm font-medium">Artists</span>
+          </div>
+          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
+            Artists
+          </div>
+        </a>
+
+        <!-- Separator Line -->
         <div class="separator w-full bg-[#1e1e1e]"></div>
 
-        <a href="#support" class="nav-item support-item has-tooltip flex items-center px-3 py-2.5 rounded-lg group w-full cursor-pointer relative">
-          <svg class="nav-icon pink-icon w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          <span class="nav-text text-sm font-medium flex-1">Support Us</span>
-          <div class="tooltip absolute left-[56px] bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">Support Us</div>
+        <!-- Support Us Item -->
+        <a href="#support" class="nav-item support-item has-tooltip flex items-center gap-3 px-3 py-2.5 rounded-lg group w-full cursor-pointer relative">
+          <svg class="nav-icon pink-icon w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <div class="fade-text-container flex-1">
+            <span class="text-sm font-medium">Support Us</span>
+          </div>
+          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
+            Support Us
+          </div>
         </a>
+
       </nav>
+
     </div>
+
   </aside>
 
+  <!-- MAIN CONTENT AREA -->
   <main class="flex-1 p-8"></main>
 
   <!-- CHANGELOG DRAWER -->
   <div id="news-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
 
   <div id="news-drawer" class="fixed top-0 right-0 h-full w-[380px] max-w-[100vw] bg-[#121212] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl translate-x-full">
-    <div class="flex flex-col border-b border-[#1e1e1e]">
-      <div class="flex items-center justify-between p-4 pb-2">
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-          <h2 class="font-bold text-base text-white tracking-wide">What's New</h2>
-        </div>
-        <button id="close-drawer-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+    
+    <div class="flex items-center justify-between p-4 border-b border-[#1e1e1e]">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+        <h2 class="font-bold text-base text-white tracking-wide">What's New</h2>
       </div>
-      <!-- 26. Filter Dropdown -->
-      <div class="px-4 pb-4">
-        <select id="news-filter" class="w-full bg-[#18181b] border border-[#27272a] text-zinc-300 text-xs rounded-lg p-2 outline-none focus:border-purple-500">
-          <option value="all">All Updates</option>
-          <option value="feature">Features</option>
-          <option value="bugfix">Bug Fixes</option>
-        </select>
+      <button id="close-drawer-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Drawer Content Area -->
+    <div id="news-content" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+      <div class="animate-pulse space-y-3">
+        <div class="h-4 bg-zinc-800 rounded w-1/3"></div>
+        <div class="h-12 bg-zinc-900 rounded-lg"></div>
       </div>
     </div>
 
-    <div id="news-content" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm relative">
-      <!-- 39. Skeleton Loader -->
-      <div id="news-skeleton" class="animate-pulse space-y-4">
-        <div class="h-24 bg-[#18181b] border border-[#27272a] rounded-xl"></div>
-        <div class="h-24 bg-[#18181b] border border-[#27272a] rounded-xl"></div>
-      </div>
-    </div>
-    
-    <!-- 29. Load More Pagination -->
-    <div id="load-more-container" class="p-4 border-t border-[#1e1e1e] hidden">
-      <button id="load-more-btn" class="w-full py-2 bg-[#18181b] hover:bg-[#27272a] text-zinc-300 text-xs font-semibold rounded-lg transition-colors border border-[#27272a]">
-        Load More
-      </button>
-    </div>
   </div>
 
   <!-- FULL ARTICLE MODAL -->
   <div id="article-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
     <div id="article-modal-panel" class="bg-[#18181b] border border-[#27272a] rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl scale-95 transition-transform duration-300 overflow-hidden">
       
-      <div class="flex items-center justify-between p-4 border-b border-[#27272a] bg-[#121212]">
+      <div class="flex items-center justify-between p-5 border-b border-[#27272a] bg-[#121212]">
         <div class="flex items-center gap-2.5">
           <span id="modal-version" class="text-xs font-bold text-purple-400 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20"></span>
           <span id="modal-date" class="text-xs text-zinc-400"></span>
         </div>
-        <div class="flex items-center gap-1">
-          <!-- 30. Share Button -->
-          <button id="share-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all" title="Copy Link">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-          </button>
-          <button id="close-modal-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
+        <button id="close-modal-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       <div class="p-6 overflow-y-auto flex-1 space-y-4">
         <h2 id="modal-title" class="text-xl font-bold text-white leading-snug"></h2>
-        <div class="flex justify-between items-center pb-2 border-b border-zinc-800">
-          <div id="modal-author" class="text-xs text-zinc-500 font-medium flex items-center gap-2"></div>
-          <!-- 70. Edit History -->
-          <span id="modal-edited" class="text-[10px] text-zinc-600 italic"></span>
-        </div>
+        <div id="modal-author" class="text-xs text-zinc-500 font-medium pb-2 border-b border-zinc-800"></div>
         <p id="modal-summary" class="text-zinc-300 text-sm leading-relaxed italic bg-zinc-900/60 p-3 rounded-lg border border-zinc-800/80"></p>
         <div>
           <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Key Changes</h4>
@@ -249,213 +295,165 @@
         <div id="modal-full-text" class="text-zinc-300 text-xs leading-relaxed space-y-2 pt-2 border-t border-zinc-800/80"></div>
       </div>
 
-      <!-- 51. Next/Previous Navigation -->
-      <div class="flex border-t border-[#27272a] bg-[#121212]">
-        <button id="modal-prev" class="flex-1 py-3 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-[#18181b] transition-colors border-r border-[#27272a]">← Previous</button>
-        <button id="modal-next" class="flex-1 py-3 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-[#18181b] transition-colors">Next →</button>
-      </div>
     </div>
   </div>
 
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    // Custom Page Loader
-    window.addEventListener('load', () => {
-      const loader = document.getElementById('page-loader');
-      loader.style.opacity = '0';
-      setTimeout(() => { loader.style.visibility = 'hidden'; }, 500);
-    });
-
-    // 179. Toast System
-    function showToast(message) {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = 'bg-[#18181b] border border-[#27272a] text-white text-xs px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 toast-enter pointer-events-auto';
-      toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-purple-500"></span>${message}`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.replace('toast-enter', 'toast-leave');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    // Sidebar & Navigation
     const sidebar = document.getElementById('sidebar');
     const brandGroup = document.getElementById('brand-group');
-    brandGroup.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+    const navItems = document.querySelectorAll('.nav-item');
 
-    document.querySelectorAll('.nav-item').forEach(item => {
+    // Toggle Collapse
+    function toggleSidebar() {
+      sidebar.classList.toggle('collapsed');
+    }
+    brandGroup.addEventListener('click', toggleSidebar);
+
+    // Tab Selection
+    navItems.forEach(item => {
       item.addEventListener('click', (e) => {
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        navItems.forEach(nav => nav.classList.remove('active'));
         e.currentTarget.classList.add('active');
-      });
-
-      // 23. Dynamic Tooltip placement
-      item.addEventListener('mouseenter', (e) => {
-        const tooltip = item.querySelector('.tooltip');
-        if (tooltip && sidebar.classList.contains('collapsed')) {
-          const rect = item.getBoundingClientRect();
-          if (rect.top < 60) tooltip.classList.add('flip-bottom');
-          else tooltip.classList.remove('flip-bottom');
-        }
       });
     });
 
-    // Data Management
-    let newsDataCache = [];
-    let filteredNews = [];
-    let visibleCount = 5;
-    let currentArticleIndex = 0;
+    // Drawer Elements
+    const bellBtn = document.getElementById('bell-btn');
+    const unreadDot = document.getElementById('unread-dot');
+    const closeDrawerBtn = document.getElementById('close-drawer-btn');
+    const newsDrawer = document.getElementById('news-drawer');
+    const newsBackdrop = document.getElementById('news-backdrop');
+    const newsContent = document.getElementById('news-content');
 
-    const fetchNews = async () => {
+    const articleModalBackdrop = document.getElementById('article-modal-backdrop');
+    const articleModalPanel = document.getElementById('article-modal-panel');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+
+    let newsDataCache = [];
+
+    function openDrawer() {
+      newsDrawer.classList.remove('translate-x-full');
+      newsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      markNewsAsRead();
+    }
+
+    function closeDrawer() {
+      newsDrawer.classList.add('translate-x-full');
+      newsBackdrop.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    bellBtn.addEventListener('click', openDrawer);
+    closeDrawerBtn.addEventListener('click', closeDrawer);
+    newsBackdrop.addEventListener('click', closeDrawer);
+
+    function markNewsAsRead() {
+      if (newsDataCache.length > 0) {
+        const latestId = newsDataCache[0].id || newsDataCache[0].version;
+        localStorage.setItem('cw_last_read_news', latestId);
+        unreadDot.classList.add('hidden');
+      }
+    }
+
+    function checkUnreadStatus(latestId) {
+      const lastRead = localStorage.getItem('cw_last_read_news');
+      if (lastRead !== latestId) {
+        unreadDot.classList.remove('hidden');
+      } else {
+        unreadDot.classList.add('hidden');
+      }
+    }
+
+    // Live Active Polling for news.json
+    async function fetchNews() {
       try {
         const res = await fetch(`news.json?t=${Date.now()}`);
-        if (!res.ok) throw new Error();
-        newsDataCache = await res.json();
-        applyFilters();
-        document.getElementById('news-skeleton').classList.add('hidden');
+        if (!res.ok) throw new Error('news.json not found');
+        const data = await res.json();
+        
+        newsDataCache = data;
+        if (data.length > 0) {
+          const latestId = data[0].id || data[0].version;
+          checkUnreadStatus(latestId);
+          renderGroupedNewsCards(data);
+        }
       } catch (err) {
-        // Fallback mock data to demonstrate features 32, 34, 70
-        newsDataCache = [
-          { id: "v1.5", version: "v1.5.0", category: "feature", priority: "critical", date: "Oct 28, 2026", group: "This Week", title: "Live Navigation Rewrite", author: "Cold Winters Lead", authorAvatar: "https://i.pravatar.cc/100?img=3", edited: "Updated 2h ago", summary: "Rewrote transitions for butter smooth UX.", changes: ["Smooth text collapse", "Custom toast added"], fullArticle: "Full text details here..." },
-          { id: "v1.4", version: "v1.4.1", category: "bugfix", priority: "low", date: "Oct 25, 2026", group: "This Week", title: "Tooltip Bugfix", author: "UI Team", authorAvatar: "https://i.pravatar.cc/100?img=5", summary: "Fixed top edge tooltips.", changes: ["Dynamic flipping"], fullArticle: "Fixed." },
-          { id: "v1.3", version: "v1.3.0", category: "feature", priority: "high", date: "Sep 15, 2026", group: "Last Month", title: "Pure White Theme", author: "Dev Team", summary: "Layout refinements.", changes: ["Standardized nav"], fullArticle: "Done." }
-        ];
-        applyFilters();
-        document.getElementById('news-skeleton').classList.add('hidden');
+        newsContent.innerHTML = `
+          <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-4 text-xs space-y-2">
+            <span class="text-pink-400 font-bold">NOTE</span>
+            <p class="text-zinc-300">Create a <code class="bg-black/50 px-1 py-0.5 rounded text-pink-300">news.json</code> file in your root folder to load updates dynamically.</p>
+          </div>
+        `;
       }
-    };
-
-    // 26 & 31. Filter and Group Rendering
-    function applyFilters() {
-      const filterVal = document.getElementById('news-filter').value;
-      filteredNews = filterVal === 'all' ? newsDataCache : newsDataCache.filter(n => n.category === filterVal);
-      visibleCount = 5;
-      renderNewsList();
-    }
-    document.getElementById('news-filter').addEventListener('change', applyFilters);
-
-    function getPriorityColor(p) {
-      if (p === 'critical') return 'bg-red-500';
-      if (p === 'high') return 'bg-orange-500';
-      return 'bg-blue-500';
     }
 
-    function renderNewsList() {
-      const content = document.getElementById('news-content');
-      const itemsToRender = filteredNews.slice(0, visibleCount);
-      
-      let html = '';
-      let currentGroup = '';
+    // Render Section-Grouped News Cards
+    function renderGroupedNewsCards(items) {
+      let htmlOutput = '';
+      let currentSection = '';
 
-      itemsToRender.forEach((item, index) => {
-        // 31. Date Grouping Headers
-        if (item.group && item.group !== currentGroup) {
-          html += `<h4 class="text-[10px] font-bold uppercase text-zinc-500 tracking-wider mt-4 mb-2 pl-1">${item.group}</h4>`;
-          currentGroup = item.group;
+      items.forEach((item, index) => {
+        const sectionHeader = item.group || 'Recent Updates';
+        
+        if (sectionHeader !== currentSection) {
+          currentSection = sectionHeader;
+          htmlOutput += `
+            <div class="text-[11px] font-bold uppercase tracking-wider text-zinc-500 pt-2 pb-1 border-b border-[#1e1e1e]">
+              ${currentSection}
+            </div>
+          `;
         }
 
-        html += `
-          <div onclick="openArticleModal(${index})" class="bg-[#18181b] hover:bg-[#202024] border border-[#27272a] hover:border-purple-500/40 rounded-xl p-3.5 transition-all cursor-pointer group shadow-sm mb-3">
-            <div class="flex items-center justify-between mb-1.5">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-purple-400">${item.version}</span>
-                <!-- 32. Priority Tags -->
-                ${item.priority ? `<span class="w-1.5 h-1.5 rounded-full ${getPriorityColor(item.priority)}" title="Priority: ${item.priority}"></span>` : ''}
-              </div>
-              <span class="text-[10px] text-zinc-500 font-medium">${item.date}</span>
+        htmlOutput += `
+          <div onclick="openArticleModal(${index})" class="bg-[#18181b] hover:bg-[#202024] border border-[#27272a] hover:border-purple-500/40 rounded-xl p-3.5 transition-all cursor-pointer group flex flex-col gap-1.5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-400 tracking-wider">${item.version}</span>
+              <span class="text-[11px] text-zinc-500 font-medium">${item.date}</span>
             </div>
             <h3 class="font-semibold text-white text-sm group-hover:text-purple-300 transition-colors">${item.title}</h3>
-            <!-- 34. Author Avatar -->
-            <div class="flex items-center gap-1.5 mt-2 mb-2 text-[10px] text-zinc-500">
-               ${item.authorAvatar ? `<img src="${item.authorAvatar}" class="w-4 h-4 rounded-full">` : ''}
-               <span>${item.author || 'Team'}</span>
+            <p class="text-zinc-400 text-xs line-clamp-2">${item.summary || item.changes[0]}</p>
+            <div class="text-[11px] font-semibold text-purple-400 flex items-center gap-1 mt-1">
+              Read Full Release <span class="group-hover:translate-x-1 transition-transform">→</span>
             </div>
           </div>
         `;
       });
 
-      content.innerHTML = html || `<p class="text-zinc-500 text-xs italic">No updates found.</p>`;
-      
-      const loadMoreBtn = document.getElementById('load-more-container');
-      if (filteredNews.length > visibleCount) {
-        loadMoreBtn.classList.remove('hidden');
-      } else {
-        loadMoreBtn.classList.add('hidden');
-      }
+      newsContent.innerHTML = htmlOutput;
     }
 
-    // 29. Pagination Load More
-    document.getElementById('load-more-btn').addEventListener('click', () => {
-      visibleCount += 5;
-      renderNewsList();
-    });
-
-    // Drawer & Modal Logic
-    const newsDrawer = document.getElementById('news-drawer');
-    const newsBackdrop = document.getElementById('news-backdrop');
-    
-    document.getElementById('bell-btn').addEventListener('click', () => {
-      newsDrawer.classList.remove('translate-x-full');
-      newsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-    });
-
-    const closeDrawer = () => {
-      newsDrawer.classList.add('translate-x-full');
-      newsBackdrop.classList.add('opacity-0', 'pointer-events-none');
-    };
-    document.getElementById('close-drawer-btn').addEventListener('click', closeDrawer);
-    newsBackdrop.addEventListener('click', closeDrawer);
-
     window.openArticleModal = function(index) {
-      currentArticleIndex = index;
-      const item = filteredNews[index];
+      const item = newsDataCache[index];
       if (!item) return;
 
       document.getElementById('modal-version').textContent = item.version;
       document.getElementById('modal-date').textContent = item.date;
       document.getElementById('modal-title').textContent = item.title;
-      
-      const authorHtml = item.authorAvatar ? `<img src="${item.authorAvatar}" class="w-5 h-5 rounded-full"> Post by ${item.author}` : `Post by ${item.author || 'Team'}`;
-      document.getElementById('modal-author').innerHTML = authorHtml;
-      
-      // 70. Edit timestamps
-      document.getElementById('modal-edited').textContent = item.edited || '';
+      document.getElementById('modal-author').textContent = `Posted by ${item.author || 'Cold Winters Team'}`;
+      document.getElementById('modal-summary').textContent = item.summary || 'Release updates and patch notes.';
 
-      document.getElementById('modal-summary').textContent = item.summary;
-      document.getElementById('modal-changes').innerHTML = (item.changes || []).map(c => `<li>${c}</li>`).join('');
-      document.getElementById('modal-full-text').textContent = item.fullArticle;
+      const changesList = document.getElementById('modal-changes');
+      changesList.innerHTML = (item.changes || []).map(c => `<li>${c}</li>`).join('');
 
-      document.getElementById('article-modal-backdrop').classList.remove('opacity-0', 'pointer-events-none');
-      document.getElementById('article-modal-panel').classList.remove('scale-95');
+      document.getElementById('modal-full-text').textContent = item.fullArticle || 'No further details available for this release.';
 
-      // 51. Update Prev/Next button states
-      document.getElementById('modal-prev').disabled = index === 0;
-      document.getElementById('modal-prev').style.opacity = index === 0 ? '0.3' : '1';
-      document.getElementById('modal-next').disabled = index === filteredNews.length - 1;
-      document.getElementById('modal-next').style.opacity = index === filteredNews.length - 1 ? '0.3' : '1';
+      articleModalBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      articleModalPanel.classList.remove('scale-95');
     };
 
-    const closeArticleModal = () => {
-      document.getElementById('article-modal-backdrop').classList.add('opacity-0', 'pointer-events-none');
-      document.getElementById('article-modal-panel').classList.add('scale-95');
-    };
-    document.getElementById('close-modal-btn').addEventListener('click', closeArticleModal);
+    function closeArticleModal() {
+      articleModalBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      articleModalPanel.classList.add('scale-95');
+    }
 
-    // 51. Next/Prev Events
-    document.getElementById('modal-prev').addEventListener('click', () => {
-      if (currentArticleIndex > 0) openArticleModal(currentArticleIndex - 1);
-    });
-    document.getElementById('modal-next').addEventListener('click', () => {
-      if (currentArticleIndex < filteredNews.length - 1) openArticleModal(currentArticleIndex + 1);
+    closeModalBtn.addEventListener('click', closeArticleModal);
+    articleModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === articleModalBackdrop) closeArticleModal();
     });
 
-    // 30. Share Button
-    document.getElementById('share-btn').addEventListener('click', () => {
-      navigator.clipboard.writeText(window.location.href + '#version=' + filteredNews[currentArticleIndex].version);
-      showToast('Link copied to clipboard!');
-    });
-
+    // Start background polling (every 5 seconds)
     fetchNews();
+    setInterval(fetchNews, 5000);
   </script>
 </body>
 </html>
