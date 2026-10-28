@@ -1,17 +1,31 @@
 [
   {
+    "id": "v1.4.0",
+    "version": "v1.4.0",
+    "date": "October 28, 2026",
+    "title": "Live Test Release: Permanent Support Border",
+    "author": "Cold Winters Lead",
+    "summary": "Testing real-time update polling and verification of permanent button borders.",
+    "changes": [
+      "Added permanent thin gray border to Support Us button.",
+      "Fixed collapsed logo width squishing.",
+      "Verified background polling synchronization."
+    ],
+    "fullArticle": "This is the live test entry! Saving this file will trigger the pink unread dot on your bell icon within 5 seconds without refreshing the page. Clicking the bell will clear the dot and mark this version as read in your local storage."
+  },
+  {
     "id": "v1.3.0",
     "version": "v1.3.0",
-    "date": "October 28, 2026",
+    "date": "October 20, 2026",
     "title": "Specialized Support Button & Pure White Theme",
     "author": "Cold Winters Dev Team",
-    "summary": "This update introduces a high-profile Support Us card alongside live news polling and full-screen release note reading.",
+    "summary": "This update introduces layout refinements alongside live news polling.",
     "changes": [
-      "Converted Support Us link into a glowing pink card.",
-      "Switched standard active states to pure white.",
-      "Implemented dynamic news reading modal overlays."
+      "Standardized nav highlights to pure white.",
+      "Integrated dynamic modal reading view.",
+      "Refined icon proportions and tooltip animations."
     ],
-    "fullArticle": "We have overhauled the layout based on community feedback. The Support Us section now has a high-visibility sponsor badge and glow effect. Standard navigation tabs now feature high-contrast pure white highlights. You can now also click any news item to open its full article modal view."
+    "fullArticle": "We overhauled the layout based on community feedback. Standard navigation tabs now feature high-contrast pure white highlights, and clicking any news item opens its full article modal view."
   },
   {
     "id": "v1.2.0",
