@@ -16,7 +16,7 @@
       width: 72px;
     }
 
-    /* Base Flex Layout for Nav Items */
+    /* Navigation Item Wrapper */
     .nav-item {
       position: relative;
       display: flex;
@@ -26,45 +26,56 @@
       border-radius: 0.5rem;
       color: #a7a7a7;
       transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                  border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Fixed Icon Container (Pins icons in position so they never shift) */
+    /* Pinned Icon Box: Locks icons strictly 12px from the left edge */
     .icon-wrapper {
-      width: 48px;
-      height: 44px;
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
 
-    /* Smooth Slide/Fade Text Container */
-    .fade-text-container {
-      display: inline-block;
-      white-space: nowrap;
-      overflow: hidden;
-      width: 140px;
-      opacity: 1;
-      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Brand Logo Container Fixed Position */
+    #brand-group .icon-wrapper {
+      left: 12px;
+      width: 40px;
+      height: 40px;
     }
 
-    /* Collapsed State Adjustment for Text */
+    /* Stationary Text Container with Right-to-Left Edge Wipe Mask */
+    .fade-text-container {
+      margin-left: 56px;
+      white-space: nowrap;
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+      -webkit-mask-size: 200% 100%;
+      mask-size: 200% 100%;
+      -webkit-mask-position: 0% 0;
+      mask-position: 0% 0;
+      transition: -webkit-mask-position 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  mask-position 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 1;
+    }
+
+    /* Collapsed State: Shifts the gradient mask to wipe text smoothly */
     #sidebar.collapsed .fade-text-container {
-      width: 0px;
+      -webkit-mask-position: 100% 0;
+      mask-position: 100% 0;
       opacity: 0;
       pointer-events: none;
     }
 
-    /* Center Nav Button Highlight Box when Collapsed */
-    #sidebar.collapsed .nav-item {
-      width: 48px;
-      margin: 0 auto;
-    }
-
-    /* Smoothly fade bell button out on collapse */
+    /* Notification Bell Fade */
     #bell-btn {
       transition: opacity 0.2s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -74,12 +85,9 @@
       pointer-events: none;
     }
 
-    /* Support Us Border Styling */
+    /* Support Us Permanent Border Adjustment */
     .support-item {
       border: 1px solid #27272a;
-      transition: border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
     #sidebar.collapsed .support-item {
       border-color: transparent !important;
@@ -99,7 +107,7 @@
       margin: 0;
     }
 
-    /* Base Styling */
+    /* Base Nav Item Hover States */
     .no-select {
       user-select: none;
       -webkit-user-select: none;
