@@ -1,4 +1,17 @@
 [
+    {
+    "id": "v1.6.0",
+    "version": "v1.6.0",
+    "date": "October 28, 2026",
+    "title": "testtt",
+    "author": "Cold Winters Lead",
+    "summary": "just testing",
+    "changes": [
+      "added bugs",
+      "added herobrine"
+    ],
+    "fullArticle": "hello"
+  },
   {
     "id": "v1.4.0",
     "version": "v1.4.0",
