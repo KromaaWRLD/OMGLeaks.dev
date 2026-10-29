@@ -16,6 +16,15 @@
       width: 72px;
     }
 
+    /* Header Container Alignment */
+    .header-container {
+      display: flex;
+      align-items: center;
+      min-height: 72px;
+      width: 100%;
+      position: relative;
+    }
+
     /* Navigation Item Base */
     .nav-item {
       position: relative;
@@ -28,7 +37,7 @@
       transition: background-color 0.2s ease, border-color 0.2s ease, width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Proportional Centered Icon Wrapper */
+    /* Proportional Fixed Icon Wrapper (Pins logo and nav icons in a locked 48px column) */
     .icon-wrapper {
       width: 48px;
       height: 48px;
@@ -55,14 +64,14 @@
       opacity: 1;
     }
 
-    /* Faster Fade for COLD WINTERS Brand Title */
+    /* Ultra-Fast Fade for COLD WINTERS Header Text */
     .brand-text-container {
       transition: -webkit-mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
                   mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
                   opacity 0.12s ease;
     }
 
-    /* Collapsed: Quick mask wipe to prevent text cutoff visibility */
+    /* Collapsed State: Quick mask wipe to fade text clean */
     #sidebar.collapsed .fade-text-container,
     #sidebar.collapsed .brand-text-container {
       -webkit-mask-position: 100% 0;
@@ -71,20 +80,10 @@
       pointer-events: none;
     }
 
-    /* Collapsed Nav Item Centering */
+    /* Center Nav Button Highlight Box when Collapsed */
     #sidebar.collapsed .nav-item {
       width: 48px;
       margin: 0 auto;
-    }
-
-    /* Header Container Positioning */
-    .header-container {
-      display: flex;
-      align-items: center;
-      padding: 12px 0;
-      min-height: 72px;
-      width: 100%;
-      position: relative;
     }
 
     /* Bell Button Animation */
@@ -119,7 +118,7 @@
       margin: 0;
     }
 
-    /* Base Styling */
+    /* Base Styling & Hover States */
     .no-select {
       user-select: none;
       -webkit-user-select: none;
