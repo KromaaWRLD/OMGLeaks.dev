@@ -48,6 +48,8 @@
             <span class="font-bold text-xs tracking-wider text-white">COLD WINTERS</span>
           </div>
         </div>
+
+        <!-- Notification Bell -->
         <button id="bell-btn" aria-label="What's New" class="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
           <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full ring-2 ring-[#121212]"></span>
@@ -75,19 +77,19 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT AREA WITH JUICE WRLD ERAS -->
+  <!-- MAIN CONTENT AREA WITH UPDATED ERAS -->
   <main class="flex-1 p-8 pb-28 space-y-8">
     <div class="flex justify-between items-center">
       <h1 class="text-2xl font-extrabold tracking-wider text-white">Music Library</h1>
-      <a href="editor.html" class="text-xs font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-lg hover:bg-purple-500/20">Editor Portal Portal →</a>
+      <a href="/editor" class="text-xs font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-lg hover:bg-purple-500/20 transition-colors">Editor Portal →</a>
     </div>
 
-    <!-- OUTSIDERS (OUT) ERA -->
+    <!-- JW3 ERA -->
     <section class="space-y-3">
       <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2">
-        <span>Outsiders Era</span> <span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">OUT</span>
+        <span>JW3 Era</span> <span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">JW3</span>
       </h2>
-      <div id="era-OUT" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+      <div id="era-JW3" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
     </section>
 
     <!-- LEGENDS NEVER DIE (LND) ERA -->
@@ -105,19 +107,10 @@
       </h2>
       <div id="era-FD" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
     </section>
-
-    <!-- JW3 ERA -->
-    <section class="space-y-3">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2">
-        <span>JW3 Era</span> <span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">JW3</span>
-      </h2>
-      <div id="era-JW3" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-    </section>
   </main>
 
-  <!-- STICKY BOTTOM MUSIC PLAYER BAR -->
+  <!-- BOTTOM MUSIC PLAYER BAR -->
   <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-[#121212]/95 border-t border-[#1e1e1e] backdrop-blur-md z-30 flex items-center justify-between px-6 translate-y-full transition-transform duration-300">
-    <!-- Current Playing Track Info -->
     <div class="flex items-center gap-3 w-1/4">
       <img id="player-cover" src="" class="w-12 h-12 rounded-lg object-cover bg-zinc-800">
       <div class="overflow-hidden">
@@ -126,35 +119,47 @@
       </div>
     </div>
 
-    <!-- Central Audio Controls -->
     <div class="flex flex-col items-center gap-1 w-1/2 max-w-md">
-      <div class="flex items-center gap-4">
-        <button onclick="togglePlay()" id="play-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold shadow-lg hover:scale-105 transition-transform">
-          ▶
-        </button>
-      </div>
+      <button onclick="togglePlay()" id="play-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold shadow-lg hover:scale-105 transition-transform">
+        ▶
+      </button>
       <audio id="audio-element" class="hidden"></audio>
     </div>
 
     <div class="w-1/4 flex justify-end"></div>
   </div>
 
-  <!-- CHANGELOG DRAWER & MODAL HTML... (Drawer JS Polls DB API) -->
+  <!-- CHANGELOG DRAWER -->
+  <div id="news-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+  <div id="news-drawer" class="fixed top-0 right-0 h-full w-[380px] max-w-[100vw] bg-[#121212] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl translate-x-full">
+    <div class="flex items-center justify-between p-4 border-b border-[#1e1e1e]">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+        <h2 class="font-bold text-base text-white tracking-wide">What's New</h2>
+      </div>
+      <button id="close-drawer-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <div id="news-content" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm"></div>
+  </div>
+
   <script>
-    const API_URL = "/api";
+    const API = "/api";
     const sidebar = document.getElementById('sidebar');
     const brandGroup = document.getElementById('brand-group');
 
     function toggleSidebar() { sidebar.classList.toggle('collapsed'); }
     brandGroup.addEventListener('click', toggleSidebar);
 
-    // Load Songs Categorized by Era
+    // SONGS BY ERA
     async function loadSongs() {
       try {
         const res = await fetch(`${API}/songs`);
         const songs = await res.json();
         
-        ['OUT', 'LND', 'FD', 'JW3'].forEach(era => {
+        ['JW3', 'LND', 'FD'].forEach(era => {
           const eraContainer = document.getElementById(`era-${era}`);
           const eraSongs = songs.filter(s => s.era === era);
           
@@ -173,11 +178,11 @@
           }
         });
       } catch (err) {
-        console.error("Could not load songs from API", err);
+        console.error("Error fetching songs:", err);
       }
     }
 
-    // Audio Player Logic
+    // MUSIC PLAYER LOGIC
     const playerBar = document.getElementById('music-player-bar');
     const audioElement = document.getElementById('audio-element');
     const playBtn = document.getElementById('play-btn');
@@ -204,17 +209,61 @@
       }
     }
 
-    // Fetch News from MongoDB
+    // NEWS & NOTIFICATION BELL SYSTEM
+    const bellBtn = document.getElementById('bell-btn');
+    const unreadDot = document.getElementById('unread-dot');
+    const closeDrawerBtn = document.getElementById('close-drawer-btn');
+    const newsDrawer = document.getElementById('news-drawer');
+    const newsBackdrop = document.getElementById('news-backdrop');
+    const newsContent = document.getElementById('news-content');
+
+    function openDrawer() {
+      newsDrawer.classList.remove('translate-x-full');
+      newsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      localStorage.setItem('cw_news_seen', 'true');
+      unreadDot.classList.add('hidden');
+    }
+
+    function closeDrawer() {
+      newsDrawer.classList.add('translate-x-full');
+      newsBackdrop.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    bellBtn.addEventListener('click', openDrawer);
+    closeDrawerBtn.addEventListener('click', closeDrawer);
+    newsBackdrop.addEventListener('click', closeDrawer);
+
     async function fetchNews() {
       try {
         const res = await fetch(`${API}/news`);
-        const data = await res.json();
-        // Uses your active grouped cards rendering logic for news drawer...
-      } catch (e) {}
+        const news = await res.json();
+        
+        if (news.length > 0) {
+          const latestNotify = news.some(n => n.notifyUsers);
+          if (latestNotify && localStorage.getItem('cw_news_seen') !== 'true') {
+            unreadDot.classList.remove('hidden');
+          }
+
+          newsContent.innerHTML = news.map(n => `
+            <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-3.5 space-y-1.5 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-purple-400 tracking-wider">${n.version}</span>
+                <span class="text-[11px] text-zinc-500 font-medium">${n.date}</span>
+              </div>
+              <h3 class="font-semibold text-white text-sm">${n.title}</h3>
+              <p class="text-zinc-400 text-xs">${n.summary}</p>
+            </div>
+          `).join('');
+        }
+      } catch (err) {}
     }
 
     loadSongs();
-    setInterval(loadSongs, 5000);
+    fetchNews();
+    setInterval(() => {
+      loadSongs();
+      fetchNews();
+    }, 5000);
   </script>
 </body>
 </html>
