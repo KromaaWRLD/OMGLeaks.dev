@@ -16,16 +16,7 @@
       width: 72px;
     }
 
-    /* Header Container Alignment */
-    .header-container {
-      display: flex;
-      align-items: center;
-      min-height: 72px;
-      width: 100%;
-      position: relative;
-    }
-
-    /* Navigation Item Base */
+    /* Navigation Item Base: Fits full width of sidebar, smoothly shrinks edge */
     .nav-item {
       position: relative;
       display: flex;
@@ -34,21 +25,35 @@
       width: 100%;
       border-radius: 0.5rem;
       color: #a7a7a7;
-      transition: background-color 0.2s ease, border-color 0.2s ease, width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    /* Proportional Fixed Icon Wrapper (Pins logo and nav icons in a locked 48px column) */
+    /* Locked Icon Column: Absolute positioning keeps icons FIXED at 12px padding */
     .icon-wrapper {
-      width: 48px;
-      height: 48px;
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      z-index: 2;
     }
 
-    /* Base Text Mask Fade Container */
+    /* Header Logo Fixed Position */
+    #brand-group .icon-wrapper {
+      left: 12px;
+      width: 40px;
+      height: 40px;
+    }
+
+    /* Text Container Offset past the fixed 12px icon */
     .fade-text-container {
+      margin-left: 52px;
       white-space: nowrap;
       overflow: hidden;
       display: inline-block;
@@ -64,14 +69,14 @@
       opacity: 1;
     }
 
-    /* Ultra-Fast Fade for COLD WINTERS Header Text */
+    /* Ultra-Fast Mask Wipe for Header Title */
     .brand-text-container {
       transition: -webkit-mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
                   mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
                   opacity 0.12s ease;
     }
 
-    /* Collapsed State: Quick mask wipe to fade text clean */
+    /* Collapsed state: Mask fades text cleanly while container clips automatically */
     #sidebar.collapsed .fade-text-container,
     #sidebar.collapsed .brand-text-container {
       -webkit-mask-position: 100% 0;
@@ -80,13 +85,16 @@
       pointer-events: none;
     }
 
-    /* Center Nav Button Highlight Box when Collapsed */
-    #sidebar.collapsed .nav-item {
-      width: 48px;
-      margin: 0 auto;
+    /* Header Container Alignment */
+    .header-container {
+      display: flex;
+      align-items: center;
+      min-height: 72px;
+      width: 100%;
+      position: relative;
     }
 
-    /* Bell Button Animation */
+    /* Bell Button Fade */
     #bell-btn {
       transition: opacity 0.15s ease, transform 0.25s ease;
     }
@@ -118,7 +126,7 @@
       margin: 0;
     }
 
-    /* Base Styling & Hover States */
+    /* Hover & Active States */
     .no-select {
       user-select: none;
       -webkit-user-select: none;
@@ -149,7 +157,7 @@
       color: #ffffff !important;
     }
 
-    /* Custom Floating Tooltips for Collapsed Mode */
+    /* Tooltips */
     .tooltip {
       opacity: 0;
       visibility: hidden;
@@ -195,14 +203,14 @@
       <div class="header-container border-b border-[#1e1e1e] no-select">
         
         <!-- Logo & Title Group -->
-        <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative shrink-0">
+        <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative shrink-0 w-full h-full">
           <div class="icon-wrapper">
             <div class="w-10 h-10 min-w-[40px] max-w-[40px] h-10 min-h-[40px] rounded-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-xs tracking-wider shadow-md shadow-purple-900/30 shrink-0">
               CW
             </div>
           </div>
           
-          <div class="fade-text-container brand-text-container pl-1">
+          <div class="fade-text-container brand-text-container">
             <span class="font-bold text-sm tracking-wider text-white">
               COLD WINTERS
             </span>
@@ -229,7 +237,7 @@
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
           </div>
-          <div class="fade-text-container pl-1">
+          <div class="fade-text-container">
             <span class="text-sm font-medium">Home</span>
           </div>
           <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
@@ -244,7 +252,7 @@
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
           </div>
-          <div class="fade-text-container pl-1">
+          <div class="fade-text-container">
             <span class="text-sm font-medium">Artists</span>
           </div>
           <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
@@ -262,7 +270,7 @@
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           </div>
-          <div class="fade-text-container pl-1">
+          <div class="fade-text-container">
             <span class="text-sm font-medium">Support Us</span>
           </div>
           <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
