@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cold Winters | Contributor Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#09090b] text-white font-sans antialiased min-h-screen">
+
+  <!-- LOGIN OVERLAY -->
+  <div id="login-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+      <h2 class="text-xl font-bold text-center text-purple-400">Contributor Login</h2>
+      <div id="login-error" class="hidden text-xs text-pink-500 font-medium text-center"></div>
+      <input id="login-user" type="text" placeholder="Username" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+      <input id="login-pass" type="password" placeholder="Password" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+      <button onclick="handleLogin()" class="w-full bg-purple-600 hover:bg-purple-700 font-bold py-2 rounded-lg text-sm transition-all">Sign In</button>
+    </div>
+  </div>
+
+  <!-- PORTAL CONTENT -->
+  <div class="max-w-6xl mx-auto p-6 space-y-8">
+    <header class="flex justify-between items-center border-b border-[#1e1e1e] pb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-white">Contributor Portal</h1>
+        <p class="text-xs text-zinc-400">Manage Songs and Changelog Updates</p>
+      </div>
+      <a href="index.html" class="text-xs text-zinc-400 hover:text-white bg-[#18181b] px-3 py-2 rounded-lg border border-[#27272a]">Back to Player ←</a>
+    </header>
+
+    <!-- TABS -->
+    <div class="flex gap-4 border-b border-[#1e1e1e]">
+      <button id="tab-songs-btn" onclick="switchTab('songs')" class="pb-2 text-sm font-bold border-b-2 border-purple-500 text-purple-400">Manage Songs</button>
+      <button id="tab-news-btn" onclick="switchTab('news')" class="pb-2 text-sm font-bold text-zinc-400 hover:text-white">Publish News</button>
+    </div>
+
+    <!-- SONGS SECTION -->
+    <section id="section-songs" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Add Song Form -->
+      <form id="song-form" onsubmit="addSong(event)" class="bg-[#121212] border border-[#1e1e1e] rounded-xl p-4 space-y-3 h-fit">
+        <h3 class="text-sm font-bold text-purple-400 uppercase tracking-wider">Add New Song</h3>
+        <input id="song-title" type="text" placeholder="Song Title" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        <input id="song-artist" type="text" placeholder="Primary Artist" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        <input id="song-featured" type="text" placeholder="Featured Artists (Optional)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        
+        <label class="block text-xs text-zinc-400">Juice WRLD Era</label>
+        <select id="song-era" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+          <option value="OUT">Outsiders (OUT)</option>
+          <option value="LND">Legends Never Die (LND)</option>
+          <option value="FD">Fighting Demons (FD)</option>
+          <option value="JW3">JW3 Era</option>
+          <option value="OTHER">Other / General</option>
+        </select>
+
+        <input id="song-cover" type="url" placeholder="Cover Art Image URL" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        <input id="song-audio" type="url" placeholder="Audio File URL (.mp3/.wav)" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold py-2 rounded-lg">Publish Song</button>
+      </form>
+
+      <!-- Songs List -->
+      <div class="md:col-span-2 space-y-3">
+        <h3 class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Existing Database Tracks</h3>
+        <div id="songs-list" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- NEWS SECTION -->
+    <section id="section-news" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+      <form id="news-form" onsubmit="addNews(event)" class="bg-[#121212] border border-[#1e1e1e] rounded-xl p-4 space-y-3 h-fit">
+        <h3 class="text-sm font-bold text-purple-400 uppercase tracking-wider">Create Changelog Update</h3>
+        <input id="news-version" type="text" placeholder="Version (e.g., v1.4.0)" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        <input id="news-title" type="text" placeholder="Update Title" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        <input id="news-group" type="text" placeholder="Section Header (e.g., Recent Updates)" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        <textarea id="news-summary" placeholder="Short Summary" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white h-20"></textarea>
+        <textarea id="news-changes" placeholder="Key Changes (Comma Separated)" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white h-20"></textarea>
+        
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold py-2 rounded-lg">Publish News</button>
+      </form>
+
+      <div class="md:col-span-2 space-y-3">
+        <h3 class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Active News Posts</h3>
+        <div id="news-list" class="space-y-2"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const API = "http://localhost:5000/api";
+
+    function handleLogin() {
+      const user = document.getElementById('login-user').value;
+      const pass = document.getElementById('login-pass').value;
+
+      fetch(`${API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          localStorage.setItem('cw_auth_token', res.token);
+          document.getElementById('login-modal').classList.add('hidden');
+          loadAllData();
+        } else {
+          document.getElementById('login-error').textContent = res.message;
+          document.getElementById('login-error').classList.remove('hidden');
+        }
+      });
+    }
+
+    function switchTab(tab) {
+      if (tab === 'songs') {
+        document.getElementById('section-songs').classList.remove('hidden');
+        document.getElementById('section-news').classList.add('hidden');
+      } else {
+        document.getElementById('section-songs').classList.add('hidden');
+        document.getElementById('section-news').classList.remove('hidden');
+      }
+    }
+
+    async function loadAllData() {
+      fetchSongs();
+      fetchNews();
+    }
+
+    async function fetchSongs() {
+      const res = await fetch(`${API}/songs`);
+      const songs = await res.json();
+      document.getElementById('songs-list').innerHTML = songs.map(s => `
+        <div class="flex items-center justify-between bg-[#121212] border border-[#1e1e1e] rounded-xl p-3">
+          <div class="flex items-center gap-3">
+            <img src="${s.coverArt}" class="w-10 h-10 rounded-lg object-cover">
+            <div>
+              <div class="font-bold text-xs text-white">${s.title} <span class="text-[10px] text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">${s.era}</span></div>
+              <div class="text-[11px] text-zinc-400">${s.artist}</div>
+            </div>
+          </div>
+          <button onclick="deleteSong('${s._id}')" class="text-xs text-pink-500 hover:text-pink-400 font-bold px-2 py-1">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    async function addSong(e) {
+      e.preventDefault();
+      const body = {
+        title: document.getElementById('song-title').value,
+        artist: document.getElementById('song-artist').value,
+        featuredArtists: document.getElementById('song-featured').value,
+        era: document.getElementById('song-era').value,
+        coverArt: document.getElementById('song-cover').value,
+        audioUrl: document.getElementById('song-audio').value,
+      };
+      await fetch(`${API}/songs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      document.getElementById('song-form').reset();
+      fetchSongs();
+    }
+
+    async function deleteSong(id) {
+      await fetch(`${API}/songs/${id}`, { method: 'DELETE' });
+      fetchSongs();
+    }
+
+    async function fetchNews() {
+      const res = await fetch(`${API}/news`);
+      const news = await res.json();
+      document.getElementById('news-list').innerHTML = news.map(n => `
+        <div class="flex items-center justify-between bg-[#121212] border border-[#1e1e1e] rounded-xl p-3">
+          <div>
+            <div class="font-bold text-xs text-purple-400">${n.version} - ${n.title}</div>
+            <div class="text-[11px] text-zinc-400">${n.summary}</div>
+          </div>
+          <button onclick="deleteNews('${n._id}')" class="text-xs text-pink-500 hover:text-pink-400 font-bold px-2 py-1">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    async function addNews(e) {
+      e.preventDefault();
+      const body = {
+        version: document.getElementById('news-version').value,
+        title: document.getElementById('news-title').value,
+        group: document.getElementById('news-group').value,
+        summary: document.getElementById('news-summary').value,
+        changes: document.getElementById('news-changes').value.split(','),
+      };
+      await fetch(`${API}/news`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      document.getElementById('news-form').reset();
+      fetchNews();
+    }
+
+    async function deleteNews(id) {
+      await fetch(`${API}/news/${id}`, { method: 'DELETE' });
+      fetchNews();
+    }
+
+    if (localStorage.getItem('cw_auth_token')) {
+      document.getElementById('login-modal').classList.add('hidden');
+      loadAllData();
+    }
+  </script>
+</body>
+</html>
