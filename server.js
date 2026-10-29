@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Serve static HTML/CSS/JS files from the root directory
+// Serve static frontend files from the current folder
 app.use(express.static(path.join(__dirname, './')));
 
 // MongoDB Atlas Connection String
@@ -22,6 +22,13 @@ mongoose.connect(MONGO_URI)
 // -----------------------------------------------------------------------------
 // SCHEMAS & MODELS
 // -----------------------------------------------------------------------------
+
+// Contributor / User Account Schema
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
 
 const songSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -48,24 +55,38 @@ const newsSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const User = mongoose.model('User', userSchema);
 const Song = mongoose.model('Song', songSchema);
 const News = mongoose.model('News', newsSchema);
 
 // -----------------------------------------------------------------------------
-// AUTHENTICATION
+// AUTHENTICATION & CONTRIBUTOR MANAGEMENT
 // -----------------------------------------------------------------------------
 
-const AUTH_CREDENTIALS = {
-  username: process.env.ADMIN_USER || "admin",
-  password: process.env.ADMIN_PASS || "password123"
-};
-
-app.post('/api/login', (req, res) => {
+// Login Route (Checks MongoDB Users table, falls back to default admin)
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  if (username === AUTH_CREDENTIALS.username && password === AUTH_CREDENTIALS.password) {
-    res.json({ success: true, token: "cw-editor-authenticated-session-9982" });
-  } else {
-    res.status(401).json({ success: false, message: "Invalid username or password" });
+  try {
+    const user = await User.findOne({ username, password });
+    if (user || (username === "admin" && password === "password123")) {
+      res.json({ success: true, token: "cw-editor-authenticated-session-9982" });
+    } else {
+      res.status(401).json({ success: false, message: "Invalid username or password" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Authentication error" });
+  }
+});
+
+// Route to manually register new contributors
+app.post('/api/users/create', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const newUser = new User({ username, password });
+    await newUser.save();
+    res.status(201).json({ success: true, message: `Contributor ${username} created!` });
+  } catch (err) {
+    res.status(400).json({ success: false, message: "Username already exists or invalid data" });
   }
 });
 
@@ -134,15 +155,13 @@ app.delete('/api/news/:id', async (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
-// FRONTEND ROUTING
+// FRONTEND PAGE ROUTING
 // -----------------------------------------------------------------------------
 
-// Serve index.html as the main entry point
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Serve editor.html for the editor page
 app.get('/editor', (req, res) => {
   res.sendFile(path.join(__dirname, 'editor.html'));
 });
