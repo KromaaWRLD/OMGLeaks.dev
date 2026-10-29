@@ -34,7 +34,7 @@
       width: 100%;
       border-radius: 0.5rem;
       color: #a7a7a7;
-      overflow: hidden;
+      overflow: visible;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
@@ -152,29 +152,31 @@
       color: #ffffff !important;
     }
 
-    /* Custom Floating Tooltips for Collapsed Mode */
+    /* Custom Floating Tooltips for Collapsed Mode (Appears on Top) */
     .tooltip {
       opacity: 0;
       visibility: hidden;
-      transform: translateX(-8px) translateY(-50%);
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
       transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
       pointer-events: none;
     }
     #sidebar.collapsed .has-tooltip:hover .tooltip {
       opacity: 1;
       visibility: visible;
-      transform: translateX(0) translateY(-50%);
+      transform: translateX(-50%) translateY(0);
     }
     .tooltip::before {
       content: '';
       position: absolute;
-      left: -4px;
-      top: 50%;
-      transform: translateY(-50%) rotate(45deg);
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
       width: 8px;
       height: 8px;
       background-color: #18181b;
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
@@ -236,7 +238,7 @@
           <div class="fade-text-container">
             <span class="text-sm font-medium">Home</span>
           </div>
-          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
+          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
             Home
           </div>
         </a>
@@ -251,7 +253,7 @@
           <div class="fade-text-container">
             <span class="text-sm font-medium">Artists</span>
           </div>
-          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
+          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
             Artists
           </div>
         </a>
@@ -269,7 +271,7 @@
           <div class="fade-text-container">
             <span class="text-sm font-medium">Support Us</span>
           </div>
-          <div class="tooltip absolute left-[56px] top-1/2 bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
+          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">
             Support Us
           </div>
         </a>
