@@ -2,31 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const multer = require('multer');
-const fs = require('fs');
 
 const app = express();
 
-app.use(express.json());
+// Increase JSON payload limit to handle Base64 audio/image strings directly
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
+
 app.use(express.static(path.join(__dirname, './')));
-
-// Ensure uploads folder exists
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-app.use('/uploads', express.static(uploadDir));
-
-// Multer Disk Storage Configuration for File Uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage });
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters";
 
@@ -55,8 +39,8 @@ const songSchema = new mongoose.Schema({
   recordingDate: { type: String, default: '' },
   studioLocation: { type: String, default: '' },
   notes: { type: String, default: '' },
-  coverArt: { type: String, required: true },
-  audioUrl: { type: String, required: true },
+  coverArt: { type: String, required: true }, // Base64 or URL stored directly in MongoDB
+  audioUrl: { type: String, required: true }, // Base64 audio data stored directly in MongoDB
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -90,21 +74,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// FILE UPLOAD ENDPOINT (Handles direct audio/cover uploads)
-app.post('/api/upload', upload.fields([
-  { name: 'audio', maxCount: 1 },
-  { name: 'cover', maxCount: 1 }
-]), (req, res) => {
-  try {
-    const audioPath = req.files['audio'] ? `/uploads/${req.files['audio'][0].filename}` : null;
-    const coverPath = req.files['cover'] ? `/uploads/${req.files['cover'][0].filename}` : null;
-    res.json({ success: true, audioUrl: audioPath, coverArt: coverPath });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "File upload failed" });
-  }
-});
-
-// SONGS API
+// SONGS API (Saves Base64 Direct to MongoDB)
 app.get('/api/songs', async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
@@ -120,7 +90,7 @@ app.post('/api/songs', async (req, res) => {
     await song.save();
     res.status(201).json(song);
   } catch (err) {
-    res.status(400).json({ error: "Failed to save song", details: err.message });
+    res.status(400).json({ error: "Failed to save song to MongoDB", details: err.message });
   }
 });
 
