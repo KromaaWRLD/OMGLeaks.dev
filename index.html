@@ -16,7 +16,16 @@
       width: 72px;
     }
 
-    /* Navigation Item Base: Fits full width of sidebar, smoothly shrinks edge */
+    /* Header Container Alignment */
+    .header-container {
+      display: flex;
+      align-items: center;
+      min-height: 72px;
+      width: 100%;
+      position: relative;
+    }
+
+    /* Navigation Item Base */
     .nav-item {
       position: relative;
       display: flex;
@@ -29,14 +38,14 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    /* Locked Icon Column: Absolute positioning keeps icons FIXED at 12px padding */
+    /* Proportional Centered Icon Wrapper (Locked 48px column perfectly aligned) */
     .icon-wrapper {
       position: absolute;
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -47,11 +56,11 @@
     /* Header Logo Fixed Position */
     #brand-group .icon-wrapper {
       left: 12px;
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
     }
 
-    /* Text Container Offset past the fixed 12px icon */
+    /* Base Text Mask Fade Container */
     .fade-text-container {
       margin-left: 52px;
       white-space: nowrap;
@@ -69,14 +78,14 @@
       opacity: 1;
     }
 
-    /* Ultra-Fast Mask Wipe for Header Title */
+    /* Ultra-Fast Fade for COLD WINTERS Header Text */
     .brand-text-container {
       transition: -webkit-mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
                   mask-position 0.12s cubic-bezier(0.4, 0, 1, 1),
                   opacity 0.12s ease;
     }
 
-    /* Collapsed state: Mask fades text cleanly while container clips automatically */
+    /* Collapsed State: Mask fades text cleanly */
     #sidebar.collapsed .fade-text-container,
     #sidebar.collapsed .brand-text-container {
       -webkit-mask-position: 100% 0;
@@ -85,16 +94,7 @@
       pointer-events: none;
     }
 
-    /* Header Container Alignment */
-    .header-container {
-      display: flex;
-      align-items: center;
-      min-height: 72px;
-      width: 100%;
-      position: relative;
-    }
-
-    /* Bell Button Fade */
+    /* Bell Button Animation */
     #bell-btn {
       transition: opacity 0.15s ease, transform 0.25s ease;
     }
@@ -126,7 +126,7 @@
       margin: 0;
     }
 
-    /* Hover & Active States */
+    /* Base Styling & Hover States */
     .no-select {
       user-select: none;
       -webkit-user-select: none;
@@ -157,7 +157,7 @@
       color: #ffffff !important;
     }
 
-    /* Tooltips */
+    /* Custom Floating Tooltips for Collapsed Mode */
     .tooltip {
       opacity: 0;
       visibility: hidden;
@@ -205,13 +205,14 @@
         <!-- Logo & Title Group -->
         <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative shrink-0 w-full h-full">
           <div class="icon-wrapper">
-            <div class="w-10 h-10 min-w-[40px] max-w-[40px] h-10 min-h-[40px] rounded-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-xs tracking-wider shadow-md shadow-purple-900/30 shrink-0">
+            <!-- Scaled-down Logo Box (32x32) -->
+            <div class="w-8 h-8 min-w-[32px] max-w-[32px] h-8 min-h-[32px] rounded-md bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-[10px] tracking-wider shadow-md shadow-purple-900/30 shrink-0">
               CW
             </div>
           </div>
           
           <div class="fade-text-container brand-text-container">
-            <span class="font-bold text-sm tracking-wider text-white">
+            <span class="font-bold text-xs tracking-wider text-white">
               COLD WINTERS
             </span>
           </div>
