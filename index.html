@@ -30,8 +30,9 @@
     .tooltip { opacity: 0; visibility: hidden; top: -32px; left: 50%; transform: translateX(-50%) translateY(4px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease; pointer-events: none; }
     #sidebar.collapsed .has-tooltip:hover .tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
     .tooltip::before { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 8px; height: 8px; background-color: #18181b; border-right: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-    #news-drawer, #article-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    #news-backdrop, #article-modal-backdrop { transition: opacity 0.3s ease; }
+    #news-drawer, #info-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #news-backdrop, #info-modal-backdrop { transition: opacity 0.3s ease; }
+    input[type=range] { accent-color: #a855f7; }
   </style>
 </head>
 <body class="bg-[#09090b] text-white flex min-h-screen font-sans antialiased overflow-x-hidden">
@@ -49,7 +50,6 @@
           </div>
         </div>
 
-        <!-- Notification Bell -->
         <button id="bell-btn" aria-label="What's New" class="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
           <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full ring-2 ring-[#121212]"></span>
@@ -77,8 +77,8 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT AREA WITH UPDATED ERAS -->
-  <main class="flex-1 p-8 pb-28 space-y-8">
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 p-8 pb-32 space-y-8">
     <div class="flex justify-between items-center">
       <h1 class="text-2xl font-extrabold tracking-wider text-white">Music Library</h1>
       <a href="/editor" class="text-xs font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-lg hover:bg-purple-500/20 transition-colors">Editor Portal →</a>
@@ -109,24 +109,65 @@
     </section>
   </main>
 
-  <!-- BOTTOM MUSIC PLAYER BAR -->
-  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-[#121212]/95 border-t border-[#1e1e1e] backdrop-blur-md z-30 flex items-center justify-between px-6 translate-y-full transition-transform duration-300">
-    <div class="flex items-center gap-3 w-1/4">
-      <img id="player-cover" src="" class="w-12 h-12 rounded-lg object-cover bg-zinc-800">
-      <div class="overflow-hidden">
-        <div id="player-title" class="font-bold text-sm text-white truncate">Select a song</div>
-        <div id="player-artist" class="text-xs text-zinc-400 truncate">-</div>
+  <!-- SONG INFO POPUP MODAL -->
+  <div id="info-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
+    <div id="info-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-sm font-bold">✕</button>
+      
+      <div class="flex items-center gap-4 border-b border-[#1e1e1e] pb-4">
+        <img id="info-cover" src="" class="w-16 h-16 rounded-xl object-cover bg-zinc-800">
+        <div>
+          <h3 id="info-title" class="font-bold text-lg text-white">Song Title</h3>
+          <p id="info-artist" class="text-xs text-purple-400">Artist</p>
+        </div>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Era:</span><span id="info-era" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Producer(s):</span><span id="info-producers" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Engineer(s):</span><span id="info-engineers" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Recording Date:</span><span id="info-date" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Studio Location:</span><span id="info-location" class="text-white font-medium">-</span></div>
       </div>
     </div>
+  </div>
 
-    <div class="flex flex-col items-center gap-1 w-1/2 max-w-md">
-      <button onclick="togglePlay()" id="play-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold shadow-lg hover:scale-105 transition-transform">
-        ▶
-      </button>
-      <audio id="audio-element" class="hidden"></audio>
+  <!-- UPGRADED MUSIC PLAYER BAR -->
+  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-24 bg-[#121212]/95 border-t border-[#1e1e1e] backdrop-blur-md z-30 flex flex-col justify-center px-6 translate-y-full transition-transform duration-300">
+    <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
+      
+      <!-- Track Info -->
+      <div class="flex items-center gap-3 w-1/4 min-w-[180px]">
+        <img id="player-cover" src="" class="w-12 h-12 rounded-lg object-cover bg-zinc-800 shrink-0">
+        <div class="overflow-hidden">
+          <div id="player-title" class="font-bold text-sm text-white truncate">Select a song</div>
+          <div id="player-artist" class="text-xs text-zinc-400 truncate">-</div>
+        </div>
+      </div>
+
+      <!-- Scrubber & Play Controls -->
+      <div class="flex flex-col items-center gap-1.5 w-2/4 max-w-xl">
+        <div class="flex items-center gap-4">
+          <button onclick="togglePlay()" id="play-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold shadow-lg hover:scale-105 transition-transform">
+            ▶
+          </button>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="flex items-center gap-2 w-full text-[11px] text-zinc-400">
+          <span id="current-time">0:00</span>
+          <input id="seek-slider" type="range" min="0" max="100" value="0" class="w-full h-1 bg-zinc-800 rounded-lg cursor-pointer">
+          <span id="duration-time">0:00</span>
+        </div>
+      </div>
+
+      <!-- Volume Slider -->
+      <div class="w-1/4 min-w-[140px] flex justify-end items-center gap-2">
+        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
+        <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-20 h-1 bg-zinc-800 rounded-lg cursor-pointer">
+      </div>
     </div>
-
-    <div class="w-1/4 flex justify-end"></div>
+    <audio id="audio-element" class="hidden"></audio>
   </div>
 
   <!-- CHANGELOG DRAWER -->
@@ -153,7 +194,7 @@
     function toggleSidebar() { sidebar.classList.toggle('collapsed'); }
     brandGroup.addEventListener('click', toggleSidebar);
 
-    // SONGS BY ERA
+    // FETCH SONGS & RENDER WITH INFO ICON
     async function loadSongs() {
       try {
         const res = await fetch(`${API}/songs`);
@@ -167,11 +208,18 @@
             eraContainer.innerHTML = `<div class="text-xs text-zinc-600 col-span-full">No songs added for this era yet.</div>`;
           } else {
             eraContainer.innerHTML = eraSongs.map(s => `
-              <div onclick='playSong(${JSON.stringify(s)})' class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] hover:border-purple-500/40 rounded-xl p-3 transition-all cursor-pointer group space-y-2">
-                <img src="${s.coverArt}" class="w-full aspect-square rounded-lg object-cover">
-                <div>
-                  <h3 class="font-bold text-sm text-white group-hover:text-purple-300 truncate">${s.title}</h3>
-                  <p class="text-xs text-zinc-400 truncate">${s.artist}</p>
+              <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] hover:border-purple-500/40 rounded-xl p-3 transition-all group space-y-2 relative">
+                <!-- Info Button -->
+                <button onclick='openInfoModal(${JSON.stringify(s)})' class="absolute top-4 right-4 bg-black/60 hover:bg-purple-600 text-zinc-300 hover:text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all z-10" title="Song Info">
+                  ⓘ
+                </button>
+
+                <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer space-y-2">
+                  <img src="${s.coverArt}" class="w-full aspect-square rounded-lg object-cover">
+                  <div>
+                    <h3 class="font-bold text-sm text-white group-hover:text-purple-300 truncate">${s.title}</h3>
+                    <p class="text-xs text-zinc-400 truncate">${s.artist}</p>
+                  </div>
                 </div>
               </div>
             `).join('');
@@ -182,10 +230,40 @@
       }
     }
 
-    // MUSIC PLAYER LOGIC
+    // INFO POPUP MODAL LOGIC
+    const infoBackdrop = document.getElementById('info-modal-backdrop');
+    function openInfoModal(song) {
+      document.getElementById('info-cover').src = song.coverArt;
+      document.getElementById('info-title').textContent = song.title;
+      document.getElementById('info-artist').textContent = song.artist + (song.featuredArtists ? ` (feat. ${song.featuredArtists})` : '');
+      document.getElementById('info-era').textContent = song.era || '-';
+      document.getElementById('info-producers').textContent = song.producers || 'Unknown';
+      document.getElementById('info-engineers').textContent = song.engineers || 'Unknown';
+      document.getElementById('info-date').textContent = song.recordingDate || 'Unknown';
+      document.getElementById('info-location').textContent = song.studioLocation || 'Unknown';
+
+      infoBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeInfoModal() {
+      infoBackdrop.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // ADVANCED MUSIC PLAYER LOGIC
     const playerBar = document.getElementById('music-player-bar');
     const audioElement = document.getElementById('audio-element');
     const playBtn = document.getElementById('play-btn');
+    const seekSlider = document.getElementById('seek-slider');
+    const volumeSlider = document.getElementById('volume-slider');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationTimeEl = document.getElementById('duration-time');
+
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
 
     function playSong(song) {
       document.getElementById('player-cover').src = song.coverArt;
@@ -209,7 +287,25 @@
       }
     }
 
-    // NEWS & NOTIFICATION BELL SYSTEM
+    audioElement.addEventListener('timeupdate', () => {
+      if (audioElement.duration) {
+        seekSlider.value = (audioElement.currentTime / audioElement.duration) * 100;
+        currentTimeEl.textContent = formatTime(audioElement.currentTime);
+        durationTimeEl.textContent = formatTime(audioElement.duration);
+      }
+    });
+
+    seekSlider.addEventListener('input', () => {
+      if (audioElement.duration) {
+        audioElement.currentTime = (seekSlider.value / 100) * audioElement.duration;
+      }
+    });
+
+    volumeSlider.addEventListener('input', () => {
+      audioElement.volume = volumeSlider.value;
+    });
+
+    // NEWS & NOTIFICATIONS
     const bellBtn = document.getElementById('bell-btn');
     const unreadDot = document.getElementById('unread-dot');
     const closeDrawerBtn = document.getElementById('close-drawer-btn');
