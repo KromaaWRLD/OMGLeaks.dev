@@ -5,25 +5,17 @@ const path = require('path');
 
 const app = express();
 
-// Middleware
 app.use(express.json());
 app.use(cors());
-
-// Serve static frontend files from the current folder
 app.use(express.static(path.join(__dirname, './')));
 
-// MongoDB Atlas Connection String
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB Connected Successfully'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
-// -----------------------------------------------------------------------------
-// SCHEMAS & MODELS
-// -----------------------------------------------------------------------------
-
-// Contributor / User Account Schema
+// SCHEMAS
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -36,8 +28,8 @@ const songSchema = new mongoose.Schema({
   featuredArtists: { type: String, default: '' },
   era: { 
     type: String, 
-    enum: ['OUT', 'LND', 'FD', 'JW3', 'OTHER'], 
-    default: 'OTHER' 
+    enum: ['JW3', 'LND', 'FD', 'OTHER'], 
+    default: 'JW3' 
   },
   coverArt: { type: String, required: true },
   audioUrl: { type: String, required: true },
@@ -50,6 +42,7 @@ const newsSchema = new mongoose.Schema({
   group: { type: String, default: 'Recent Updates' },
   summary: { type: String, required: true },
   changes: [String],
+  notifyUsers: { type: Boolean, default: false },
   author: { type: String, default: 'Cold Winters Team' },
   date: { type: String, default: () => new Date().toISOString().split('T')[0] },
   createdAt: { type: Date, default: Date.now }
@@ -59,41 +52,21 @@ const User = mongoose.model('User', userSchema);
 const Song = mongoose.model('Song', songSchema);
 const News = mongoose.model('News', newsSchema);
 
-// -----------------------------------------------------------------------------
-// AUTHENTICATION & CONTRIBUTOR MANAGEMENT
-// -----------------------------------------------------------------------------
-
-// Login Route (Checks MongoDB Users table, falls back to default admin)
+// AUTH
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username, password });
     if (user || (username === "admin" && password === "password123")) {
-      res.json({ success: true, token: "cw-editor-authenticated-session-9982" });
-    } else {
-      res.status(401).json({ success: false, message: "Invalid username or password" });
+      return res.json({ success: true, token: "cw-editor-authenticated-session-9982" });
     }
+    return res.status(401).json({ success: false, message: "Invalid username or password" });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Authentication error" });
+    return res.status(500).json({ success: false, message: "Server auth error" });
   }
 });
 
-// Route to manually register new contributors
-app.post('/api/users/create', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const newUser = new User({ username, password });
-    await newUser.save();
-    res.status(201).json({ success: true, message: `Contributor ${username} created!` });
-  } catch (err) {
-    res.status(400).json({ success: false, message: "Username already exists or invalid data" });
-  }
-});
-
-// -----------------------------------------------------------------------------
 // SONGS API
-// -----------------------------------------------------------------------------
-
 app.get('/api/songs', async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
@@ -122,10 +95,7 @@ app.delete('/api/songs/:id', async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------------------------
-// NEWS API
-// -----------------------------------------------------------------------------
-
+// NEWS & NOTIFICATIONS API
 app.get('/api/news', async (req, res) => {
   try {
     const news = await News.find().sort({ createdAt: -1 });
@@ -154,21 +124,9 @@ app.delete('/api/news/:id', async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------------------------
-// FRONTEND PAGE ROUTING
-// -----------------------------------------------------------------------------
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/editor', (req, res) => {
-  res.sendFile(path.join(__dirname, 'editor.html'));
-});
-
-// -----------------------------------------------------------------------------
-// START SERVER
-// -----------------------------------------------------------------------------
+// FRONTEND ROUTES
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/editor', (req, res) => res.sendFile(path.join(__dirname, 'editor.html')));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
