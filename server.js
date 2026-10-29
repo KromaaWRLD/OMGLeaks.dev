@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -8,7 +9,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// MongoDB Atlas Connection String (Uses Environment Variable with Fallback)
+// Serve static HTML/CSS/JS files from the root directory
+app.use(express.static(path.join(__dirname, './')));
+
+// MongoDB Atlas Connection String
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters";
 
 mongoose.connect(MONGO_URI)
@@ -16,10 +20,9 @@ mongoose.connect(MONGO_URI)
   .catch(err => console.error('MongoDB Connection Error:', err));
 
 // -----------------------------------------------------------------------------
-// MONGOOSE SCHEMAS & MODELS
+// SCHEMAS & MODELS
 // -----------------------------------------------------------------------------
 
-// Song Document Schema
 const songSchema = new mongoose.Schema({
   title: { type: String, required: true },
   artist: { type: String, required: true },
@@ -34,7 +37,6 @@ const songSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// News/Changelog Document Schema
 const newsSchema = new mongoose.Schema({
   version: { type: String, required: true },
   title: { type: String, required: true },
@@ -50,10 +52,9 @@ const Song = mongoose.model('Song', songSchema);
 const News = mongoose.model('News', newsSchema);
 
 // -----------------------------------------------------------------------------
-// AUTHENTICATION ROUTE
+// AUTHENTICATION
 // -----------------------------------------------------------------------------
 
-// Simple Hardcoded Admin Credentials for Editors
 const AUTH_CREDENTIALS = {
   username: process.env.ADMIN_USER || "admin",
   password: process.env.ADMIN_PASS || "password123"
@@ -69,10 +70,9 @@ app.post('/api/login', (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
-// SONG ROUTES
+// SONGS API
 // -----------------------------------------------------------------------------
 
-// Fetch All Songs (Sorted Latest First)
 app.get('/api/songs', async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
@@ -82,7 +82,6 @@ app.get('/api/songs', async (req, res) => {
   }
 });
 
-// Add New Song
 app.post('/api/songs', async (req, res) => {
   try {
     const song = new Song(req.body);
@@ -93,21 +92,19 @@ app.post('/api/songs', async (req, res) => {
   }
 });
 
-// Delete Song by ID
 app.delete('/api/songs/:id', async (req, res) => {
   try {
     await Song.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: "Song deleted successfully" });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete song" });
   }
 });
 
 // -----------------------------------------------------------------------------
-// NEWS / CHANGELOG ROUTES
+// NEWS API
 // -----------------------------------------------------------------------------
 
-// Fetch All News (Sorted Latest First)
 app.get('/api/news', async (req, res) => {
   try {
     const news = await News.find().sort({ createdAt: -1 });
@@ -117,7 +114,6 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
-// Publish New Changelog Post
 app.post('/api/news', async (req, res) => {
   try {
     const newsItem = new News(req.body);
@@ -128,25 +124,34 @@ app.post('/api/news', async (req, res) => {
   }
 });
 
-// Delete News Post by ID
 app.delete('/api/news/:id', async (req, res) => {
   try {
     await News.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: "News post deleted" });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete news post" });
   }
 });
 
-// Health check endpoint for Docker/Render
-app.get('/health', (req, res) => res.send('OK'));
-
 // -----------------------------------------------------------------------------
-// SERVER STARTUP
+// FRONTEND ROUTING
 // -----------------------------------------------------------------------------
 
-// Render automatically passes process.env.PORT
+// Serve index.html as the main entry point
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Serve editor.html for the editor page
+app.get('/editor', (req, res) => {
+  res.sendFile(path.join(__dirname, 'editor.html'));
+});
+
+// -----------------------------------------------------------------------------
+// START SERVER
+// -----------------------------------------------------------------------------
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Cold Winters API running on port ${PORT}`);
+  console.log(`Cold Winters Full-Stack Site running on port ${PORT}`);
 });
