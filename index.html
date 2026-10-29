@@ -112,18 +112,13 @@
       border-color: transparent !important;
     }
 
-    /* Separator Line */
+    /* Separator Line: Stays visible and smoothly shrinks with sidebar edge */
     .separator {
-      transition: opacity 0.25s ease, margin 0.35s ease, height 0.35s ease;
-      opacity: 1;
       height: 1px;
       margin-top: 6px;
       margin-bottom: 6px;
-    }
-    #sidebar.collapsed .separator {
-      opacity: 0;
-      height: 0;
-      margin: 0;
+      width: 100%;
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Base Styling & Hover States */
@@ -262,7 +257,7 @@
         </a>
 
         <!-- Separator Line -->
-        <div class="separator w-full bg-[#1e1e1e]"></div>
+        <div class="separator bg-[#1e1e1e]"></div>
 
         <!-- Support Us Item -->
         <a href="#support" class="nav-item support-item has-tooltip group cursor-pointer relative">
