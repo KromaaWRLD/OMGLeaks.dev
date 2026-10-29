@@ -24,7 +24,7 @@
     <header class="flex justify-between items-center border-b border-[#1e1e1e] pb-4">
       <div>
         <h1 class="text-2xl font-bold text-white">Contributor Portal</h1>
-        <p class="text-xs text-zinc-400">Upload Track Audio & Full Metadata</p>
+        <p class="text-xs text-zinc-400">Upload Tracks Directly into MongoDB Atlas</p>
       </div>
       <a href="/" class="text-xs text-zinc-400 hover:text-white bg-[#18181b] px-3 py-2 rounded-lg border border-[#27272a]">Back to Player ←</a>
     </header>
@@ -38,9 +38,8 @@
     <!-- SONGS SECTION -->
     <section id="section-songs" class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <form id="song-form" onsubmit="addSong(event)" class="bg-[#121212] border border-[#1e1e1e] rounded-xl p-4 space-y-3 h-fit">
-        <h3 class="text-sm font-bold text-purple-400 uppercase tracking-wider">Add New Track</h3>
+        <h3 class="text-sm font-bold text-purple-400 uppercase tracking-wider">Add Track to MongoDB</h3>
         
-        <!-- Core Details -->
         <input id="song-title" type="text" placeholder="Song Title *" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
         <input id="song-artist" type="text" placeholder="Primary Artist *" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
         <input id="song-featured" type="text" placeholder="Featured Artists (Optional)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
@@ -53,36 +52,36 @@
           <option value="OTHER">Other Releases</option>
         </select>
 
-        <!-- Extended Credits & Production Details -->
+        <!-- Extended Info -->
         <div class="border-t border-[#1e1e1e] pt-2 space-y-2">
           <span class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Production Credits</span>
-          <input id="song-producers" type="text" placeholder="Producer(s) (e.g. Nick Mira, DT)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
-          <input id="song-engineers" type="text" placeholder="Mixing/Mastering Engineer(s)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
-          <input id="song-rec-date" type="text" placeholder="Recording Date (e.g. 2019-04-12)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
-          <input id="song-location" type="text" placeholder="Studio Location (e.g. Los Angeles, CA)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+          <input id="song-producers" type="text" placeholder="Producer(s)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+          <input id="song-engineers" type="text" placeholder="Engineers" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+          <input id="song-rec-date" type="text" placeholder="Recording Date" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+          <input id="song-location" type="text" placeholder="Studio Location" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
         </div>
 
-        <!-- Media Uploads -->
+        <!-- Direct MongoDB File Uploads -->
         <div class="border-t border-[#1e1e1e] pt-2 space-y-2">
-          <span class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Media Files</span>
+          <span class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Direct Media Files (< 16MB)</span>
           <div>
             <label class="block text-[10px] text-zinc-400">Audio File (.mp3/.wav)</label>
             <input id="song-audio-file" type="file" accept="audio/*" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-2 py-1 text-xs text-zinc-400">
-            <input id="song-audio-url" type="url" placeholder="or Direct Audio URL" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white mt-1">
+            <input id="song-audio-url" type="url" placeholder="or Direct Link URL" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white mt-1">
           </div>
 
           <div>
-            <label class="block text-[10px] text-zinc-400">Cover Art Image</label>
+            <label class="block text-[10px] text-zinc-400">Cover Image</label>
             <input id="song-cover-file" type="file" accept="image/*" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-2 py-1 text-xs text-zinc-400">
-            <input id="song-cover-url" type="url" placeholder="or Direct Cover Image URL" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white mt-1">
+            <input id="song-cover-url" type="url" placeholder="or Direct Link URL" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white mt-1">
           </div>
         </div>
 
-        <button type="submit" id="submit-song-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold py-2 rounded-lg transition-all">Publish Track</button>
+        <button type="submit" id="submit-song-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold py-2 rounded-lg transition-all">Save to MongoDB</button>
       </form>
 
       <div class="md:col-span-2 space-y-3">
-        <h3 class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Active Songs</h3>
+        <h3 class="text-sm font-bold text-zinc-400 uppercase tracking-wider">MongoDB Tracks</h3>
         <div id="songs-list" class="space-y-2"></div>
       </div>
     </section>
@@ -93,7 +92,7 @@
         <h3 class="text-sm font-bold text-purple-400 uppercase tracking-wider">Create News / Alert</h3>
         <input id="news-version" type="text" placeholder="Version (e.g., v1.4.0)" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
         <input id="news-title" type="text" placeholder="Update Title" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
-        <input id="news-group" type="text" placeholder="Header Group (e.g., Recent Updates)" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+        <input id="news-group" type="text" placeholder="Header Group" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
         <textarea id="news-summary" placeholder="Summary" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white h-20"></textarea>
         <textarea id="news-changes" placeholder="Key Changes (Comma Separated)" required class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white h-20"></textarea>
         
@@ -114,6 +113,14 @@
 
   <script>
     const API = "/api";
+
+    // Helper: Convert File to Base64 String
+    const fileToBase64 = file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
 
     function handleLogin() {
       const user = document.getElementById('login-user').value.trim();
@@ -186,7 +193,7 @@
     async function addSong(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('submit-song-btn');
-      submitBtn.textContent = 'Uploading...';
+      submitBtn.textContent = 'Saving to MongoDB...';
       submitBtn.disabled = true;
 
       try {
@@ -196,24 +203,24 @@
         const audioFile = document.getElementById('song-audio-file').files[0];
         const coverFile = document.getElementById('song-cover-file').files[0];
 
-        // Upload local files first if selected
-        if (audioFile || coverFile) {
-          const formData = new FormData();
-          if (audioFile) formData.append('audio', audioFile);
-          if (coverFile) formData.append('cover', coverFile);
+        // Convert files to Base64 data strings for direct MongoDB insertion
+        if (audioFile) {
+          if (audioFile.size > 15 * 1024 * 1024) {
+            alert('Audio file exceeds 15MB limit for direct MongoDB storage. Please select a smaller file or use a direct URL.');
+            submitBtn.textContent = 'Save to MongoDB';
+            submitBtn.disabled = false;
+            return;
+          }
+          finalAudioUrl = await fileToBase64(audioFile);
+        }
 
-          const uploadRes = await fetch(`${API}/upload`, {
-            method: 'POST',
-            body: formData
-          });
-          const uploadData = await uploadRes.json();
-          if (uploadData.audioUrl) finalAudioUrl = uploadData.audioUrl;
-          if (uploadData.coverArt) finalCoverArt = uploadData.coverArt;
+        if (coverFile) {
+          finalCoverArt = await fileToBase64(coverFile);
         }
 
         if (!finalAudioUrl || !finalCoverArt) {
           alert('Please select files or enter direct URLs for both audio and cover art.');
-          submitBtn.textContent = 'Publish Track';
+          submitBtn.textContent = 'Save to MongoDB';
           submitBtn.disabled = false;
           return;
         }
@@ -240,9 +247,9 @@
         document.getElementById('song-form').reset();
         fetchSongs();
       } catch (err) {
-        alert('Failed to publish track.');
+        alert('Failed to save track to MongoDB.');
       } finally {
-        submitBtn.textContent = 'Publish Track';
+        submitBtn.textContent = 'Save to MongoDB';
         submitBtn.disabled = false;
       }
     }
