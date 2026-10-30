@@ -5,11 +5,12 @@ const path = require('path');
 
 const app = express();
 
-// Increase JSON payload limit to handle Base64 audio/image strings directly
+// Increase payload limits to handle direct Base64 audio & image strings
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
+// Serve static frontend files
 app.use(express.static(path.join(__dirname, './')));
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters";
@@ -18,7 +19,10 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB Connected Successfully'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
-// SCHEMAS
+// -----------------------------------------------------------------------------
+// SCHEMAS & MODELS
+// -----------------------------------------------------------------------------
+
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -31,7 +35,7 @@ const songSchema = new mongoose.Schema({
   featuredArtists: { type: String, default: '' },
   era: { 
     type: String, 
-    enum: ['JW3', 'LND', 'FD', 'OTHER'], 
+    enum: ['PRE', 'GBGR', 'DRFL', 'JW3', 'LND', 'FD', 'OTHER'], 
     default: 'JW3' 
   },
   producers: { type: String, default: '' },
@@ -39,8 +43,8 @@ const songSchema = new mongoose.Schema({
   recordingDate: { type: String, default: '' },
   studioLocation: { type: String, default: '' },
   notes: { type: String, default: '' },
-  coverArt: { type: String, required: true }, // Base64 or URL stored directly in MongoDB
-  audioUrl: { type: String, required: true }, // Base64 audio data stored directly in MongoDB
+  coverArt: { type: String, required: true },
+  audioUrl: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -60,7 +64,10 @@ const User = mongoose.model('User', userSchema);
 const Song = mongoose.model('Song', songSchema);
 const News = mongoose.model('News', newsSchema);
 
-// AUTH
+// -----------------------------------------------------------------------------
+// AUTHENTICATION
+// -----------------------------------------------------------------------------
+
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -74,7 +81,10 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// SONGS API (Saves Base64 Direct to MongoDB)
+// -----------------------------------------------------------------------------
+// SONGS API
+// -----------------------------------------------------------------------------
+
 app.get('/api/songs', async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
@@ -90,7 +100,16 @@ app.post('/api/songs', async (req, res) => {
     await song.save();
     res.status(201).json(song);
   } catch (err) {
-    res.status(400).json({ error: "Failed to save song to MongoDB", details: err.message });
+    res.status(400).json({ error: "Failed to save song", details: err.message });
+  }
+});
+
+app.put('/api/songs/:id', async (req, res) => {
+  try {
+    const updatedSong = await Song.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedSong);
+  } catch (err) {
+    res.status(400).json({ error: "Failed to update song metadata" });
   }
 });
 
@@ -103,7 +122,10 @@ app.delete('/api/songs/:id', async (req, res) => {
   }
 });
 
-// NEWS API
+// -----------------------------------------------------------------------------
+// NEWS & NOTIFICATIONS API
+// -----------------------------------------------------------------------------
+
 app.get('/api/news', async (req, res) => {
   try {
     const news = await News.find().sort({ createdAt: -1 });
@@ -132,7 +154,10 @@ app.delete('/api/news/:id', async (req, res) => {
   }
 });
 
-// FRONTEND ROUTES
+// -----------------------------------------------------------------------------
+// PAGE ROUTING
+// -----------------------------------------------------------------------------
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/editor', (req, res) => res.sendFile(path.join(__dirname, 'editor.html')));
 
