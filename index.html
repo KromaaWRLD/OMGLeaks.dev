@@ -29,7 +29,6 @@
     #news-drawer, #queue-drawer, #info-modal-panel, #eq-modal-panel, #lyrics-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     #news-backdrop, #queue-backdrop, #info-modal-backdrop, #eq-modal-backdrop, #lyrics-modal-backdrop { transition: opacity 0.3s ease; }
 
-    /* DYNAMIC GREEN PROGRESS SLIDER */
     input[type=range] {
       -webkit-appearance: none;
       background: linear-gradient(to right, #22c55e 0%, #22c55e 0%, #27272a 0%, #27272a 100%);
@@ -44,7 +43,6 @@
       cursor: pointer;
     }
 
-    /* ACTIVE PLAYER TOGGLE BUTTON INDICATOR (SPOTIFY GREEN) */
     .btn-active {
       color: #22c55e !important;
       background-color: transparent !important;
@@ -265,7 +263,6 @@
     function toggleSidebar() { sidebar.classList.toggle('collapsed'); }
     brandGroup.addEventListener('click', toggleSidebar);
 
-    // RENDER LOADING SKELETONS WHILE WAITING FOR BACKEND
     function renderSkeletons() {
       const container = document.getElementById('eras-container');
       container.innerHTML = ERA_DEFINITIONS.map(era => `
@@ -274,7 +271,7 @@
             <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-300">${era.name}</h2>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            ${[1, 2, 3].map(() => `
+            ${[1, 2].map(() => `
               <div class="bg-[#121212] border border-[#1e1e1e] rounded-lg p-2 flex items-center gap-2.5 animate-pulse">
                 <div class="w-11 h-11 bg-zinc-800 rounded shrink-0"></div>
                 <div class="space-y-1 flex-1">
@@ -289,23 +286,12 @@
     }
 
     async function loadSongs() {
-      // 1. INSTANT LOAD FROM CACHE IF AVAILABLE
-      const cachedData = localStorage.getItem('cw_songs_cache');
-      if (cachedData) {
-        try {
-          allSongsCache = JSON.parse(cachedData);
-          renderSongs(allSongsCache);
-        } catch (e) {}
-      } else {
-        renderSkeletons();
-      }
+      renderSkeletons();
 
-      // 2. FETCH FROM SERVER & UPDATE CACHE
       try {
         const res = await fetch(`${API}/songs`);
         if (res.ok) {
           allSongsCache = await res.json();
-          localStorage.setItem('cw_songs_cache', JSON.stringify(allSongsCache));
           renderSongs(allSongsCache);
         }
       } catch (err) {
@@ -363,7 +349,6 @@
       renderSongs(filtered);
     }
 
-    // AUDIO CONTROL & WEBAUDIO EQ SYSTEM
     const audioElement = document.getElementById('audio-element');
     let audioCtx, srcNode, bassFilter, lowMidFilter, midFilter, highMidFilter, trebleFilter;
 
@@ -476,7 +461,7 @@
       document.getElementById('player-artist').textContent = song.artist + (song.featuredArtists ? ` (feat. ${song.featuredArtists})` : '');
       
       audioElement.src = song.audioUrl;
-      audioElement.play().catch(e => console.log("Playback interrupted or missing audio source"));
+      audioElement.play().catch(e => console.log("Playback interrupted"));
       
       playIcon.classList.add('hidden');
       pauseIcon.classList.remove('hidden');
