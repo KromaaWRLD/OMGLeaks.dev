@@ -56,7 +56,6 @@
   <!-- SIDEBAR -->
   <aside id="sidebar" class="w-[220px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-hidden z-20">
     <div class="flex flex-col">
-      <!-- HEADER WITH FIXED ALIGNMENT -->
       <div class="header-container border-b border-[#1e1e1e] no-select">
         <div id="brand-group" class="flex items-center gap-2.5 cursor-pointer overflow-hidden shrink-0">
           <div class="w-8 h-8 rounded-lg bg-[#27272a] flex items-center justify-center font-extrabold italic text-white text-[10px] tracking-wider shrink-0">CW</div>
@@ -71,7 +70,6 @@
         </button>
       </div>
 
-      <!-- NAV MENU -->
       <nav class="flex flex-col p-2 no-select space-y-1" id="nav-menu">
         <a href="#home" class="nav-item active group cursor-pointer relative">
           <div class="icon-wrapper"><svg class="nav-icon default-icon w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
@@ -104,14 +102,12 @@
       </div>
     </div>
 
-    <!-- ERA SECTIONS -->
     <div id="eras-container" class="space-y-8"></div>
   </main>
 
-  <!-- SPOTIFY-STYLE MUSIC PLAYER BAR -->
+  <!-- MUSIC PLAYER BAR -->
   <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-[#09090b] border-t border-[#1e1e1e] z-30 flex items-center justify-between px-6 translate-y-full transition-transform duration-300">
     
-    <!-- LEFT: Track Metadata & Info Icon -->
     <div class="flex items-center gap-3 w-1/4 min-w-[200px]">
       <img id="player-cover" src="" class="w-11 h-11 rounded object-cover bg-zinc-800 shrink-0">
       <div class="overflow-hidden">
@@ -123,7 +119,6 @@
       </button>
     </div>
 
-    <!-- CENTER: Playback Controls & Dynamic Progress Line -->
     <div class="flex flex-col items-center gap-1.5 w-2/4 max-w-lg">
       <div class="flex items-center gap-4">
         <button id="shuffle-btn" onclick="toggleShuffle()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Shuffle"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
@@ -143,7 +138,6 @@
       </div>
     </div>
 
-    <!-- RIGHT: Equalizer, Queue, Lyrics, Volume -->
     <div class="w-1/4 min-w-[180px] flex justify-end items-center gap-3">
       <button id="eq-btn" onclick="openEqModal()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Equalizer Settings">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
@@ -165,7 +159,7 @@
         <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-16 h-1 cursor-pointer">
       </div>
     </div>
-    <audio id="audio-element" class="hidden" crossorigin="anonymous"></audio>
+    <audio id="audio-element" class="hidden"></audio>
   </div>
 
   <!-- QUEUE DRAWER -->
@@ -293,24 +287,21 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              ${eraSongs.length === 0 ? `<div class="text-[11px] text-zinc-600 col-span-full py-1">No tracks added to this era yet.</div>` : eraSongs.map(s => {
-                const globalIndex = allSongsCache.findIndex(item => item._id === s._id);
-                return `
-                  <div onclick="playSongByIndex(${globalIndex})" class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] rounded-lg p-2 transition-all duration-200 group flex items-center justify-between cursor-pointer shadow-sm">
-                    <div class="flex items-center gap-2.5 overflow-hidden">
-                      <img src="${s.coverArt}" class="w-11 h-11 rounded object-cover bg-zinc-800 shrink-0">
-                      <div class="overflow-hidden">
-                        <h3 class="font-semibold text-xs text-white group-hover:text-zinc-300 truncate tracking-tight">${s.title}</h3>
-                        <p class="text-[10px] text-zinc-400 truncate mt-0.5">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
-                      </div>
+              ${eraSongs.length === 0 ? `<div class="text-[11px] text-zinc-600 col-span-full py-1">No tracks added to this era yet.</div>` : eraSongs.map(s => `
+                <div onclick="playSongById('${s._id}')" class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] rounded-lg p-2 transition-all duration-200 group flex items-center justify-between cursor-pointer shadow-sm">
+                  <div class="flex items-center gap-2.5 overflow-hidden">
+                    <img src="${s.coverArt}" class="w-11 h-11 rounded object-cover bg-zinc-800 shrink-0">
+                    <div class="overflow-hidden">
+                      <h3 class="font-semibold text-xs text-white group-hover:text-zinc-300 truncate tracking-tight">${s.title}</h3>
+                      <p class="text-[10px] text-zinc-400 truncate mt-0.5">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
                     </div>
-                    
-                    <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="text-zinc-500 hover:text-white p-1.5 rounded-full shrink-0" title="Details">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </button>
                   </div>
-                `;
-              }).join('')}
+                  
+                  <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="text-zinc-500 hover:text-white p-1.5 rounded-full shrink-0" title="Details">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  </button>
+                </div>
+              `).join('')}
             </div>
           </section>
         `;
@@ -377,11 +368,13 @@
 
     function updateEq() {
       initAudioContext();
-      bassFilter.gain.value = parseFloat(document.getElementById('eq-bass').value);
-      lowMidFilter.gain.value = parseFloat(document.getElementById('eq-lowmid').value);
-      midFilter.gain.value = parseFloat(document.getElementById('eq-mid').value);
-      highMidFilter.gain.value = parseFloat(document.getElementById('eq-highmid').value);
-      trebleFilter.gain.value = parseFloat(document.getElementById('eq-treble').value);
+      if (bassFilter) {
+        bassFilter.gain.value = parseFloat(document.getElementById('eq-bass').value);
+        lowMidFilter.gain.value = parseFloat(document.getElementById('eq-lowmid').value);
+        midFilter.gain.value = parseFloat(document.getElementById('eq-mid').value);
+        highMidFilter.gain.value = parseFloat(document.getElementById('eq-highmid').value);
+        trebleFilter.gain.value = parseFloat(document.getElementById('eq-treble').value);
+      }
     }
 
     function applyEqPreset(preset) {
@@ -400,7 +393,6 @@
       updateEq();
     }
 
-    // PLAYBACK MANAGEMENT & AUTO-LOOPING
     const playerBar = document.getElementById('music-player-bar');
     const playIcon = document.getElementById('play-icon');
     const pauseIcon = document.getElementById('pause-icon');
@@ -428,6 +420,13 @@
       }
     }
 
+    function playSongById(id) {
+      const index = allSongsCache.findIndex(s => s._id === id);
+      if (index !== -1) {
+        playSongByIndex(index);
+      }
+    }
+
     function playSongByIndex(index) {
       if (index < 0 || index >= allSongsCache.length) return;
       initAudioContext();
@@ -439,7 +438,7 @@
       document.getElementById('player-artist').textContent = song.artist + (song.featuredArtists ? ` (feat. ${song.featuredArtists})` : '');
       
       audioElement.src = song.audioUrl;
-      audioElement.play();
+      audioElement.play().catch(e => console.log("Playback interrupted or missing audio source"));
       
       playIcon.classList.add('hidden');
       pauseIcon.classList.remove('hidden');
@@ -529,7 +528,6 @@
       }
     });
 
-    // QUEUE DRAWER LOGIC
     const queueDrawer = document.getElementById('queue-drawer');
     const queueBackdrop = document.getElementById('queue-backdrop');
 
@@ -564,7 +562,6 @@
       `).join('');
     }
 
-    // MODALS HANDLERS
     const eqBackdrop = document.getElementById('eq-modal-backdrop');
     function openEqModal() {
       eqBackdrop.classList.remove('opacity-0', 'pointer-events-none');
@@ -613,7 +610,6 @@
       infoBackdrop.classList.add('opacity-0', 'pointer-events-none');
     }
 
-    // NEWS DRAWER LOGIC
     const bellBtn = document.getElementById('bell-btn');
     const unreadDot = document.getElementById('unread-dot');
     const closeDrawerBtn = document.getElementById('close-drawer-btn');
@@ -664,10 +660,6 @@
 
     loadSongs();
     fetchNews();
-    setInterval(() => {
-      loadSongs();
-      fetchNews();
-    }, 5000);
   </script>
 </body>
 </html>
