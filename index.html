@@ -9,16 +9,15 @@
     #sidebar { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
     #sidebar.collapsed { width: 64px; }
     
-    .header-container { display: flex; items-center: center; min-height: 60px; width: 100%; position: relative; padding: 0 12px; }
+    .header-container { display: flex; align-items: center; justify-content: space-between; min-height: 60px; width: 100%; position: relative; padding: 0 12px; }
     
-    .nav-item { position: relative; display: flex; items-center: center; height: 40px; width: 100%; border-radius: 0.5rem; color: #a7a7a7; transition: background-color 0.2s ease; }
+    .nav-item { position: relative; display: flex; align-items: center; height: 40px; width: 100%; border-radius: 0.5rem; color: #a7a7a7; transition: background-color 0.2s ease; }
     .icon-wrapper { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     
     .fade-text-container { white-space: nowrap; overflow: hidden; transition: opacity 0.2s ease; opacity: 1; }
     #sidebar.collapsed .fade-text-container { opacity: 0; pointer-events: none; }
     
-    #sidebar.collapsed #bell-btn { position: static; margin-left: auto; }
-    #sidebar.collapsed .header-container { justify-content: space-between; padding: 0 8px; }
+    #sidebar.collapsed .header-container { padding: 0 8px; }
 
     .no-select { user-select: none; -webkit-user-select: none; }
     .nav-item:hover { background-color: #1f1f1f; color: #ffffff; }
@@ -30,10 +29,10 @@
     #news-drawer, #queue-drawer, #info-modal-panel, #eq-modal-panel, #lyrics-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     #news-backdrop, #queue-backdrop, #info-modal-backdrop, #eq-modal-backdrop, #lyrics-modal-backdrop { transition: opacity 0.3s ease; }
 
-    /* CLEAN NO-GLOW SLIDERS */
+    /* DYNAMIC GREEN PROGRESS SLIDER */
     input[type=range] {
       -webkit-appearance: none;
-      background: #27272a;
+      background: linear-gradient(to right, #22c55e 0%, #22c55e 0%, #27272a 0%, #27272a 100%);
       border-radius: 9999px;
     }
     input[type=range]::-webkit-slider-thumb {
@@ -45,11 +44,11 @@
       cursor: pointer;
     }
 
-/* ACTIVE PLAYER TOGGLE BUTTON INDICATOR (SPOTIFY GREEN) */
-.btn-active {
-  color: #22c55e !important; /* Spotify Green */
-  background-color: transparent !important;
-}
+    /* ACTIVE PLAYER TOGGLE BUTTON INDICATOR (SPOTIFY GREEN) */
+    .btn-active {
+      color: #22c55e !important;
+      background-color: transparent !important;
+    }
   </style>
 </head>
 <body class="bg-[#09090b] text-white flex min-h-screen font-sans antialiased overflow-x-hidden">
@@ -57,18 +56,18 @@
   <!-- SIDEBAR -->
   <aside id="sidebar" class="w-[220px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-hidden z-20">
     <div class="flex flex-col">
-      <!-- HEADER WITH COLLAPSE FIX -->
+      <!-- HEADER WITH FIXED ALIGNMENT -->
       <div class="header-container border-b border-[#1e1e1e] no-select">
-        <div id="brand-group" class="flex items-center gap-2 cursor-pointer overflow-hidden relative shrink-0">
+        <div id="brand-group" class="flex items-center gap-2.5 cursor-pointer overflow-hidden shrink-0">
           <div class="w-8 h-8 rounded-lg bg-[#27272a] flex items-center justify-center font-extrabold italic text-white text-[10px] tracking-wider shrink-0">CW</div>
           <div class="fade-text-container">
             <span class="font-bold text-xs tracking-wider text-white">COLD WINTERS</span>
           </div>
         </div>
 
-        <button id="bell-btn" aria-label="What's New" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0 ml-auto">
+        <button id="bell-btn" aria-label="What's New" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0 relative">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-          <span id="unread-dot" class="hidden absolute top-2 right-2 w-2 h-2 bg-pink-500 rounded-full"></span>
+          <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full"></span>
         </button>
       </div>
 
@@ -105,7 +104,7 @@
       </div>
     </div>
 
-    <!-- ERA SECTIONS WITH COMPACT PLAYER-SIZED ARTWORK -->
+    <!-- ERA SECTIONS -->
     <div id="eras-container" class="space-y-8"></div>
   </main>
 
@@ -124,7 +123,7 @@
       </button>
     </div>
 
-    <!-- CENTER: Playback Controls & Progress Scrubber -->
+    <!-- CENTER: Playback Controls & Dynamic Progress Line -->
     <div class="flex flex-col items-center gap-1.5 w-2/4 max-w-lg">
       <div class="flex items-center gap-4">
         <button id="shuffle-btn" onclick="toggleShuffle()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Shuffle"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
@@ -282,7 +281,6 @@
       }
     }
 
-    // COMPACT SONG TEMPLATES (PLAYER SIZED ARTWORK W-11 H-11)
     function renderSongs(songsToRender) {
       const container = document.getElementById('eras-container');
       container.innerHTML = ERA_DEFINITIONS.map(era => {
@@ -420,6 +418,16 @@
       return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
+    function updateProgressBar() {
+      if (audioElement.duration) {
+        const val = (audioElement.currentTime / audioElement.duration) * 100;
+        seekSlider.value = val;
+        seekSlider.style.background = `linear-gradient(to right, #22c55e 0%, #22c55e ${val}%, #27272a ${val}%, #27272a 100%)`;
+        currentTimeEl.textContent = formatTime(audioElement.currentTime);
+        durationTimeEl.textContent = formatTime(audioElement.duration);
+      }
+    }
+
     function playSongByIndex(index) {
       if (index < 0 || index >= allSongsCache.length) return;
       initAudioContext();
@@ -480,54 +488,108 @@
       }
     });
 
-function toggleShuffle() {
-  isShuffle = !isShuffle;
-  document.getElementById('shuffle-btn').classList.toggle('btn-active', isShuffle);
-}
+    function toggleShuffle() {
+      isShuffle = !isShuffle;
+      document.getElementById('shuffle-btn').classList.toggle('btn-active', isShuffle);
+    }
 
-function toggleRepeat() {
-  isRepeat = !isRepeat;
-  document.getElementById('repeat-btn').classList.toggle('btn-active', isRepeat);
-}
+    function toggleRepeat() {
+      isRepeat = !isRepeat;
+      document.getElementById('repeat-btn').classList.toggle('btn-active', isRepeat);
+    }
 
-function openQueueDrawer() {
-  renderQueueList();
-  queueDrawer.classList.remove('translate-x-full');
-  queueBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-  document.getElementById('queue-btn').classList.add('btn-active');
-}
+    function toggleMute() {
+      audioElement.muted = !audioElement.muted;
+      if (audioElement.muted) {
+        volIcon.classList.add('hidden');
+        muteIcon.classList.remove('hidden');
+      } else {
+        volIcon.classList.remove('hidden');
+        muteIcon.classList.add('hidden');
+      }
+    }
 
-function closeQueueDrawer() {
-  queueDrawer.classList.add('translate-x-full');
-  queueBackdrop.classList.add('opacity-0', 'pointer-events-none');
-  document.getElementById('queue-btn').classList.remove('btn-active');
-}
+    audioElement.addEventListener('timeupdate', updateProgressBar);
 
-function openEqModal() {
-  eqBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-  document.getElementById('eq-btn').classList.add('btn-active');
-}
+    seekSlider.addEventListener('input', () => {
+      if (audioElement.duration) {
+        audioElement.currentTime = (seekSlider.value / 100) * audioElement.duration;
+        updateProgressBar();
+      }
+    });
 
-function closeEqModal() {
-  eqBackdrop.classList.add('opacity-0', 'pointer-events-none');
-  document.getElementById('eq-btn').classList.remove('btn-active');
-}
+    volumeSlider.addEventListener('input', () => {
+      audioElement.volume = volumeSlider.value;
+      if (volumeSlider.value == 0) {
+        volIcon.classList.add('hidden');
+        muteIcon.classList.remove('hidden');
+      } else {
+        volIcon.classList.remove('hidden');
+        muteIcon.classList.add('hidden');
+      }
+    });
 
-function openLyricsModal() {
-  if (currentPlayingIndex >= 0) {
-    const s = allSongsCache[currentPlayingIndex];
-    document.getElementById('lyrics-title').textContent = s.title;
-    document.getElementById('lyrics-artist').textContent = s.artist;
-    document.getElementById('lyrics-body').textContent = s.lyrics || "No lyrics uploaded for this track yet.";
-  }
-  lyricsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-  document.getElementById('lyrics-btn').classList.add('btn-active');
-}
+    // QUEUE DRAWER LOGIC
+    const queueDrawer = document.getElementById('queue-drawer');
+    const queueBackdrop = document.getElementById('queue-backdrop');
 
-function closeLyricsModal() {
-  lyricsBackdrop.classList.add('opacity-0', 'pointer-events-none');
-  document.getElementById('lyrics-btn').classList.remove('btn-active');
-}
+    function openQueueDrawer() {
+      renderQueueList();
+      queueDrawer.classList.remove('translate-x-full');
+      queueBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('queue-btn').classList.add('btn-active');
+    }
+
+    function closeQueueDrawer() {
+      queueDrawer.classList.add('translate-x-full');
+      queueBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('queue-btn').classList.remove('btn-active');
+    }
+
+    queueBackdrop.addEventListener('click', closeQueueDrawer);
+
+    function renderQueueList() {
+      const container = document.getElementById('queue-list');
+      container.innerHTML = allSongsCache.map((s, idx) => `
+        <div onclick="playSongByIndex(${idx})" class="p-2 rounded-lg flex items-center justify-between gap-2 cursor-pointer border ${idx === currentPlayingIndex ? 'bg-[#27272a] border-white/20' : 'bg-[#18181b] border-transparent hover:bg-[#27272a]'}">
+          <div class="flex items-center gap-2 overflow-hidden">
+            <img src="${s.coverArt}" class="w-8 h-8 rounded object-cover shrink-0">
+            <div class="overflow-hidden">
+              <div class="font-semibold text-white truncate text-[11px]">${s.title}</div>
+              <div class="text-[10px] text-zinc-400 truncate">${s.artist}</div>
+            </div>
+          </div>
+          ${idx === currentPlayingIndex ? '<span class="text-[9px] text-emerald-400 font-bold uppercase">Playing</span>' : ''}
+        </div>
+      `).join('');
+    }
+
+    // MODALS HANDLERS
+    const eqBackdrop = document.getElementById('eq-modal-backdrop');
+    function openEqModal() {
+      eqBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('eq-btn').classList.add('btn-active');
+    }
+    function closeEqModal() {
+      eqBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('eq-btn').classList.remove('btn-active');
+    }
+
+    const lyricsBackdrop = document.getElementById('lyrics-modal-backdrop');
+    function openLyricsModal() {
+      if (currentPlayingIndex >= 0) {
+        const s = allSongsCache[currentPlayingIndex];
+        document.getElementById('lyrics-title').textContent = s.title;
+        document.getElementById('lyrics-artist').textContent = s.artist;
+        document.getElementById('lyrics-body').textContent = s.lyrics || "No lyrics uploaded for this track yet.";
+      }
+      lyricsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('lyrics-btn').classList.add('btn-active');
+    }
+    function closeLyricsModal() {
+      lyricsBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('lyrics-btn').classList.remove('btn-active');
+    }
 
     const infoBackdrop = document.getElementById('info-modal-backdrop');
     function openInfoModal(song) {
