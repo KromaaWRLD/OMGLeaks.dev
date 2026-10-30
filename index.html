@@ -8,208 +8,184 @@
   <style>
     #sidebar { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
     #sidebar.collapsed { width: 72px; }
-    .header-container { display: flex; align-items: center; min-height: 72px; width: 100%; position: relative; }
-    .nav-item { position: relative; display: flex; align-items: center; height: 48px; width: 100%; border-radius: 0.5rem; color: #a7a7a7; overflow: visible; transition: background-color 0.2s ease, border-color 0.2s ease; }
-    .icon-wrapper { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
-    #brand-group .icon-wrapper { left: 12px; width: 32px; height: 32px; }
-    .fade-text-container { margin-left: 52px; white-space: nowrap; overflow: hidden; display: inline-block; -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%); mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%); -webkit-mask-size: 200% 100%; mask-size: 200% 100%; -webkit-mask-position: 0% 0; mask-position: 0% 0; transition: -webkit-mask-position 0.25s cubic-bezier(0.4, 0, 0.2, 1), mask-position 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease; opacity: 1; }
-    .brand-text-container { transition: -webkit-mask-position 0.12s cubic-bezier(0.4, 0, 1, 1), mask-position 0.12s cubic-bezier(0.4, 0, 1, 1), opacity 0.12s ease; }
-    #sidebar.collapsed .fade-text-container, #sidebar.collapsed .brand-text-container { -webkit-mask-position: 100% 0; mask-position: 100% 0; opacity: 0; pointer-events: none; }
-    #bell-btn { transition: opacity 0.15s ease, transform 0.25s ease; }
-    #sidebar.collapsed #bell-btn { opacity: 0; transform: scale(0.8); pointer-events: none; }
-    .support-item { border: 1px solid #27272a; }
-    #sidebar.collapsed .support-item { border-color: transparent !important; }
-    .separator { height: 1px; margin-top: 6px; margin-bottom: 6px; width: 100%; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .header-container { display: flex; align-items: center; min-height: 64px; width: 100%; position: relative; }
+    .nav-item { position: relative; display: flex; align-items: center; height: 40px; width: 100%; border-radius: 0.375rem; color: #a7a7a7; overflow: visible; transition: background-color 0.2s ease, border-color 0.2s ease; }
+    .icon-wrapper { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
+    #brand-group .icon-wrapper { left: 12px; width: 28px; height: 28px; }
+    .fade-text-container { margin-left: 48px; white-space: nowrap; overflow: hidden; display: inline-block; -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%); mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%); transition: opacity 0.2s ease; opacity: 1; }
+    #sidebar.collapsed .fade-text-container { opacity: 0; pointer-events: none; }
     .no-select { user-select: none; -webkit-user-select: none; }
     .nav-item:hover { background-color: #1f1f1f; color: #ffffff; }
     .nav-item.active { background-color: #282828; color: #ffffff; }
     .default-icon { color: #a7a7a7; transition: color 0.15s ease; }
     .nav-item:hover .default-icon, .nav-item.active .default-icon { color: #ffffff !important; }
-    .pink-icon { color: #ec4899; transition: color 0.15s ease; }
-    .support-item:hover .pink-icon { color: #ffffff !important; }
+    .pink-icon { color: #ec4899; }
     .tooltip { opacity: 0; visibility: hidden; top: -32px; left: 50%; transform: translateX(-50%) translateY(4px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease; pointer-events: none; }
     #sidebar.collapsed .has-tooltip:hover .tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-    .tooltip::before { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 8px; height: 8px; background-color: #18181b; border-right: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-    #news-drawer, #info-modal-panel, #eq-modal-panel, #lyrics-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    #news-backdrop, #info-modal-backdrop, #eq-modal-backdrop, #lyrics-modal-backdrop { transition: opacity 0.3s ease; }
+    
+    #news-drawer, #queue-drawer, #info-modal-panel, #eq-modal-panel, #lyrics-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #news-backdrop, #queue-backdrop, #info-modal-backdrop, #eq-modal-backdrop, #lyrics-modal-backdrop { transition: opacity 0.3s ease; }
 
-    /* NO-GLOW SLIDERS */
+    /* CLEAN NO-GLOW SLIDERS */
     input[type=range] {
       -webkit-appearance: none;
-      background: #3f3f46;
+      background: #27272a;
       border-radius: 9999px;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      height: 12px;
-      width: 12px;
+      height: 10px;
+      width: 10px;
       border-radius: 50%;
       background: #ffffff;
       cursor: pointer;
+    }
+
+    /* ACTIVE PLAYER TOGGLE BUTTON INDICATOR */
+    .btn-active {
+      color: #ffffff !important;
+      background-color: #27272a;
+      border-radius: 0.375rem;
     }
   </style>
 </head>
 <body class="bg-[#09090b] text-white flex min-h-screen font-sans antialiased overflow-x-hidden">
 
   <!-- SIDEBAR -->
-  <aside id="sidebar" class="w-[250px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-visible z-20">
+  <aside id="sidebar" class="w-[220px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-visible z-20">
     <div class="flex flex-col">
       <div class="header-container border-b border-[#1e1e1e] no-select">
         <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative shrink-0 w-full h-full">
           <div class="icon-wrapper">
-            <div class="w-8 h-8 min-w-[32px] max-w-[32px] rounded-md bg-[#27272a] flex items-center justify-center font-extrabold italic text-white text-[10px] tracking-wider shrink-0">CW</div>
+            <div class="w-7 h-7 rounded bg-[#27272a] flex items-center justify-center font-extrabold italic text-white text-[9px] tracking-wider shrink-0">CW</div>
           </div>
-          <div class="fade-text-container brand-text-container">
+          <div class="fade-text-container">
             <span class="font-bold text-xs tracking-wider text-white">COLD WINTERS</span>
           </div>
         </div>
 
-        <button id="bell-btn" aria-label="What's New" class="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-          <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full"></span>
+        <button id="bell-btn" aria-label="What's New" class="absolute right-3 w-7 h-7 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+          <span id="unread-dot" class="hidden absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full"></span>
         </button>
       </div>
 
-      <nav class="flex flex-col p-2 no-select" id="nav-menu" style="gap: 6px;">
+      <nav class="flex flex-col p-2 no-select" id="nav-menu" style="gap: 4px;">
         <a href="#home" class="nav-item has-tooltip active group cursor-pointer relative">
-          <div class="icon-wrapper"><svg class="nav-icon default-icon w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
-          <div class="fade-text-container"><span class="text-sm font-medium">Home</span></div>
-          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 whitespace-nowrap z-50">Home</div>
+          <div class="icon-wrapper"><svg class="nav-icon default-icon w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+          <div class="fade-text-container"><span class="text-xs font-medium">Home</span></div>
         </a>
-        <div class="separator bg-[#1e1e1e]"></div>
-        <a href="#support" class="nav-item support-item has-tooltip group cursor-pointer relative">
-          <div class="icon-wrapper"><svg class="nav-icon pink-icon w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
-          <div class="fade-text-container"><span class="text-sm font-medium">Support Us</span></div>
-          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 whitespace-nowrap z-50">Support Us</div>
+        <div class="h-px bg-[#1e1e1e] my-1"></div>
+        <a href="#support" class="nav-item has-tooltip group cursor-pointer relative">
+          <div class="icon-wrapper"><svg class="nav-icon pink-icon w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+          <div class="fade-text-container"><span class="text-xs font-medium">Support Us</span></div>
         </a>
       </nav>
     </div>
   </aside>
 
   <!-- MAIN CONTENT -->
-  <main class="flex-1 p-8 pb-36 space-y-10">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1e1e1e] pb-6">
+  <main class="flex-1 p-6 pb-32 space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1e1e1e] pb-4">
       <div>
-        <h1 class="text-3xl font-black tracking-tight text-white">JUICE WRLD VAULT</h1>
-        <p class="text-xs text-zinc-400 mt-1">Explore discography, unreleased sessions, and studio information.</p>
+        <h1 class="text-2xl font-black tracking-tight text-white">JUICE WRLD VAULT</h1>
+        <p class="text-[11px] text-zinc-400 mt-0.5">Explore discography, unreleased sessions, and studio information.</p>
       </div>
 
       <div class="flex items-center gap-3">
-        <div class="relative w-full md:w-72">
-          <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input id="search-input" oninput="filterSongs()" type="text" placeholder="Search track, producer, era..." class="w-full bg-[#121212] border border-[#27272a] rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500">
+        <div class="relative w-full md:w-64">
+          <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input id="search-input" oninput="filterSongs()" type="text" placeholder="Search track, producer, era..." class="w-full bg-[#121212] border border-[#27272a] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500">
         </div>
 
-        <a href="/editor" class="text-xs font-bold text-zinc-300 bg-[#18181b] border border-[#27272a] px-4 py-2 rounded-xl hover:bg-[#27272a] transition-all whitespace-nowrap">Portal →</a>
+        <a href="/editor" class="text-xs font-medium text-zinc-300 bg-[#18181b] border border-[#27272a] px-3 py-1.5 rounded-lg hover:bg-[#27272a] transition-all whitespace-nowrap">Portal →</a>
       </div>
     </div>
 
-    <!-- ERA SECTIONS (WITHOUT BADGES) -->
-    <div id="eras-container" class="space-y-10"></div>
+    <!-- ERA SECTIONS -->
+    <div id="eras-container" class="space-y-8"></div>
   </main>
 
   <!-- SPOTIFY-STYLE MUSIC PLAYER BAR -->
-  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-24 bg-[#09090b] border-t border-[#1e1e1e] z-30 flex items-center justify-between px-6 translate-y-full transition-transform duration-300">
+  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-20 bg-[#09090b] border-t border-[#1e1e1e] z-30 flex items-center justify-between px-6 translate-y-full transition-transform duration-300">
     
-    <!-- LEFT: Cover, Metadata, 3 Dots -->
-    <div class="flex items-center gap-3 w-1/4 min-w-[220px]">
-      <img id="player-cover" src="" class="w-14 h-14 rounded-md object-cover bg-zinc-800 shrink-0">
+    <!-- LEFT: Track Metadata & Info Icon -->
+    <div class="flex items-center gap-3 w-1/4 min-w-[200px]">
+      <img id="player-cover" src="" class="w-11 h-11 rounded object-cover bg-zinc-800 shrink-0">
       <div class="overflow-hidden">
-        <div id="player-title" class="font-bold text-sm text-white truncate">Select a song</div>
-        <div id="player-artist" class="text-xs text-zinc-400 truncate mt-0.5">-</div>
+        <div id="player-title" class="font-semibold text-xs text-white truncate">Select a song</div>
+        <div id="player-artist" class="text-[11px] text-zinc-400 truncate mt-0.5">-</div>
       </div>
-      <!-- 3-Dots Menu Icon -->
-      <button onclick="openCurrentInfoModal()" class="text-zinc-400 hover:text-white ml-2 shrink-0">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      <button onclick="openCurrentInfoModal()" class="text-zinc-400 hover:text-white ml-1 shrink-0" title="Details">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
       </button>
     </div>
 
-    <!-- CENTER: Controls + Scrubber Bar -->
-    <div class="flex flex-col items-center gap-2 w-2/4 max-w-xl">
-      <!-- Player Controls -->
-      <div class="flex items-center gap-5">
-        <button class="text-zinc-400 hover:text-white transition-colors" title="Shuffle"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
-        <button class="text-zinc-400 hover:text-white transition-colors" title="Previous"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-        <button onclick="togglePlay()" id="play-btn" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
-          <svg id="play-icon" class="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg id="pause-icon" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    <!-- CENTER: Playback Controls & Progress Scrubber -->
+    <div class="flex flex-col items-center gap-1.5 w-2/4 max-w-lg">
+      <div class="flex items-center gap-4">
+        <button id="shuffle-btn" onclick="toggleShuffle()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Shuffle"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
+        <button onclick="playPrevSong()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Previous"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+        <button onclick="togglePlay()" id="play-btn" class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+          <svg id="play-icon" class="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pause-icon" class="w-4 h-4 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
         </button>
-        <button class="text-zinc-400 hover:text-white transition-colors" title="Next"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
-        <button class="text-zinc-400 hover:text-white transition-colors" title="Repeat"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4m0 0l-4 4m4-4H7a4 4 0 00-4 4v1m0 11l-4-4m0 0l4-4m-4 4h14a4 4 0 004-4v-1"/></svg></button>
+        <button onclick="playNextSong()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Next"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+        <button id="repeat-btn" onclick="toggleRepeat()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Repeat"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4m0 0l-4 4m4-4H7a4 4 0 00-4 4v1m0 11l-4-4m0 0l4-4m-4 4h14a4 4 0 004-4v-1"/></svg></button>
       </div>
       
-      <!-- Scrubber -->
-      <div class="flex items-center gap-3 w-full text-[11px] text-zinc-400 font-mono">
-        <span id="current-time">0:06</span>
+      <div class="flex items-center gap-2.5 w-full text-[10px] text-zinc-400 font-mono">
+        <span id="current-time">0:00</span>
         <input id="seek-slider" type="range" min="0" max="100" value="0" class="w-full h-1 cursor-pointer">
-        <span id="duration-time">2:55</span>
+        <span id="duration-time">0:00</span>
       </div>
     </div>
 
-    <!-- RIGHT: EQ, Queue, Lyrics, Volume -->
-    <div class="w-1/4 min-w-[200px] flex justify-end items-center gap-3.5">
-      <!-- Equalizer Settings Button -->
-      <button onclick="openEqModal()" class="text-zinc-400 hover:text-white transition-colors" title="Equalizer Settings">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+    <!-- RIGHT: Equalizer, Queue, Lyrics, Volume -->
+    <div class="w-1/4 min-w-[180px] flex justify-end items-center gap-3">
+      <button id="eq-btn" onclick="openEqModal()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Equalizer Settings">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
       </button>
 
-      <!-- Display / Screen Layout Icon -->
-      <button class="text-zinc-400 hover:text-white transition-colors" title="View Layout">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      <button id="queue-btn" onclick="openQueueDrawer()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Queue">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
       </button>
 
-      <!-- Queue Icon -->
-      <button class="text-zinc-400 hover:text-white transition-colors" title="Queue">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+      <button id="lyrics-btn" onclick="openLyricsModal()" class="text-zinc-400 hover:text-white p-1 transition-colors" title="Lyrics">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       </button>
 
-      <!-- Lyrics Icon -->
-      <button onclick="openLyricsModal()" class="text-zinc-400 hover:text-white transition-colors" title="Lyrics">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-      </button>
-
-      <!-- Volume -->
-      <div class="flex items-center gap-2">
+      <!-- Working Volume Controls -->
+      <div class="flex items-center gap-1.5">
         <button id="volume-btn" onclick="toggleMute()" class="text-zinc-400 hover:text-white transition-colors">
-          <svg id="vol-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M11 5L6 9H2v6h4l5 4V5z"/></svg>
-          <svg id="mute-icon" class="w-5 h-5 hidden text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+          <svg id="vol-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M11 5L6 9H2v6h4l5 4V5z"/></svg>
+          <svg id="mute-icon" class="w-4 h-4 hidden text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
         </button>
-        <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-20 h-1 cursor-pointer">
+        <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-16 h-1 cursor-pointer">
       </div>
     </div>
-    <audio id="audio-element" class="hidden"></audio>
+    <audio id="audio-element" class="hidden" crossorigin="anonymous"></audio>
   </div>
 
-  <!-- SONG INFO MODAL -->
-  <div id="info-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
-    <div id="info-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
-      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg">✕</button>
-      <div class="flex items-center gap-4 border-b border-[#1e1e1e] pb-4">
-        <img id="info-cover" src="" class="w-16 h-16 rounded-xl object-cover bg-zinc-800">
-        <div>
-          <h3 id="info-title" class="font-bold text-lg text-white">Song Title</h3>
-          <p id="info-artist" class="text-xs text-zinc-400">Artist</p>
-        </div>
-      </div>
-      <div class="space-y-2 text-xs">
-        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Era:</span><span id="info-era" class="text-white font-medium">-</span></div>
-        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Producer(s):</span><span id="info-producers" class="text-white font-medium">-</span></div>
-        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Engineer(s):</span><span id="info-engineers" class="text-white font-medium">-</span></div>
-        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Recording Date:</span><span id="info-date" class="text-white font-medium">-</span></div>
-        <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Studio Location:</span><span id="info-location" class="text-white font-medium">-</span></div>
-      </div>
+  <!-- QUEUE DRAWER -->
+  <div id="queue-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <div id="queue-drawer" class="fixed top-0 right-0 h-full w-[320px] max-w-[100vw] bg-[#121212] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl translate-x-full">
+    <div class="flex items-center justify-between p-4 border-b border-[#1e1e1e]">
+      <h2 class="font-bold text-sm text-white">Play Queue</h2>
+      <button onclick="closeQueueDrawer()" class="text-zinc-400 hover:text-white text-xs">✕</button>
     </div>
+    <div id="queue-list" class="flex-1 overflow-y-auto p-3 space-y-2 text-xs"></div>
   </div>
 
-  <!-- EQUALIZER MODAL -->
+  <!-- EQUALIZER MODAL WITH REAL WEBAUDIO EQ LOGIC -->
   <div id="eq-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
-    <div id="eq-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
-      <button onclick="closeEqModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold">✕</button>
-      <h3 class="text-base font-bold text-white">Audio Equalizer</h3>
+    <div id="eq-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-xl max-w-xs w-full p-5 space-y-4 shadow-2xl relative">
+      <button onclick="closeEqModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-xs">✕</button>
+      <h3 class="text-sm font-bold text-white">Equalizer Controls</h3>
       <div class="space-y-3 text-xs">
         <div>
-          <label class="block text-zinc-400 mb-1">Preset Profile</label>
-          <select id="eq-preset" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+          <label class="block text-zinc-400 mb-1 text-[11px]">Preset Profile</label>
+          <select id="eq-preset" onchange="applyEqPreset(this.value)" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
             <option value="flat">Flat (Default)</option>
             <option value="bass">Bass Boost</option>
             <option value="vocal">Vocal Booster</option>
@@ -217,11 +193,11 @@
           </select>
         </div>
         <div class="flex justify-between items-center gap-2 pt-2">
-          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Bass</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
-          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Low Mid</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
-          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Mid</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
-          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">High Mid</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
-          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Treble</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[9px] text-zinc-500">60Hz</span><input id="eq-bass" type="range" min="-12" max="12" value="0" oninput="updateEq()" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[9px] text-zinc-500">230Hz</span><input id="eq-lowmid" type="range" min="-12" max="12" value="0" oninput="updateEq()" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[9px] text-zinc-500">910Hz</span><input id="eq-mid" type="range" min="-12" max="12" value="0" oninput="updateEq()" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[9px] text-zinc-500">4kHz</span><input id="eq-highmid" type="range" min="-12" max="12" value="0" oninput="updateEq()" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[9px] text-zinc-500">14kHz</span><input id="eq-treble" type="range" min="-12" max="12" value="0" oninput="updateEq()" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
         </div>
       </div>
     </div>
@@ -229,35 +205,55 @@
 
   <!-- LYRICS MODAL -->
   <div id="lyrics-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
-    <div id="lyrics-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[80vh] flex flex-col">
-      <button onclick="closeLyricsModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold">✕</button>
+    <div id="lyrics-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-xl max-w-md w-full p-5 space-y-3 shadow-2xl relative max-h-[75vh] flex flex-col">
+      <button onclick="closeLyricsModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-xs">✕</button>
       <div>
-        <h3 id="lyrics-title" class="text-base font-bold text-white">Song Lyrics</h3>
-        <p id="lyrics-artist" class="text-xs text-zinc-400">-</p>
+        <h3 id="lyrics-title" class="text-sm font-bold text-white">Song Lyrics</h3>
+        <p id="lyrics-artist" class="text-[11px] text-zinc-400">-</p>
       </div>
-      <div id="lyrics-body" class="flex-1 overflow-y-auto whitespace-pre-wrap text-sm text-zinc-300 font-mono bg-[#18181b] p-4 rounded-xl border border-[#27272a]">
+      <div id="lyrics-body" class="flex-1 overflow-y-auto whitespace-pre-wrap text-xs text-zinc-300 font-mono bg-[#18181b] p-3 rounded-lg border border-[#27272a]">
         No lyrics uploaded for this track yet.
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO MODAL -->
+  <div id="info-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
+    <div id="info-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-xl max-w-sm w-full p-5 space-y-3 shadow-2xl relative">
+      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-xs">✕</button>
+      <div class="flex items-center gap-3 border-b border-[#1e1e1e] pb-3">
+        <img id="info-cover" src="" class="w-12 h-12 rounded object-cover bg-zinc-800">
+        <div>
+          <h3 id="info-title" class="font-bold text-sm text-white">Song Title</h3>
+          <p id="info-artist" class="text-[11px] text-zinc-400">Artist</p>
+        </div>
+      </div>
+      <div class="space-y-1.5 text-[11px]">
+        <div class="flex justify-between py-0.5 border-b border-zinc-800/50"><span class="text-zinc-500">Era:</span><span id="info-era" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-0.5 border-b border-zinc-800/50"><span class="text-zinc-500">Producer(s):</span><span id="info-producers" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-0.5 border-b border-zinc-800/50"><span class="text-zinc-500">Engineer(s):</span><span id="info-engineers" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-0.5 border-b border-zinc-800/50"><span class="text-zinc-500">Recording Date:</span><span id="info-date" class="text-white font-medium">-</span></div>
+        <div class="flex justify-between py-0.5 border-b border-zinc-800/50"><span class="text-zinc-500">Studio Location:</span><span id="info-location" class="text-white font-medium">-</span></div>
       </div>
     </div>
   </div>
 
   <!-- CHANGELOG DRAWER -->
   <div id="news-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
-  <div id="news-drawer" class="fixed top-0 right-0 h-full w-[380px] max-w-[100vw] bg-[#121212] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl translate-x-full">
+  <div id="news-drawer" class="fixed top-0 right-0 h-full w-[320px] max-w-[100vw] bg-[#121212] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl translate-x-full">
     <div class="flex items-center justify-between p-4 border-b border-[#1e1e1e]">
-      <div class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-        <h2 class="font-bold text-base text-white tracking-wide">What's New</h2>
-      </div>
-      <button id="close-drawer-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">✕</button>
+      <h2 class="font-bold text-sm text-white">What's New</h2>
+      <button id="close-drawer-btn" class="text-zinc-400 hover:text-white text-xs">✕</button>
     </div>
-    <div id="news-content" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm"></div>
+    <div id="news-content" class="flex-1 overflow-y-auto p-4 space-y-3 text-xs"></div>
   </div>
 
   <script>
     const API = "/api";
     let allSongsCache = [];
-    let currentPlayingSong = null;
+    let currentPlayingIndex = -1;
+    let isShuffle = false;
+    let isRepeat = false;
 
     const ERA_DEFINITIONS = [
       { id: "PRE", name: "JuiceTheKidd / Pre-Juice Era" },
@@ -284,36 +280,39 @@
       }
     }
 
-    // ERA SECTIONS RENDER WITHOUT BADGES
+    // SMALLER & PROFESSIONAL SONG CARD TEMPLATES
     function renderSongs(songsToRender) {
       const container = document.getElementById('eras-container');
       container.innerHTML = ERA_DEFINITIONS.map(era => {
         const eraSongs = songsToRender.filter(s => s.era === era.id);
         
         return `
-          <section class="space-y-4">
-            <div class="border-b border-zinc-800/80 pb-2">
-              <h2 class="text-sm font-bold uppercase tracking-wider text-white">${era.name}</h2>
+          <section class="space-y-3">
+            <div class="border-b border-zinc-800/80 pb-1.5">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-300">${era.name}</h2>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              ${eraSongs.length === 0 ? `<div class="text-xs text-zinc-600 col-span-full py-2">No tracks added to this era yet.</div>` : eraSongs.map(s => `
-                <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] rounded-2xl p-3 transition-all duration-200 group flex flex-col justify-between shadow-lg relative">
-                  
-                  <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer relative overflow-hidden rounded-xl aspect-square mb-2.5 bg-zinc-800">
-                    <img src="${s.coverArt}" class="w-full h-full object-cover">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              ${eraSongs.length === 0 ? `<div class="text-[11px] text-zinc-600 col-span-full py-1">No tracks added to this era yet.</div>` : eraSongs.map(s => {
+                const globalIndex = allSongsCache.findIndex(item => item._id === s._id);
+                return `
+                  <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] rounded-xl p-2.5 transition-all duration-200 group flex flex-col justify-between shadow-sm relative">
                     
-                    <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="absolute bottom-2 right-2 bg-black/80 hover:bg-zinc-700 text-zinc-300 hover:text-white w-6 h-6 rounded-full flex items-center justify-center transition-all z-10 border border-white/10" title="Track Details">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </button>
-                  </div>
+                    <div onclick="playSongByIndex(${globalIndex})" class="cursor-pointer relative overflow-hidden rounded-lg aspect-square mb-2 bg-zinc-800">
+                      <img src="${s.coverArt}" class="w-full h-full object-cover">
+                      
+                      <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="absolute bottom-1.5 right-1.5 bg-black/80 hover:bg-zinc-700 text-zinc-300 hover:text-white w-5 h-5 rounded-full flex items-center justify-center transition-all z-10 border border-white/10" title="Details">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      </button>
+                    </div>
 
-                  <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer space-y-1">
-                    <h3 class="font-bold text-xs text-white group-hover:text-zinc-300 truncate tracking-wide">${s.title}</h3>
-                    <p class="text-[11px] text-zinc-400 truncate">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
+                    <div onclick="playSongByIndex(${globalIndex})" class="cursor-pointer space-y-0.5">
+                      <h3 class="font-semibold text-[11px] text-white group-hover:text-zinc-300 truncate tracking-tight">${s.title}</h3>
+                      <p class="text-[10px] text-zinc-400 truncate">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </section>
         `;
@@ -337,47 +336,74 @@
       renderSongs(filtered);
     }
 
-    // MODAL HANDLERS
-    const infoBackdrop = document.getElementById('info-modal-backdrop');
-    function openInfoModal(song) {
-      document.getElementById('info-cover').src = song.coverArt;
-      document.getElementById('info-title').textContent = song.title;
-      document.getElementById('info-artist').textContent = song.artist + (song.featuredArtists ? ` (feat. ${song.featuredArtists})` : '');
-      document.getElementById('info-era').textContent = song.era || '-';
-      document.getElementById('info-producers').textContent = song.producers || 'Unknown';
-      document.getElementById('info-engineers').textContent = song.engineers || 'Unknown';
-      document.getElementById('info-date').textContent = song.recordingDate || 'Unknown';
-      document.getElementById('info-location').textContent = song.studioLocation || 'Unknown';
-
-      infoBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-    }
-
-    function openCurrentInfoModal() {
-      if (currentPlayingSong) openInfoModal(currentPlayingSong);
-    }
-
-    function closeInfoModal() {
-      infoBackdrop.classList.add('opacity-0', 'pointer-events-none');
-    }
-
-    const eqBackdrop = document.getElementById('eq-modal-backdrop');
-    function openEqModal() { eqBackdrop.classList.remove('opacity-0', 'pointer-events-none'); }
-    function closeEqModal() { eqBackdrop.classList.add('opacity-0', 'pointer-events-none'); }
-
-    const lyricsBackdrop = document.getElementById('lyrics-modal-backdrop');
-    function openLyricsModal() {
-      if (currentPlayingSong) {
-        document.getElementById('lyrics-title').textContent = currentPlayingSong.title;
-        document.getElementById('lyrics-artist').textContent = currentPlayingSong.artist;
-        document.getElementById('lyrics-body').textContent = currentPlayingSong.lyrics || "No lyrics uploaded for this track yet.";
-      }
-      lyricsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-    }
-    function closeLyricsModal() { lyricsBackdrop.classList.add('opacity-0', 'pointer-events-none'); }
-
-    // PLAYER LOGIC
-    const playerBar = document.getElementById('music-player-bar');
+    // AUDIO CONTROL & WEBAUDIO EQ SYSTEM
     const audioElement = document.getElementById('audio-element');
+    let audioCtx, srcNode, bassFilter, lowMidFilter, midFilter, highMidFilter, trebleFilter;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        srcNode = audioCtx.createMediaElementSource(audioElement);
+
+        bassFilter = audioCtx.createBiquadFilter();
+        bassFilter.type = 'lowshelf';
+        bassFilter.frequency.value = 60;
+
+        lowMidFilter = audioCtx.createBiquadFilter();
+        lowMidFilter.type = 'peaking';
+        lowMidFilter.frequency.value = 230;
+
+        midFilter = audioCtx.createBiquadFilter();
+        midFilter.type = 'peaking';
+        midFilter.frequency.value = 910;
+
+        highMidFilter = audioCtx.createBiquadFilter();
+        highMidFilter.type = 'peaking';
+        highMidFilter.frequency.value = 4000;
+
+        trebleFilter = audioCtx.createBiquadFilter();
+        trebleFilter.type = 'highshelf';
+        trebleFilter.frequency.value = 14000;
+
+        srcNode.connect(bassFilter);
+        bassFilter.connect(lowMidFilter);
+        lowMidFilter.connect(midFilter);
+        midFilter.connect(highMidFilter);
+        highMidFilter.connect(trebleFilter);
+        trebleFilter.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function updateEq() {
+      initAudioContext();
+      bassFilter.gain.value = parseFloat(document.getElementById('eq-bass').value);
+      lowMidFilter.gain.value = parseFloat(document.getElementById('eq-lowmid').value);
+      midFilter.gain.value = parseFloat(document.getElementById('eq-mid').value);
+      highMidFilter.gain.value = parseFloat(document.getElementById('eq-highmid').value);
+      trebleFilter.gain.value = parseFloat(document.getElementById('eq-treble').value);
+    }
+
+    function applyEqPreset(preset) {
+      const presets = {
+        flat: [0, 0, 0, 0, 0],
+        bass: [8, 5, 0, -2, -4],
+        vocal: [-3, 2, 6, 3, -2],
+        treble: [-4, -2, 1, 5, 8]
+      };
+      const vals = presets[preset] || presets.flat;
+      document.getElementById('eq-bass').value = vals[0];
+      document.getElementById('eq-lowmid').value = vals[1];
+      document.getElementById('eq-mid').value = vals[2];
+      document.getElementById('eq-highmid').value = vals[3];
+      document.getElementById('eq-treble').value = vals[4];
+      updateEq();
+    }
+
+    // PLAYBACK MANAGEMENT & AUTO-LOOPING
+    const playerBar = document.getElementById('music-player-bar');
     const playIcon = document.getElementById('play-icon');
     const pauseIcon = document.getElementById('pause-icon');
     const seekSlider = document.getElementById('seek-slider');
@@ -394,8 +420,12 @@
       return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    function playSong(song) {
-      currentPlayingSong = song;
+    function playSongByIndex(index) {
+      if (index < 0 || index >= allSongsCache.length) return;
+      initAudioContext();
+      currentPlayingIndex = index;
+      const song = allSongsCache[currentPlayingIndex];
+
       document.getElementById('player-cover').src = song.coverArt;
       document.getElementById('player-title').textContent = song.title;
       document.getElementById('player-artist').textContent = song.artist + (song.featuredArtists ? ` (feat. ${song.featuredArtists})` : '');
@@ -406,9 +436,13 @@
       playIcon.classList.add('hidden');
       pauseIcon.classList.remove('hidden');
       playerBar.classList.remove('translate-y-full');
+
+      renderQueueList();
     }
 
     function togglePlay() {
+      if (!audioElement.src) return;
+      initAudioContext();
       if (audioElement.paused) {
         audioElement.play();
         playIcon.classList.add('hidden');
@@ -418,6 +452,42 @@
         playIcon.classList.remove('hidden');
         pauseIcon.classList.add('hidden');
       }
+    }
+
+    function playNextSong() {
+      if (allSongsCache.length === 0) return;
+      if (isShuffle) {
+        const randomIndex = Math.floor(Math.random() * allSongsCache.length);
+        playSongByIndex(randomIndex);
+      } else {
+        const nextIndex = (currentPlayingIndex + 1) % allSongsCache.length;
+        playSongByIndex(nextIndex);
+      }
+    }
+
+    function playPrevSong() {
+      if (allSongsCache.length === 0) return;
+      const prevIndex = (currentPlayingIndex - 1 + allSongsCache.length) % allSongsCache.length;
+      playSongByIndex(prevIndex);
+    }
+
+    audioElement.addEventListener('ended', () => {
+      if (isRepeat) {
+        audioElement.currentTime = 0;
+        audioElement.play();
+      } else {
+        playNextSong();
+      }
+    });
+
+    function toggleShuffle() {
+      isShuffle = !isShuffle;
+      document.getElementById('shuffle-btn').classList.toggle('btn-active', isShuffle);
+    }
+
+    function toggleRepeat() {
+      isRepeat = !isRepeat;
+      document.getElementById('repeat-btn').classList.toggle('btn-active', isRepeat);
     }
 
     function toggleMute() {
@@ -456,7 +526,91 @@
       }
     });
 
-    // DRAWER LOGIC
+    // QUEUE DRAWER LOGIC
+    const queueDrawer = document.getElementById('queue-drawer');
+    const queueBackdrop = document.getElementById('queue-backdrop');
+
+    function openQueueDrawer() {
+      renderQueueList();
+      queueDrawer.classList.remove('translate-x-full');
+      queueBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('queue-btn').classList.add('btn-active');
+    }
+
+    function closeQueueDrawer() {
+      queueDrawer.classList.add('translate-x-full');
+      queueBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('queue-btn').classList.remove('btn-active');
+    }
+
+    queueBackdrop.addEventListener('click', closeQueueDrawer);
+
+    function renderQueueList() {
+      const container = document.getElementById('queue-list');
+      container.innerHTML = allSongsCache.map((s, idx) => `
+        <div onclick="playSongByIndex(${idx})" class="p-2 rounded-lg flex items-center justify-between gap-2 cursor-pointer border ${idx === currentPlayingIndex ? 'bg-[#27272a] border-white/20' : 'bg-[#18181b] border-transparent hover:bg-[#27272a]'}">
+          <div class="flex items-center gap-2 overflow-hidden">
+            <img src="${s.coverArt}" class="w-8 h-8 rounded object-cover shrink-0">
+            <div class="overflow-hidden">
+              <div class="font-semibold text-white truncate text-[11px]">${s.title}</div>
+              <div class="text-[10px] text-zinc-400 truncate">${s.artist}</div>
+            </div>
+          </div>
+          ${idx === currentPlayingIndex ? '<span class="text-[9px] text-emerald-400 font-bold uppercase">Playing</span>' : ''}
+        </div>
+      `).join('');
+    }
+
+    // MODAL WINDOW HANDLERS & TOGGLES
+    const eqBackdrop = document.getElementById('eq-modal-backdrop');
+    function openEqModal() {
+      eqBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('eq-btn').classList.add('btn-active');
+    }
+    function closeEqModal() {
+      eqBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('eq-btn').classList.remove('btn-active');
+    }
+
+    const lyricsBackdrop = document.getElementById('lyrics-modal-backdrop');
+    function openLyricsModal() {
+      if (currentPlayingIndex >= 0) {
+        const s = allSongsCache[currentPlayingIndex];
+        document.getElementById('lyrics-title').textContent = s.title;
+        document.getElementById('lyrics-artist').textContent = s.artist;
+        document.getElementById('lyrics-body').textContent = s.lyrics || "No lyrics uploaded for this track yet.";
+      }
+      lyricsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('lyrics-btn').classList.add('btn-active');
+    }
+    function closeLyricsModal() {
+      lyricsBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('lyrics-btn').classList.remove('btn-active');
+    }
+
+    const infoBackdrop = document.getElementById('info-modal-backdrop');
+    function openInfoModal(song) {
+      document.getElementById('info-cover').src = song.coverArt;
+      document.getElementById('info-title').textContent = song.title;
+      document.getElementById('info-artist').textContent = song.artist + (song.featuredArtists ? ` (feat. ${song.featuredArtists})` : '');
+      document.getElementById('info-era').textContent = song.era || '-';
+      document.getElementById('info-producers').textContent = song.producers || 'Unknown';
+      document.getElementById('info-engineers').textContent = song.engineers || 'Unknown';
+      document.getElementById('info-date').textContent = song.recordingDate || 'Unknown';
+      document.getElementById('info-location').textContent = song.studioLocation || 'Unknown';
+
+      infoBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function openCurrentInfoModal() {
+      if (currentPlayingIndex >= 0) openInfoModal(allSongsCache[currentPlayingIndex]);
+    }
+
+    function closeInfoModal() {
+      infoBackdrop.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // NEWS DRAWER LOGIC
     const bellBtn = document.getElementById('bell-btn');
     const unreadDot = document.getElementById('unread-dot');
     const closeDrawerBtn = document.getElementById('close-drawer-btn');
@@ -492,13 +646,13 @@
           }
 
           newsContent.innerHTML = news.map(n => `
-            <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-3.5 space-y-1.5 shadow-sm">
+            <div class="bg-[#18181b] border border-[#27272a] rounded-lg p-3 space-y-1 shadow-sm">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-white tracking-wider">${n.version}</span>
-                <span class="text-[11px] text-zinc-500 font-medium">${n.date}</span>
+                <span class="text-[10px] font-bold text-white tracking-wider">${n.version}</span>
+                <span class="text-[10px] text-zinc-500">${n.date}</span>
               </div>
-              <h3 class="font-semibold text-white text-sm">${n.title}</h3>
-              <p class="text-zinc-400 text-xs">${n.summary}</p>
+              <h3 class="font-semibold text-white text-xs">${n.title}</h3>
+              <p class="text-zinc-400 text-[11px]">${n.summary}</p>
             </div>
           `).join('');
         }
