@@ -265,11 +265,49 @@
     function toggleSidebar() { sidebar.classList.toggle('collapsed'); }
     brandGroup.addEventListener('click', toggleSidebar);
 
+    // RENDER LOADING SKELETONS WHILE WAITING FOR BACKEND
+    function renderSkeletons() {
+      const container = document.getElementById('eras-container');
+      container.innerHTML = ERA_DEFINITIONS.map(era => `
+        <section class="space-y-2">
+          <div class="border-b border-zinc-800/80 pb-1.5">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-300">${era.name}</h2>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            ${[1, 2, 3].map(() => `
+              <div class="bg-[#121212] border border-[#1e1e1e] rounded-lg p-2 flex items-center gap-2.5 animate-pulse">
+                <div class="w-11 h-11 bg-zinc-800 rounded shrink-0"></div>
+                <div class="space-y-1 flex-1">
+                  <div class="h-3 bg-zinc-800 rounded w-3/4"></div>
+                  <div class="h-2.5 bg-zinc-800/60 rounded w-1/2"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `).join('');
+    }
+
     async function loadSongs() {
+      // 1. INSTANT LOAD FROM CACHE IF AVAILABLE
+      const cachedData = localStorage.getItem('cw_songs_cache');
+      if (cachedData) {
+        try {
+          allSongsCache = JSON.parse(cachedData);
+          renderSongs(allSongsCache);
+        } catch (e) {}
+      } else {
+        renderSkeletons();
+      }
+
+      // 2. FETCH FROM SERVER & UPDATE CACHE
       try {
         const res = await fetch(`${API}/songs`);
-        allSongsCache = await res.json();
-        renderSongs(allSongsCache);
+        if (res.ok) {
+          allSongsCache = await res.json();
+          localStorage.setItem('cw_songs_cache', JSON.stringify(allSongsCache));
+          renderSongs(allSongsCache);
+        }
       } catch (err) {
         console.error("Error fetching songs:", err);
       }
