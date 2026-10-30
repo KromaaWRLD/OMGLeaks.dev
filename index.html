@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cold Winters</title>
+  <title>Cold Winters | Juice WRLD Vault</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     #sidebar { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -32,12 +32,30 @@
     .tooltip::before { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 8px; height: 8px; background-color: #18181b; border-right: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
     #news-drawer, #info-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     #news-backdrop, #info-modal-backdrop { transition: opacity 0.3s ease; }
-    input[type=range] { accent-color: #a855f7; }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #27272a;
+      border-radius: 9999px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 12px;
+      width: 12px;
+      border-radius: 50%;
+      background: #c084fc;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(192, 132, 252, 0.5);
+      transition: transform 0.1s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
   </style>
 </head>
 <body class="bg-[#09090b] text-white flex min-h-screen font-sans antialiased overflow-x-hidden">
 
-  <!-- UNTOUCHED SIDEBAR -->
+  <!-- SIDEBAR -->
   <aside id="sidebar" class="w-[250px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-visible z-20">
     <div class="flex flex-col">
       <div class="header-container border-b border-[#1e1e1e] no-select">
@@ -62,11 +80,6 @@
           <div class="fade-text-container"><span class="text-sm font-medium">Home</span></div>
           <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">Home</div>
         </a>
-        <a href="#artists" class="nav-item has-tooltip group cursor-pointer relative">
-          <div class="icon-wrapper"><svg class="nav-icon default-icon w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
-          <div class="fade-text-container"><span class="text-sm font-medium">Artists</span></div>
-          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">Artists</div>
-        </a>
         <div class="separator bg-[#1e1e1e]"></div>
         <a href="#support" class="nav-item support-item has-tooltip group cursor-pointer relative">
           <div class="icon-wrapper"><svg class="nav-icon pink-icon w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
@@ -78,41 +91,77 @@
   </aside>
 
   <!-- MAIN CONTENT -->
-  <main class="flex-1 p-8 pb-32 space-y-8">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-extrabold tracking-wider text-white">Music Library</h1>
-      <a href="/editor" class="text-xs font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-lg hover:bg-purple-500/20 transition-colors">Editor Portal →</a>
+  <main class="flex-1 p-8 pb-36 space-y-10">
+    
+    <!-- HEADER & SEARCH BAR -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1e1e1e] pb-6">
+      <div>
+        <h1 class="text-3xl font-black tracking-tight text-white">JUICE WRLD VAULT</h1>
+        <p class="text-xs text-zinc-400 mt-1">Explore discography, unreleased sessions, and studio information.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="relative w-full md:w-72">
+          <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input id="search-input" oninput="filterSongs()" type="text" placeholder="Search track, producer, era..." class="w-full bg-[#121212] border border-[#27272a] rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors">
+        </div>
+
+        <a href="/editor" class="text-xs font-bold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl hover:bg-purple-500/20 transition-all whitespace-nowrap shadow-sm">Portal →</a>
+      </div>
     </div>
 
-    <!-- JW3 ERA -->
-    <section class="space-y-3">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2">
-        <span>JW3 Era</span> <span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">JW3</span>
-      </h2>
-      <div id="era-JW3" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-    </section>
+    <!-- ERA SECTIONS -->
+    <div id="eras-container" class="space-y-10"></div>
 
-    <!-- LEGENDS NEVER DIE (LND) ERA -->
-    <section class="space-y-3">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2">
-        <span>Legends Never Die</span> <span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">LND</span>
-      </h2>
-      <div id="era-LND" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-    </section>
-
-    <!-- FIGHTING DEMONS (FD) ERA -->
-    <section class="space-y-3">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2">
-        <span>Fighting Demons</span> <span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded text-purple-300">FD</span>
-      </h2>
-      <div id="era-FD" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-    </section>
   </main>
 
-  <!-- SONG INFO POPUP MODAL -->
+  <!-- MUSIC PLAYER BAR -->
+  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-24 bg-[#121212]/95 border-t border-[#1e1e1e] backdrop-blur-xl z-30 flex flex-col justify-center px-6 translate-y-full transition-transform duration-300 shadow-2xl">
+    <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-6">
+      
+      <!-- Track Cover & Metadata -->
+      <div class="flex items-center gap-3.5 w-1/4 min-w-[200px]">
+        <img id="player-cover" src="" class="w-14 h-14 rounded-xl object-cover bg-zinc-800 shadow-md border border-white/5 shrink-0">
+        <div class="overflow-hidden">
+          <div id="player-title" class="font-bold text-sm text-white truncate">Select a song</div>
+          <div id="player-artist" class="text-xs text-zinc-400 truncate mt-0.5">-</div>
+        </div>
+      </div>
+
+      <!-- Controls & Scrubber -->
+      <div class="flex flex-col items-center gap-2 w-2/4 max-w-xl">
+        <button onclick="togglePlay()" id="play-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
+          <svg id="play-icon" class="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pause-icon" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        
+        <div class="flex items-center gap-3 w-full text-[11px] text-zinc-400 font-mono">
+          <span id="current-time">0:00</span>
+          <div class="relative flex-1 flex items-center">
+            <input id="seek-slider" type="range" min="0" max="100" value="0" class="w-full h-1.5 cursor-pointer accent-purple-500">
+          </div>
+          <span id="duration-time">0:00</span>
+        </div>
+      </div>
+
+      <!-- Volume Bar -->
+      <div class="w-1/4 min-w-[140px] flex justify-end items-center gap-2.5">
+        <button id="volume-btn" onclick="toggleMute()" class="text-zinc-400 hover:text-white transition-colors">
+          <svg id="vol-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
+          <svg id="mute-icon" class="w-5 h-5 hidden text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+        </button>
+        <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-20 h-1.5 cursor-pointer accent-purple-500">
+      </div>
+    </div>
+    <audio id="audio-element" class="hidden"></audio>
+  </div>
+
+  <!-- SONG INFO MODAL -->
   <div id="info-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
     <div id="info-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
-      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-sm font-bold">✕</button>
+      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
       
       <div class="flex items-center gap-4 border-b border-[#1e1e1e] pb-4">
         <img id="info-cover" src="" class="w-16 h-16 rounded-xl object-cover bg-zinc-800">
@@ -132,47 +181,8 @@
     </div>
   </div>
 
-  <!-- UPGRADED MUSIC PLAYER BAR -->
-  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-24 bg-[#121212]/95 border-t border-[#1e1e1e] backdrop-blur-md z-30 flex flex-col justify-center px-6 translate-y-full transition-transform duration-300">
-    <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
-      
-      <!-- Track Info -->
-      <div class="flex items-center gap-3 w-1/4 min-w-[180px]">
-        <img id="player-cover" src="" class="w-12 h-12 rounded-lg object-cover bg-zinc-800 shrink-0">
-        <div class="overflow-hidden">
-          <div id="player-title" class="font-bold text-sm text-white truncate">Select a song</div>
-          <div id="player-artist" class="text-xs text-zinc-400 truncate">-</div>
-        </div>
-      </div>
-
-      <!-- Scrubber & Play Controls -->
-      <div class="flex flex-col items-center gap-1.5 w-2/4 max-w-xl">
-        <div class="flex items-center gap-4">
-          <button onclick="togglePlay()" id="play-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold shadow-lg hover:scale-105 transition-transform">
-            ▶
-          </button>
-        </div>
-        
-        <!-- Progress Bar -->
-        <div class="flex items-center gap-2 w-full text-[11px] text-zinc-400">
-          <span id="current-time">0:00</span>
-          <input id="seek-slider" type="range" min="0" max="100" value="0" class="w-full h-1 bg-zinc-800 rounded-lg cursor-pointer">
-          <span id="duration-time">0:00</span>
-        </div>
-      </div>
-
-      <!-- Volume Slider -->
-      <div class="w-1/4 min-w-[140px] flex justify-end items-center gap-2">
-        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
-        <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-20 h-1 bg-zinc-800 rounded-lg cursor-pointer">
-      </div>
-    </div>
-    <audio id="audio-element" class="hidden"></audio>
-  </div>
-
   <!-- CHANGELOG DRAWER -->
   <div id="news-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
-
   <div id="news-drawer" class="fixed top-0 right-0 h-full w-[380px] max-w-[100vw] bg-[#121212] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl translate-x-full">
     <div class="flex items-center justify-between p-4 border-b border-[#1e1e1e]">
       <div class="flex items-center gap-2">
@@ -188,49 +198,86 @@
 
   <script>
     const API = "/api";
+    let allSongsCache = [];
+
+    const ERA_DEFINITIONS = [
+      { id: "PRE", name: "JuiceTheKidd / Pre-Juice Era", tag: "Pre-2017" },
+      { id: "GBGR", name: "Goodbye & Good Riddance / 999 Era", tag: "2017 - 2018" },
+      { id: "DRFL", name: "Death Race For Love Era", tag: "DRFL (2018 - 2019)" },
+      { id: "JW3", name: "JW3 / Outsiders Era", tag: "JW3" },
+      { id: "LND", name: "Legends Never Die Era", tag: "LND" },
+      { id: "FD", name: "Fighting Demons Era", tag: "FD" }
+    ];
+
     const sidebar = document.getElementById('sidebar');
     const brandGroup = document.getElementById('brand-group');
 
     function toggleSidebar() { sidebar.classList.toggle('collapsed'); }
     brandGroup.addEventListener('click', toggleSidebar);
 
-    // FETCH SONGS & RENDER WITH INFO ICON
     async function loadSongs() {
       try {
         const res = await fetch(`${API}/songs`);
-        const songs = await res.json();
-        
-        ['JW3', 'LND', 'FD'].forEach(era => {
-          const eraContainer = document.getElementById(`era-${era}`);
-          const eraSongs = songs.filter(s => s.era === era);
-          
-          if (eraSongs.length === 0) {
-            eraContainer.innerHTML = `<div class="text-xs text-zinc-600 col-span-full">No songs added for this era yet.</div>`;
-          } else {
-            eraContainer.innerHTML = eraSongs.map(s => `
-              <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] hover:border-purple-500/40 rounded-xl p-3 transition-all group space-y-2 relative">
-                <!-- Info Button -->
-                <button onclick='openInfoModal(${JSON.stringify(s)})' class="absolute top-4 right-4 bg-black/60 hover:bg-purple-600 text-zinc-300 hover:text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all z-10" title="Song Info">
-                  ⓘ
-                </button>
-
-                <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer space-y-2">
-                  <img src="${s.coverArt}" class="w-full aspect-square rounded-lg object-cover">
-                  <div>
-                    <h3 class="font-bold text-sm text-white group-hover:text-purple-300 truncate">${s.title}</h3>
-                    <p class="text-xs text-zinc-400 truncate">${s.artist}</p>
-                  </div>
-                </div>
-              </div>
-            `).join('');
-          }
-        });
+        allSongsCache = await res.json();
+        renderSongs(allSongsCache);
       } catch (err) {
         console.error("Error fetching songs:", err);
       }
     }
 
-    // INFO POPUP MODAL LOGIC
+    function renderSongs(songsToRender) {
+      const container = document.getElementById('eras-container');
+      container.innerHTML = ERA_DEFINITIONS.map(era => {
+        const eraSongs = songsToRender.filter(s => s.era === era.id);
+        
+        return `
+          <section class="space-y-4">
+            <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-2">
+              <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">${era.name}</h2>
+              <span class="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-mono">${era.tag}</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              ${eraSongs.length === 0 ? `<div class="text-xs text-zinc-600 col-span-full py-2">No tracks added to this era yet.</div>` : eraSongs.map(s => `
+                <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] hover:border-purple-500/30 rounded-2xl p-3 transition-all duration-200 group flex flex-col justify-between shadow-lg hover:-translate-y-0.5 relative">
+                  
+                  <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer relative overflow-hidden rounded-xl aspect-square mb-2.5 bg-zinc-800">
+                    <img src="${s.coverArt}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    
+                    <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="absolute bottom-2 right-2 bg-black/80 hover:bg-purple-600 text-zinc-300 hover:text-white w-6 h-6 rounded-full flex items-center justify-center transition-all shadow-md backdrop-blur-sm border border-white/10 z-10" title="Track Details">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                  </div>
+
+                  <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer space-y-1">
+                    <h3 class="font-bold text-xs text-white group-hover:text-purple-300 truncate tracking-wide">${s.title}</h3>
+                    <p class="text-[11px] text-zinc-400 truncate">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+        `;
+      }).join('');
+    }
+
+    function filterSongs() {
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      if (!query) {
+        renderSongs(allSongsCache);
+        return;
+      }
+
+      const filtered = allSongsCache.filter(s => 
+        (s.title && s.title.toLowerCase().includes(query)) ||
+        (s.artist && s.artist.toLowerCase().includes(query)) ||
+        (s.producers && s.producers.toLowerCase().includes(query)) ||
+        (s.featuredArtists && s.featuredArtists.toLowerCase().includes(query))
+      );
+
+      renderSongs(filtered);
+    }
+
     const infoBackdrop = document.getElementById('info-modal-backdrop');
     function openInfoModal(song) {
       document.getElementById('info-cover').src = song.coverArt;
@@ -249,12 +296,14 @@
       infoBackdrop.classList.add('opacity-0', 'pointer-events-none');
     }
 
-    // ADVANCED MUSIC PLAYER LOGIC
     const playerBar = document.getElementById('music-player-bar');
     const audioElement = document.getElementById('audio-element');
-    const playBtn = document.getElementById('play-btn');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
     const seekSlider = document.getElementById('seek-slider');
     const volumeSlider = document.getElementById('volume-slider');
+    const volIcon = document.getElementById('vol-icon');
+    const muteIcon = document.getElementById('mute-icon');
     const currentTimeEl = document.getElementById('current-time');
     const durationTimeEl = document.getElementById('duration-time');
 
@@ -273,17 +322,31 @@
       audioElement.src = song.audioUrl;
       audioElement.play();
       
-      playBtn.textContent = '⏸';
+      playIcon.classList.add('hidden');
+      pauseIcon.classList.remove('hidden');
       playerBar.classList.remove('translate-y-full');
     }
 
     function togglePlay() {
       if (audioElement.paused) {
         audioElement.play();
-        playBtn.textContent = '⏸';
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
       } else {
         audioElement.pause();
-        playBtn.textContent = '▶';
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+      }
+    }
+
+    function toggleMute() {
+      audioElement.muted = !audioElement.muted;
+      if (audioElement.muted) {
+        volIcon.classList.add('hidden');
+        muteIcon.classList.remove('hidden');
+      } else {
+        volIcon.classList.remove('hidden');
+        muteIcon.classList.add('hidden');
       }
     }
 
@@ -303,9 +366,15 @@
 
     volumeSlider.addEventListener('input', () => {
       audioElement.volume = volumeSlider.value;
+      if (volumeSlider.value == 0) {
+        volIcon.classList.add('hidden');
+        muteIcon.classList.remove('hidden');
+      } else {
+        volIcon.classList.remove('hidden');
+        muteIcon.classList.add('hidden');
+      }
     });
 
-    // NEWS & NOTIFICATIONS
     const bellBtn = document.getElementById('bell-btn');
     const unreadDot = document.getElementById('unread-dot');
     const closeDrawerBtn = document.getElementById('close-drawer-btn');
