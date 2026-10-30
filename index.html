@@ -7,21 +7,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     #sidebar { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-    #sidebar.collapsed { width: 72px; }
-    .header-container { display: flex; align-items: center; min-height: 64px; width: 100%; position: relative; }
-    .nav-item { position: relative; display: flex; align-items: center; height: 40px; width: 100%; border-radius: 0.375rem; color: #a7a7a7; overflow: visible; transition: background-color 0.2s ease, border-color 0.2s ease; }
-    .icon-wrapper { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
-    #brand-group .icon-wrapper { left: 12px; width: 28px; height: 28px; }
-    .fade-text-container { margin-left: 48px; white-space: nowrap; overflow: hidden; display: inline-block; -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%); mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%); transition: opacity 0.2s ease; opacity: 1; }
+    #sidebar.collapsed { width: 64px; }
+    
+    .header-container { display: flex; items-center: center; min-height: 60px; width: 100%; position: relative; padding: 0 12px; }
+    
+    .nav-item { position: relative; display: flex; items-center: center; height: 40px; width: 100%; border-radius: 0.5rem; color: #a7a7a7; transition: background-color 0.2s ease; }
+    .icon-wrapper { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    
+    .fade-text-container { white-space: nowrap; overflow: hidden; transition: opacity 0.2s ease; opacity: 1; }
     #sidebar.collapsed .fade-text-container { opacity: 0; pointer-events: none; }
+    
+    #sidebar.collapsed #bell-btn { position: static; margin-left: auto; }
+    #sidebar.collapsed .header-container { justify-content: space-between; padding: 0 8px; }
+
     .no-select { user-select: none; -webkit-user-select: none; }
     .nav-item:hover { background-color: #1f1f1f; color: #ffffff; }
     .nav-item.active { background-color: #282828; color: #ffffff; }
     .default-icon { color: #a7a7a7; transition: color 0.15s ease; }
     .nav-item:hover .default-icon, .nav-item.active .default-icon { color: #ffffff !important; }
     .pink-icon { color: #ec4899; }
-    .tooltip { opacity: 0; visibility: hidden; top: -32px; left: 50%; transform: translateX(-50%) translateY(4px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease; pointer-events: none; }
-    #sidebar.collapsed .has-tooltip:hover .tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
     
     #news-drawer, #queue-drawer, #info-modal-panel, #eq-modal-panel, #lyrics-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     #news-backdrop, #queue-backdrop, #info-modal-backdrop, #eq-modal-backdrop, #lyrics-modal-backdrop { transition: opacity 0.3s ease; }
@@ -52,31 +56,31 @@
 <body class="bg-[#09090b] text-white flex min-h-screen font-sans antialiased overflow-x-hidden">
 
   <!-- SIDEBAR -->
-  <aside id="sidebar" class="w-[220px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-visible z-20">
+  <aside id="sidebar" class="w-[220px] bg-[#121212] flex flex-col justify-between border-r border-[#1e1e1e] relative h-screen sticky top-0 shrink-0 overflow-hidden z-20">
     <div class="flex flex-col">
+      <!-- HEADER WITH COLLAPSE FIX -->
       <div class="header-container border-b border-[#1e1e1e] no-select">
-        <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative shrink-0 w-full h-full">
-          <div class="icon-wrapper">
-            <div class="w-7 h-7 rounded bg-[#27272a] flex items-center justify-center font-extrabold italic text-white text-[9px] tracking-wider shrink-0">CW</div>
-          </div>
+        <div id="brand-group" class="flex items-center gap-2 cursor-pointer overflow-hidden relative shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-[#27272a] flex items-center justify-center font-extrabold italic text-white text-[10px] tracking-wider shrink-0">CW</div>
           <div class="fade-text-container">
             <span class="font-bold text-xs tracking-wider text-white">COLD WINTERS</span>
           </div>
         </div>
 
-        <button id="bell-btn" aria-label="What's New" class="absolute right-3 w-7 h-7 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-          <span id="unread-dot" class="hidden absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full"></span>
+        <button id="bell-btn" aria-label="What's New" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0 ml-auto">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+          <span id="unread-dot" class="hidden absolute top-2 right-2 w-2 h-2 bg-pink-500 rounded-full"></span>
         </button>
       </div>
 
-      <nav class="flex flex-col p-2 no-select" id="nav-menu" style="gap: 4px;">
-        <a href="#home" class="nav-item has-tooltip active group cursor-pointer relative">
+      <!-- NAV MENU -->
+      <nav class="flex flex-col p-2 no-select space-y-1" id="nav-menu">
+        <a href="#home" class="nav-item active group cursor-pointer relative">
           <div class="icon-wrapper"><svg class="nav-icon default-icon w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
           <div class="fade-text-container"><span class="text-xs font-medium">Home</span></div>
         </a>
         <div class="h-px bg-[#1e1e1e] my-1"></div>
-        <a href="#support" class="nav-item has-tooltip group cursor-pointer relative">
+        <a href="#support" class="nav-item group cursor-pointer relative">
           <div class="icon-wrapper"><svg class="nav-icon pink-icon w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
           <div class="fade-text-container"><span class="text-xs font-medium">Support Us</span></div>
         </a>
@@ -102,7 +106,7 @@
       </div>
     </div>
 
-    <!-- ERA SECTIONS -->
+    <!-- ERA SECTIONS WITH COMPACT PLAYER-SIZED ARTWORK -->
     <div id="eras-container" class="space-y-8"></div>
   </main>
 
@@ -155,7 +159,6 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       </button>
 
-      <!-- Working Volume Controls -->
       <div class="flex items-center gap-1.5">
         <button id="volume-btn" onclick="toggleMute()" class="text-zinc-400 hover:text-white transition-colors">
           <svg id="vol-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M11 5L6 9H2v6h4l5 4V5z"/></svg>
@@ -177,7 +180,7 @@
     <div id="queue-list" class="flex-1 overflow-y-auto p-3 space-y-2 text-xs"></div>
   </div>
 
-  <!-- EQUALIZER MODAL WITH REAL WEBAUDIO EQ LOGIC -->
+  <!-- EQUALIZER MODAL -->
   <div id="eq-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
     <div id="eq-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-xl max-w-xs w-full p-5 space-y-4 shadow-2xl relative">
       <button onclick="closeEqModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-xs">✕</button>
@@ -280,36 +283,34 @@
       }
     }
 
-    // SMALLER & PROFESSIONAL SONG CARD TEMPLATES
+    // COMPACT SONG TEMPLATES (PLAYER SIZED ARTWORK W-11 H-11)
     function renderSongs(songsToRender) {
       const container = document.getElementById('eras-container');
       container.innerHTML = ERA_DEFINITIONS.map(era => {
         const eraSongs = songsToRender.filter(s => s.era === era.id);
         
         return `
-          <section class="space-y-3">
+          <section class="space-y-2">
             <div class="border-b border-zinc-800/80 pb-1.5">
               <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-300">${era.name}</h2>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               ${eraSongs.length === 0 ? `<div class="text-[11px] text-zinc-600 col-span-full py-1">No tracks added to this era yet.</div>` : eraSongs.map(s => {
                 const globalIndex = allSongsCache.findIndex(item => item._id === s._id);
                 return `
-                  <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] rounded-xl p-2.5 transition-all duration-200 group flex flex-col justify-between shadow-sm relative">
+                  <div onclick="playSongByIndex(${globalIndex})" class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] rounded-lg p-2 transition-all duration-200 group flex items-center justify-between cursor-pointer shadow-sm">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                      <img src="${s.coverArt}" class="w-11 h-11 rounded object-cover bg-zinc-800 shrink-0">
+                      <div class="overflow-hidden">
+                        <h3 class="font-semibold text-xs text-white group-hover:text-zinc-300 truncate tracking-tight">${s.title}</h3>
+                        <p class="text-[10px] text-zinc-400 truncate mt-0.5">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
+                      </div>
+                    </div>
                     
-                    <div onclick="playSongByIndex(${globalIndex})" class="cursor-pointer relative overflow-hidden rounded-lg aspect-square mb-2 bg-zinc-800">
-                      <img src="${s.coverArt}" class="w-full h-full object-cover">
-                      
-                      <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="absolute bottom-1.5 right-1.5 bg-black/80 hover:bg-zinc-700 text-zinc-300 hover:text-white w-5 h-5 rounded-full flex items-center justify-center transition-all z-10 border border-white/10" title="Details">
-                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      </button>
-                    </div>
-
-                    <div onclick="playSongByIndex(${globalIndex})" class="cursor-pointer space-y-0.5">
-                      <h3 class="font-semibold text-[11px] text-white group-hover:text-zinc-300 truncate tracking-tight">${s.title}</h3>
-                      <p class="text-[10px] text-zinc-400 truncate">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
-                    </div>
+                    <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="text-zinc-500 hover:text-white p-1.5 rounded-full shrink-0" title="Details">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
                   </div>
                 `;
               }).join('')}
@@ -561,7 +562,7 @@
       `).join('');
     }
 
-    // MODAL WINDOW HANDLERS & TOGGLES
+    // MODALS HANDLERS
     const eqBackdrop = document.getElementById('eq-modal-backdrop');
     function openEqModal() {
       eqBackdrop.classList.remove('opacity-0', 'pointer-events-none');
