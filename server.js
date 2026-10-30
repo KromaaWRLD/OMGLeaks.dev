@@ -74,20 +74,45 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// SONGS API
+// -----------------------------------------------------------------------------
+// CACHED SONGS API
+// -----------------------------------------------------------------------------
+
+let cachedSongs = null;
+let lastCacheTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
 app.get('/api/songs', async (req, res) => {
   try {
+    const now = Date.now();
+    // Return cached list if available and fresh
+    if (cachedSongs && (now - lastCacheTime < CACHE_DURATION)) {
+      return res.json(cachedSongs);
+    }
+
     const songs = await Song.find().sort({ createdAt: -1 });
+    cachedSongs = songs;
+    lastCacheTime = now;
     res.json(songs);
   } catch (err) {
+    if (cachedSongs) {
+      // Fallback to cache if database connection is slow
+      return res.json(cachedSongs);
+    }
     res.status(500).json({ error: "Failed to fetch songs" });
   }
 });
+
+// Clear cache when a new song is added, updated, or deleted
+function invalidateSongCache() {
+  cachedSongs = null;
+}
 
 app.post('/api/songs', async (req, res) => {
   try {
     const song = new Song(req.body);
     await song.save();
+    invalidateSongCache();
     res.status(201).json(song);
   } catch (err) {
     res.status(400).json({ error: "Failed to save song", details: err.message });
@@ -97,6 +122,7 @@ app.post('/api/songs', async (req, res) => {
 app.put('/api/songs/:id', async (req, res) => {
   try {
     const updatedSong = await Song.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    invalidateSongCache();
     res.json(updatedSong);
   } catch (err) {
     res.status(400).json({ error: "Failed to update song metadata" });
@@ -106,6 +132,7 @@ app.put('/api/songs/:id', async (req, res) => {
 app.delete('/api/songs/:id', async (req, res) => {
   try {
     await Song.findByIdAndDelete(req.params.id);
+    invalidateSongCache();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete song" });
