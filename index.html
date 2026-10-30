@@ -30,12 +30,13 @@
     .tooltip { opacity: 0; visibility: hidden; top: -32px; left: 50%; transform: translateX(-50%) translateY(4px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease; pointer-events: none; }
     #sidebar.collapsed .has-tooltip:hover .tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
     .tooltip::before { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 8px; height: 8px; background-color: #18181b; border-right: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-    #news-drawer, #info-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    #news-backdrop, #info-modal-backdrop { transition: opacity 0.3s ease; }
+    #news-drawer, #info-modal-panel, #eq-modal-panel, #lyrics-modal-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #news-backdrop, #info-modal-backdrop, #eq-modal-backdrop, #lyrics-modal-backdrop { transition: opacity 0.3s ease; }
 
+    /* NO-GLOW SLIDERS */
     input[type=range] {
       -webkit-appearance: none;
-      background: #27272a;
+      background: #3f3f46;
       border-radius: 9999px;
     }
     input[type=range]::-webkit-slider-thumb {
@@ -43,13 +44,8 @@
       height: 12px;
       width: 12px;
       border-radius: 50%;
-      background: #c084fc;
+      background: #ffffff;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(192, 132, 252, 0.5);
-      transition: transform 0.1s ease;
-    }
-    input[type=range]::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
     }
   </style>
 </head>
@@ -61,7 +57,7 @@
       <div class="header-container border-b border-[#1e1e1e] no-select">
         <div id="brand-group" class="flex items-center cursor-pointer overflow-hidden relative shrink-0 w-full h-full">
           <div class="icon-wrapper">
-            <div class="w-8 h-8 min-w-[32px] max-w-[32px] h-8 min-h-[32px] rounded-md bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center font-extrabold italic text-white text-[10px] tracking-wider shadow-md shadow-purple-900/30 shrink-0">CW</div>
+            <div class="w-8 h-8 min-w-[32px] max-w-[32px] rounded-md bg-[#27272a] flex items-center justify-center font-extrabold italic text-white text-[10px] tracking-wider shrink-0">CW</div>
           </div>
           <div class="fade-text-container brand-text-container">
             <span class="font-bold text-xs tracking-wider text-white">COLD WINTERS</span>
@@ -70,7 +66,7 @@
 
         <button id="bell-btn" aria-label="What's New" class="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#a7a7a7] hover:text-white hover:bg-[#282828] shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-          <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full ring-2 ring-[#121212]"></span>
+          <span id="unread-dot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full"></span>
         </button>
       </div>
 
@@ -78,13 +74,13 @@
         <a href="#home" class="nav-item has-tooltip active group cursor-pointer relative">
           <div class="icon-wrapper"><svg class="nav-icon default-icon w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
           <div class="fade-text-container"><span class="text-sm font-medium">Home</span></div>
-          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">Home</div>
+          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 whitespace-nowrap z-50">Home</div>
         </a>
         <div class="separator bg-[#1e1e1e]"></div>
         <a href="#support" class="nav-item support-item has-tooltip group cursor-pointer relative">
           <div class="icon-wrapper"><svg class="nav-icon pink-icon w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
           <div class="fade-text-container"><span class="text-sm font-medium">Support Us</span></div>
-          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 shadow-xl whitespace-nowrap z-50">Support Us</div>
+          <div class="tooltip absolute bg-[#18181b] text-white text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 whitespace-nowrap z-50">Support Us</div>
         </a>
       </nav>
     </div>
@@ -92,8 +88,6 @@
 
   <!-- MAIN CONTENT -->
   <main class="flex-1 p-8 pb-36 space-y-10">
-    
-    <!-- HEADER & SEARCH BAR -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1e1e1e] pb-6">
       <div>
         <h1 class="text-3xl font-black tracking-tight text-white">JUICE WRLD VAULT</h1>
@@ -103,54 +97,84 @@
       <div class="flex items-center gap-3">
         <div class="relative w-full md:w-72">
           <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input id="search-input" oninput="filterSongs()" type="text" placeholder="Search track, producer, era..." class="w-full bg-[#121212] border border-[#27272a] rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors">
+          <input id="search-input" oninput="filterSongs()" type="text" placeholder="Search track, producer, era..." class="w-full bg-[#121212] border border-[#27272a] rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500">
         </div>
 
-        <a href="/editor" class="text-xs font-bold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl hover:bg-purple-500/20 transition-all whitespace-nowrap shadow-sm">Portal →</a>
+        <a href="/editor" class="text-xs font-bold text-zinc-300 bg-[#18181b] border border-[#27272a] px-4 py-2 rounded-xl hover:bg-[#27272a] transition-all whitespace-nowrap">Portal →</a>
       </div>
     </div>
 
-    <!-- ERA SECTIONS -->
+    <!-- ERA SECTIONS (WITHOUT BADGES) -->
     <div id="eras-container" class="space-y-10"></div>
-
   </main>
 
-  <!-- MUSIC PLAYER BAR -->
-  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-24 bg-[#121212]/95 border-t border-[#1e1e1e] backdrop-blur-xl z-30 flex flex-col justify-center px-6 translate-y-full transition-transform duration-300 shadow-2xl">
-    <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-6">
-      
-      <!-- Track Cover & Metadata -->
-      <div class="flex items-center gap-3.5 w-1/4 min-w-[200px]">
-        <img id="player-cover" src="" class="w-14 h-14 rounded-xl object-cover bg-zinc-800 shadow-md border border-white/5 shrink-0">
-        <div class="overflow-hidden">
-          <div id="player-title" class="font-bold text-sm text-white truncate">Select a song</div>
-          <div id="player-artist" class="text-xs text-zinc-400 truncate mt-0.5">-</div>
-        </div>
+  <!-- SPOTIFY-STYLE MUSIC PLAYER BAR -->
+  <div id="music-player-bar" class="fixed bottom-0 left-0 right-0 h-24 bg-[#09090b] border-t border-[#1e1e1e] z-30 flex items-center justify-between px-6 translate-y-full transition-transform duration-300">
+    
+    <!-- LEFT: Cover, Metadata, 3 Dots -->
+    <div class="flex items-center gap-3 w-1/4 min-w-[220px]">
+      <img id="player-cover" src="" class="w-14 h-14 rounded-md object-cover bg-zinc-800 shrink-0">
+      <div class="overflow-hidden">
+        <div id="player-title" class="font-bold text-sm text-white truncate">Select a song</div>
+        <div id="player-artist" class="text-xs text-zinc-400 truncate mt-0.5">-</div>
       </div>
+      <!-- 3-Dots Menu Icon -->
+      <button onclick="openCurrentInfoModal()" class="text-zinc-400 hover:text-white ml-2 shrink-0">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      </button>
+    </div>
 
-      <!-- Controls & Scrubber -->
-      <div class="flex flex-col items-center gap-2 w-2/4 max-w-xl">
-        <button onclick="togglePlay()" id="play-btn" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
+    <!-- CENTER: Controls + Scrubber Bar -->
+    <div class="flex flex-col items-center gap-2 w-2/4 max-w-xl">
+      <!-- Player Controls -->
+      <div class="flex items-center gap-5">
+        <button class="text-zinc-400 hover:text-white transition-colors" title="Shuffle"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
+        <button class="text-zinc-400 hover:text-white transition-colors" title="Previous"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+        <button onclick="togglePlay()" id="play-btn" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
           <svg id="play-icon" class="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           <svg id="pause-icon" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
         </button>
-        
-        <div class="flex items-center gap-3 w-full text-[11px] text-zinc-400 font-mono">
-          <span id="current-time">0:00</span>
-          <div class="relative flex-1 flex items-center">
-            <input id="seek-slider" type="range" min="0" max="100" value="0" class="w-full h-1.5 cursor-pointer accent-purple-500">
-          </div>
-          <span id="duration-time">0:00</span>
-        </div>
+        <button class="text-zinc-400 hover:text-white transition-colors" title="Next"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+        <button class="text-zinc-400 hover:text-white transition-colors" title="Repeat"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 1l4 4m0 0l-4 4m4-4H7a4 4 0 00-4 4v1m0 11l-4-4m0 0l4-4m-4 4h14a4 4 0 004-4v-1"/></svg></button>
       </div>
+      
+      <!-- Scrubber -->
+      <div class="flex items-center gap-3 w-full text-[11px] text-zinc-400 font-mono">
+        <span id="current-time">0:06</span>
+        <input id="seek-slider" type="range" min="0" max="100" value="0" class="w-full h-1 cursor-pointer">
+        <span id="duration-time">2:55</span>
+      </div>
+    </div>
 
-      <!-- Volume Bar -->
-      <div class="w-1/4 min-w-[140px] flex justify-end items-center gap-2.5">
+    <!-- RIGHT: EQ, Queue, Lyrics, Volume -->
+    <div class="w-1/4 min-w-[200px] flex justify-end items-center gap-3.5">
+      <!-- Equalizer Settings Button -->
+      <button onclick="openEqModal()" class="text-zinc-400 hover:text-white transition-colors" title="Equalizer Settings">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      </button>
+
+      <!-- Display / Screen Layout Icon -->
+      <button class="text-zinc-400 hover:text-white transition-colors" title="View Layout">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </button>
+
+      <!-- Queue Icon -->
+      <button class="text-zinc-400 hover:text-white transition-colors" title="Queue">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+      </button>
+
+      <!-- Lyrics Icon -->
+      <button onclick="openLyricsModal()" class="text-zinc-400 hover:text-white transition-colors" title="Lyrics">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </button>
+
+      <!-- Volume -->
+      <div class="flex items-center gap-2">
         <button id="volume-btn" onclick="toggleMute()" class="text-zinc-400 hover:text-white transition-colors">
-          <svg id="vol-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
-          <svg id="mute-icon" class="w-5 h-5 hidden text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+          <svg id="vol-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M11 5L6 9H2v6h4l5 4V5z"/></svg>
+          <svg id="mute-icon" class="w-5 h-5 hidden text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
         </button>
-        <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-20 h-1.5 cursor-pointer accent-purple-500">
+        <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="w-20 h-1 cursor-pointer">
       </div>
     </div>
     <audio id="audio-element" class="hidden"></audio>
@@ -159,18 +183,14 @@
   <!-- SONG INFO MODAL -->
   <div id="info-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
     <div id="info-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
-      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-      
+      <button onclick="closeInfoModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg">✕</button>
       <div class="flex items-center gap-4 border-b border-[#1e1e1e] pb-4">
         <img id="info-cover" src="" class="w-16 h-16 rounded-xl object-cover bg-zinc-800">
         <div>
           <h3 id="info-title" class="font-bold text-lg text-white">Song Title</h3>
-          <p id="info-artist" class="text-xs text-purple-400">Artist</p>
+          <p id="info-artist" class="text-xs text-zinc-400">Artist</p>
         </div>
       </div>
-
       <div class="space-y-2 text-xs">
         <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Era:</span><span id="info-era" class="text-white font-medium">-</span></div>
         <div class="flex justify-between py-1 border-b border-zinc-800/50"><span class="text-zinc-500">Producer(s):</span><span id="info-producers" class="text-white font-medium">-</span></div>
@@ -181,17 +201,55 @@
     </div>
   </div>
 
+  <!-- EQUALIZER MODAL -->
+  <div id="eq-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
+    <div id="eq-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closeEqModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold">✕</button>
+      <h3 class="text-base font-bold text-white">Audio Equalizer</h3>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-zinc-400 mb-1">Preset Profile</label>
+          <select id="eq-preset" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2 text-xs text-white">
+            <option value="flat">Flat (Default)</option>
+            <option value="bass">Bass Boost</option>
+            <option value="vocal">Vocal Booster</option>
+            <option value="treble">Treble Boost</option>
+          </select>
+        </div>
+        <div class="flex justify-between items-center gap-2 pt-2">
+          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Bass</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Low Mid</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Mid</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">High Mid</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+          <div class="flex flex-col items-center gap-1"><span class="text-[10px] text-zinc-500">Treble</span><input type="range" class="h-20 [writing-mode:vertical-lr] cursor-pointer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LYRICS MODAL -->
+  <div id="lyrics-modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
+    <div id="lyrics-modal-panel" class="bg-[#121212] border border-[#27272a] rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[80vh] flex flex-col">
+      <button onclick="closeLyricsModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold">✕</button>
+      <div>
+        <h3 id="lyrics-title" class="text-base font-bold text-white">Song Lyrics</h3>
+        <p id="lyrics-artist" class="text-xs text-zinc-400">-</p>
+      </div>
+      <div id="lyrics-body" class="flex-1 overflow-y-auto whitespace-pre-wrap text-sm text-zinc-300 font-mono bg-[#18181b] p-4 rounded-xl border border-[#27272a]">
+        No lyrics uploaded for this track yet.
+      </div>
+    </div>
+  </div>
+
   <!-- CHANGELOG DRAWER -->
   <div id="news-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
   <div id="news-drawer" class="fixed top-0 right-0 h-full w-[380px] max-w-[100vw] bg-[#121212] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl translate-x-full">
     <div class="flex items-center justify-between p-4 border-b border-[#1e1e1e]">
       <div class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
         <h2 class="font-bold text-base text-white tracking-wide">What's New</h2>
       </div>
-      <button id="close-drawer-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-      </button>
+      <button id="close-drawer-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#282828] transition-all">✕</button>
     </div>
     <div id="news-content" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm"></div>
   </div>
@@ -199,14 +257,15 @@
   <script>
     const API = "/api";
     let allSongsCache = [];
+    let currentPlayingSong = null;
 
     const ERA_DEFINITIONS = [
-      { id: "PRE", name: "JuiceTheKidd / Pre-Juice Era", tag: "Pre-2017" },
-      { id: "GBGR", name: "Goodbye & Good Riddance / 999 Era", tag: "2017 - 2018" },
-      { id: "DRFL", name: "Death Race For Love Era", tag: "DRFL (2018 - 2019)" },
-      { id: "JW3", name: "JW3 / Outsiders Era", tag: "JW3" },
-      { id: "LND", name: "Legends Never Die Era", tag: "LND" },
-      { id: "FD", name: "Fighting Demons Era", tag: "FD" }
+      { id: "PRE", name: "JuiceTheKidd / Pre-Juice Era" },
+      { id: "GBGR", name: "Goodbye & Good Riddance / 999 Era" },
+      { id: "DRFL", name: "Death Race For Love Era" },
+      { id: "JW3", name: "JW3 / Outsiders Era" },
+      { id: "LND", name: "Legends Never Die Era" },
+      { id: "FD", name: "Fighting Demons Era" }
     ];
 
     const sidebar = document.getElementById('sidebar');
@@ -225,6 +284,7 @@
       }
     }
 
+    // ERA SECTIONS RENDER WITHOUT BADGES
     function renderSongs(songsToRender) {
       const container = document.getElementById('eras-container');
       container.innerHTML = ERA_DEFINITIONS.map(era => {
@@ -232,25 +292,24 @@
         
         return `
           <section class="space-y-4">
-            <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-2">
-              <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">${era.name}</h2>
-              <span class="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-mono">${era.tag}</span>
+            <div class="border-b border-zinc-800/80 pb-2">
+              <h2 class="text-sm font-bold uppercase tracking-wider text-white">${era.name}</h2>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               ${eraSongs.length === 0 ? `<div class="text-xs text-zinc-600 col-span-full py-2">No tracks added to this era yet.</div>` : eraSongs.map(s => `
-                <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] hover:border-purple-500/30 rounded-2xl p-3 transition-all duration-200 group flex flex-col justify-between shadow-lg hover:-translate-y-0.5 relative">
+                <div class="bg-[#121212] hover:bg-[#18181b] border border-[#1e1e1e] rounded-2xl p-3 transition-all duration-200 group flex flex-col justify-between shadow-lg relative">
                   
                   <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer relative overflow-hidden rounded-xl aspect-square mb-2.5 bg-zinc-800">
-                    <img src="${s.coverArt}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="${s.coverArt}" class="w-full h-full object-cover">
                     
-                    <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="absolute bottom-2 right-2 bg-black/80 hover:bg-purple-600 text-zinc-300 hover:text-white w-6 h-6 rounded-full flex items-center justify-center transition-all shadow-md backdrop-blur-sm border border-white/10 z-10" title="Track Details">
+                    <button onclick='event.stopPropagation(); openInfoModal(${JSON.stringify(s)})' class="absolute bottom-2 right-2 bg-black/80 hover:bg-zinc-700 text-zinc-300 hover:text-white w-6 h-6 rounded-full flex items-center justify-center transition-all z-10 border border-white/10" title="Track Details">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </button>
                   </div>
 
                   <div onclick='playSong(${JSON.stringify(s)})' class="cursor-pointer space-y-1">
-                    <h3 class="font-bold text-xs text-white group-hover:text-purple-300 truncate tracking-wide">${s.title}</h3>
+                    <h3 class="font-bold text-xs text-white group-hover:text-zinc-300 truncate tracking-wide">${s.title}</h3>
                     <p class="text-[11px] text-zinc-400 truncate">${s.artist} ${s.featuredArtists ? `<span class="text-zinc-500">(ft. ${s.featuredArtists})</span>` : ''}</p>
                   </div>
                 </div>
@@ -278,6 +337,7 @@
       renderSongs(filtered);
     }
 
+    // MODAL HANDLERS
     const infoBackdrop = document.getElementById('info-modal-backdrop');
     function openInfoModal(song) {
       document.getElementById('info-cover').src = song.coverArt;
@@ -292,10 +352,30 @@
       infoBackdrop.classList.remove('opacity-0', 'pointer-events-none');
     }
 
+    function openCurrentInfoModal() {
+      if (currentPlayingSong) openInfoModal(currentPlayingSong);
+    }
+
     function closeInfoModal() {
       infoBackdrop.classList.add('opacity-0', 'pointer-events-none');
     }
 
+    const eqBackdrop = document.getElementById('eq-modal-backdrop');
+    function openEqModal() { eqBackdrop.classList.remove('opacity-0', 'pointer-events-none'); }
+    function closeEqModal() { eqBackdrop.classList.add('opacity-0', 'pointer-events-none'); }
+
+    const lyricsBackdrop = document.getElementById('lyrics-modal-backdrop');
+    function openLyricsModal() {
+      if (currentPlayingSong) {
+        document.getElementById('lyrics-title').textContent = currentPlayingSong.title;
+        document.getElementById('lyrics-artist').textContent = currentPlayingSong.artist;
+        document.getElementById('lyrics-body').textContent = currentPlayingSong.lyrics || "No lyrics uploaded for this track yet.";
+      }
+      lyricsBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+    }
+    function closeLyricsModal() { lyricsBackdrop.classList.add('opacity-0', 'pointer-events-none'); }
+
+    // PLAYER LOGIC
     const playerBar = document.getElementById('music-player-bar');
     const audioElement = document.getElementById('audio-element');
     const playIcon = document.getElementById('play-icon');
@@ -315,9 +395,10 @@
     }
 
     function playSong(song) {
+      currentPlayingSong = song;
       document.getElementById('player-cover').src = song.coverArt;
       document.getElementById('player-title').textContent = song.title;
-      document.getElementById('player-artist').textContent = song.artist;
+      document.getElementById('player-artist').textContent = song.artist + (song.featuredArtists ? ` (feat. ${song.featuredArtists})` : '');
       
       audioElement.src = song.audioUrl;
       audioElement.play();
@@ -375,6 +456,7 @@
       }
     });
 
+    // DRAWER LOGIC
     const bellBtn = document.getElementById('bell-btn');
     const unreadDot = document.getElementById('unread-dot');
     const closeDrawerBtn = document.getElementById('close-drawer-btn');
@@ -412,7 +494,7 @@
           newsContent.innerHTML = news.map(n => `
             <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-3.5 space-y-1.5 shadow-sm">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-purple-400 tracking-wider">${n.version}</span>
+                <span class="text-xs font-bold text-white tracking-wider">${n.version}</span>
                 <span class="text-[11px] text-zinc-500 font-medium">${n.date}</span>
               </div>
               <h3 class="font-semibold text-white text-sm">${n.title}</h3>
