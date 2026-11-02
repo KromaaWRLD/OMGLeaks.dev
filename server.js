@@ -11,7 +11,6 @@ app.use(express.static(__dirname));
 
 // Environment Variables & Configurations
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters?retryWrites=true&w=majority';
-const ADMIN_SECRET = process.env.ADMIN_PASSWORD || 'admin123'; // Default secret key for admin signup
 
 // Connect to MongoDB Atlas
 mongoose.connect(MONGODB_URI, {
@@ -69,36 +68,27 @@ app.get('/app', (req, res) => {
 
 // --- AUTHENTICATION ROUTES --- //
 
-// FIXED REGISTER / SIGNUP ENDPOINT
+// FIXED REGISTER / SIGNUP ENDPOINT (No Admin Key Option)
 app.post('/api/register', async (req, res) => {
   try {
-    const { username, password, name, adminKey } = req.body;
+    const { username, password, name } = req.body;
 
-    // 1. Validation check
     if (!username || !password || !name) {
       return res.status(400).json({ error: 'Full name, username, and password are required.' });
     }
 
     const cleanUsername = username.trim().toLowerCase();
 
-    // 2. Check for duplicate username
+    // Check for duplicate username
     const existingUser = await User.findOne({ username: cleanUsername });
     if (existingUser) {
       return res.status(400).json({ error: 'That username is already taken. Please pick another or log in.' });
     }
 
-    // 3. Determine User Role
-    let role = 'student';
-    if (adminKey && adminKey.trim() !== '') {
-      if (adminKey.trim() === ADMIN_SECRET) {
-        role = 'admin';
-        console.log(`🔐 Admin role granted to user: ${cleanUsername}`);
-      } else {
-        return res.status(403).json({ error: 'Incorrect Admin Security Key.' });
-      }
-    }
+    // Assign 'admin' role automatically IF username is 'admin', otherwise 'student'
+    const role = (cleanUsername === 'admin') ? 'admin' : 'student';
 
-    // 4. Hash password & Save to MongoDB
+    // Hash password & Save to MongoDB
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       username: cleanUsername,
@@ -122,7 +112,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// FIXED LOGIN ENDPOINT
+// FIXED LOGIN ENDPOINT (Prevents Illegal Argument Crash)
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -137,6 +127,11 @@ app.post('/api/login', async (req, res) => {
     const user = await User.findOne({ username: cleanUsername });
     if (!user) {
       return res.status(400).json({ error: 'Account not found. Please register first!' });
+    }
+
+    // Safety check: ensure user object actually has a stored password hash
+    if (!user.password) {
+      return res.status(400).json({ error: 'Account data corrupted (missing password hash). Please re-register.' });
     }
 
     // 2. Compare hashed password
