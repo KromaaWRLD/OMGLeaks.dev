@@ -112,7 +112,6 @@
       <h1>My Schedule</h1>
       <p class="subtitle">Manage and arrange your personal class timetable.</p>
 
-      <!-- Add Class Form -->
       <div class="content-block">
         <h3>Add New Class</h3>
         <form id="addClassForm" class="inline-form">
@@ -124,7 +123,6 @@
         </form>
       </div>
 
-      <!-- Personal Schedule Table -->
       <div class="content-block">
         <h3>Your Current Schedule</h3>
         <table class="schedule-table">
@@ -155,31 +153,54 @@
       </div>
     </section>
 
-    <!-- SETTINGS VIEW -->
+    <!-- WORKING SETTINGS VIEW -->
     <section id="view-settings" class="view-section" style="display: none;">
       <h1>Profile & Settings</h1>
-      <p class="subtitle">Update account details and preferences.</p>
+      <p class="subtitle">Update account details, security settings, and preferences.</p>
+
+      <!-- Account Settings -->
       <div class="content-block">
-        <p style="color: #888888;">Account management options will appear here.</p>
+        <h3><i class="fa-solid fa-user-gear"></i> Account Security</h3>
+        <form id="updatePasswordForm" class="inline-form" style="grid-template-columns: 1fr 1fr auto;">
+          <input type="password" id="currentPass" placeholder="Current Password" required>
+          <input type="password" id="newPass" placeholder="New Password" required>
+          <button type="submit" class="action-btn">Update Password</button>
+        </form>
+        <div id="settingsMsg" style="margin-top: 0.5rem; font-size: 0.85rem;"></div>
+      </div>
+
+      <!-- Schedule Privacy & Display -->
+      <div class="content-block">
+        <h3><i class="fa-solid fa-lock"></i> Privacy & Schedule Visibility</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 400px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; color: #ccc;">
+            <span>Allow classmates to see shared classes:</span>
+            <input type="checkbox" id="prefSharing" checked style="accent-color: #fff; width: 18px; height: 18px;">
+          </label>
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; color: #ccc;">
+            <span>Show room numbers on shared profiles:</span>
+            <input type="checkbox" id="prefShowRooms" checked style="accent-color: #fff; width: 18px; height: 18px;">
+          </label>
+        </div>
       </div>
     </section>
 
     <!-- ADMIN PANEL VIEW -->
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
-      <p class="subtitle">Set master bell schedules and manage calendar overrides.</p>
+      <p class="subtitle">Set master bell schedules, custom date schedules, and manage overrides.</p>
 
-      <!-- Date Override / Day Off Creator -->
+      <!-- Date Override / Custom Bell Schedule Creator -->
       <div class="content-block">
-        <h3><i class="fa-solid fa-calendar-plus"></i> Date Schedule Override / Day Off</h3>
-        <form id="adminCalendarForm" class="inline-form">
+        <h3><i class="fa-solid fa-calendar-plus"></i> Date Override / Custom Schedule Creator</h3>
+        <form id="adminCalendarForm" class="inline-form" style="grid-template-columns: 1fr 1fr 1fr auto;">
           <input type="date" id="adminDate" required>
-          <input type="text" id="adminDateTitle" placeholder="Reason (e.g. Winter Break, 2-Hr Delay)" required>
+          <input type="text" id="adminDateTitle" placeholder="Schedule Name (e.g. 2-Hr Delay, Rally)" required>
           <select id="adminIsDayOff" style="background:#111; color:#fff; border:1px solid #222; padding:0.6rem; border-radius:6px;">
+            <option value="false">Special Schedule Day (Custom Bells)</option>
             <option value="true">Full Day Off (No School)</option>
-            <option value="false">Special Schedule Day</option>
           </select>
-          <button type="submit" class="action-btn">Save Override</button>
+          <button type="submit" class="action-btn">Save Date Override</button>
         </form>
       </div>
 
