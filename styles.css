@@ -1,0 +1,309 @@
+/* Black & White Minimalist Theme */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  display: flex;
+  min-height: 100vh;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Mobile Toggle */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+  background-color: #111111;
+  color: #ffffff;
+  border: 1px solid #333333;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.mobile-toggle:hover {
+  background-color: #222222;
+  border-color: #666666;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 30;
+}
+
+/* Sidebar Layout */
+.sidenav {
+  width: 260px;
+  background-color: #0a0a0a;
+  border-right: 1px solid #222222;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease-in-out;
+  z-index: 40;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.nav-header {
+  padding: 1.5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  font-size: 1.2rem;
+}
+
+.brand-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: #888888;
+}
+
+/* Student Badge Box */
+.user-card {
+  margin-top: 1.25rem;
+  background-color: #111111;
+  border: 1px solid #222222;
+  padding: 0.75rem;
+  border-radius: 6px;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.user-school {
+  font-size: 0.75rem;
+  color: #aaaaaa;
+}
+
+/* Nav Menu Items */
+.nav-menu {
+  flex: 1;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  color: #888888;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+/* White-Grayish Hover Effects */
+.nav-item:hover {
+  background-color: #222222;
+  color: #ffffff;
+  border-color: #444444;
+}
+
+.nav-item.active {
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 600;
+}
+
+.nav-item.active .badge {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+}
+
+.nav-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Badges */
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background-color: #1a1a1a;
+  color: #cccccc;
+  border: 1px solid #333333;
+}
+
+.nav-footer {
+  padding: 1rem;
+  border-top: 1px solid #222222;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background-color: #111111;
+  color: #888888;
+  border: 1px solid #222222;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #222222;
+  color: #ffffff;
+  border-color: #555555;
+}
+
+/* Main Area */
+.main-content {
+  margin-left: 260px;
+  padding: 2.5rem;
+  flex: 1;
+}
+
+.subtitle {
+  color: #777777;
+  margin-top: 0.5rem;
+}
+
+/* Login Page Styling */
+.login-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+  width: 100vw;
+  height: 100vh;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background-color: #0a0a0a;
+  border: 1px solid #222222;
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-icon {
+  display: inline-block;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 1.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.login-header h2 {
+  font-size: 1.25rem;
+  color: #ffffff;
+}
+
+.login-header p {
+  font-size: 0.8rem;
+  color: #777777;
+  margin-top: 0.25rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  color: #aaaaaa;
+}
+
+.form-group input {
+  background-color: #111111;
+  border: 1px solid #222222;
+  color: #ffffff;
+  padding: 0.65rem;
+  border-radius: 6px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #ffffff;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.login-btn:hover {
+  background-color: #cccccc;
+}
+
+.error-msg {
+  color: #ff5555;
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+/* Responsive Breakdown */
+@media (max-width: 768px) {
+  .mobile-toggle { display: block; }
+  .sidenav { transform: translateX(-100%); }
+  .sidenav.open { transform: translateX(0); }
+  .sidebar-overlay.open { display: block; }
+  .main-content { margin-left: 0; padding-top: 5rem; }
+}
