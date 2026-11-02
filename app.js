@@ -1,4 +1,3 @@
-// Auth Guard Check
 const userId = localStorage.getItem('uhs_user_id');
 const userRole = localStorage.getItem('uhs_user_role');
 
@@ -6,25 +5,20 @@ if (!userId && !window.location.pathname.includes('login.html')) {
   window.location.href = 'login.html';
 }
 
-// Elements
 const sidenav = document.getElementById('sidenav');
 const mobileToggle = document.getElementById('mobileToggle');
-const toggleIcon = document.getElementById('toggleIcon');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
 const navItems = document.querySelectorAll('.nav-item');
 const logoutBtn = document.getElementById('logoutBtn');
 const adminNavItem = document.getElementById('adminNavItem');
 
-// Show Admin Tab if user is admin
 if (userRole === 'admin' && adminNavItem) {
   adminNavItem.style.display = 'flex';
 }
 
-// Sidebar Drawer Control
 function toggleSidebar() {
   const isOpen = sidenav.classList.toggle('open');
   sidebarOverlay.classList.toggle('open', isOpen);
-  toggleIcon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
 }
 
 if (mobileToggle) {
@@ -32,26 +26,22 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
-// Navigation View Switcher
+// Route Switcher
 navItems.forEach(item => {
   item.addEventListener('click', () => {
     navItems.forEach(nav => nav.classList.remove('active'));
     item.classList.add('active');
 
     const path = item.getAttribute('data-path');
-
-    // Hide all view sections
     document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
 
-    // Show active view section
-    const activeSection = document.getElementById(`view-${path}`);
-    if (activeSection) activeSection.style.display = 'block';
+    const activeSec = document.getElementById(`view-${path}`);
+    if (activeSec) activeSec.style.display = 'block';
 
     if (sidenav.classList.contains('open')) toggleSidebar();
   });
 });
 
-// Logout
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
     localStorage.clear();
@@ -59,149 +49,183 @@ if (logoutBtn) {
   });
 }
 
-// FETCH & RENDER SCHEDULE DATA
-async function loadUserData() {
+// MAIN DATA LOADER
+async function initApp() {
   if (!userId) return;
 
-  try {
-    const res = await fetch(`/api/users/${userId}`);
-    if (res.ok) {
-      const user = await res.json();
-
-      document.getElementById('userName').innerText = user.name || 'Urbana Student';
-
-      // 1. Render Dashboard Info
-      renderDashboard(user.schedule || []);
-
-      // 2. Render Schedule Table
-      renderScheduleTable(user.schedule || []);
-
-      // 3. Render Admin Panel if Admin
-      if (userRole === 'admin') {
-        loadAdminUserList();
-      }
-    }
-  } catch (err) {
-    console.error("Error loading user data:", err);
-  }
-}
-
-// Render Dashboard
-function renderDashboard(schedule) {
-  document.getElementById('dashTotalClasses').innerText = schedule.length;
-  const dashList = document.getElementById('dashClassList');
-
-  if (schedule.length === 0) {
-    dashList.innerHTML = '<p class="empty-msg">No classes added to your schedule yet.</p>';
-    return;
+  // Fetch User Info
+  const userRes = await fetch(`/api/users/${userId}`);
+  if (userRes.ok) {
+    const user = await userRes.json();
+    document.getElementById('userName').innerText = user.name;
+    document.getElementById('dashTotalClasses').innerText = (user.schedule || []).length;
+    renderUserSchedule(user.schedule || []);
   }
 
-  dashList.innerHTML = schedule.map(item => `
-    <div class="class-summary-item">
-      <div>
-        <strong>${item.period}: ${item.className}</strong>
-        <div style="font-size: 0.8rem; color: #888888;">Room ${item.room} • ${item.teacher}</div>
-      </div>
-    </div>
-  `).join('');
+  // Fetch Calendar Days Off
+  const calRes = await fetch('/api/calendar');
+  if (calRes.ok) {
+    const events = await calRes.json();
+    renderCalendarEvents(events);
+    checkTodayStatus(events);
+  }
+
+  // Fetch Master Schedule Template
+  const masterRes = await fetch('/api/master-schedule');
+  if (masterRes.ok) {
+    const master = await masterRes.json();
+    renderMasterSchedule(master);
+  }
+
+  if (userRole === 'admin') loadAdminData();
 }
 
-// Render Schedule Table
-function renderScheduleTable(schedule) {
+function renderUserSchedule(schedule) {
   const tbody = document.getElementById('scheduleTableBody');
-
   if (schedule.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No classes added yet. Use the form above to add one.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No classes added yet.</td></tr>';
     return;
   }
-
-  tbody.innerHTML = schedule.map((item, index) => `
+  tbody.innerHTML = schedule.map((item, idx) => `
     <tr>
       <td><strong>${item.period}</strong></td>
       <td>${item.className}</td>
       <td>${item.room}</td>
       <td>${item.teacher}</td>
-      <td><button onclick="deleteClass(${index})" class="delete-btn"><i class="fa-solid fa-trash"></i></button></td>
+      <td><button onclick="deleteClass(${idx})" class="delete-btn">Delete</button></td>
     </tr>
   `).join('');
 }
 
-// Add Class Handler
-const addClassForm = document.getElementById('addClassForm');
-if (addClassForm) {
-  addClassForm.addEventListener('submit', async (e) => {
+function checkTodayStatus(events) {
+  const today = new Date().toISOString().split('T')[0];
+  const dayOffToday = events.find(e => e.date === today);
+
+  const statusEl = document.getElementById('dashTodayStatus');
+  if (dayOffToday) {
+    statusEl.innerText = `NO SCHOOL: ${dayOffToday.title}`;
+    statusEl.style.color = '#ff5555';
+  } else {
+    statusEl.innerText = 'Regular Urbana High School Day';
+    statusEl.style.color = '#55ff55';
+  }
+}
+
+function renderCalendarEvents(events) {
+  const container = document.getElementById('calendarList');
+  if (events.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No upcoming days off listed.</p>';
+    return;
+  }
+  container.innerHTML = events.map(e => `
+    <div class="class-summary-item">
+      <div><strong>${e.date}</strong> - ${e.title}</div>
+      ${userRole === 'admin' ? `<button onclick="deleteCalendarDate('${e.date}')" class="delete-btn">Remove</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderMasterSchedule(master) {
+  const container = document.getElementById('dashMasterSchedule');
+  if (master.length === 0) {
+    container.innerHTML = '<p class="empty-msg">Master bell schedule has not been set by admin.</p>';
+    return;
+  }
+  container.innerHTML = master.map(m => `
+    <div class="class-summary-item">
+      <div><strong>${m.period}:</strong> ${m.startTime} - ${m.endTime} (${m.label || 'Standard Class'})</div>
+      ${userRole === 'admin' ? `<button onclick="deleteMasterSlot('${m._id}')" class="delete-btn">Delete Slot</button>` : ''}
+    </div>
+  `).join('');
+}
+
+// SCHEDULE FORM
+document.getElementById('addClassForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const newClass = {
+    period: document.getElementById('classPeriod').value,
+    className: document.getElementById('className').value,
+    room: document.getElementById('classRoom').value,
+    teacher: document.getElementById('classTeacher').value
+  };
+  await fetch(`/api/users/${userId}/schedule`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newClass)
+  });
+  initApp();
+});
+
+async function deleteClass(index) {
+  await fetch(`/api/users/${userId}/schedule/${index}`, { method: 'DELETE' });
+  initApp();
+}
+
+// ADMIN FORM ACTIONS
+const adminCalForm = document.getElementById('adminCalendarForm');
+if (adminCalForm) {
+  adminCalForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    const newClass = {
-      period: document.getElementById('classPeriod').value,
-      className: document.getElementById('className').value,
-      room: document.getElementById('classRoom').value,
-      teacher: document.getElementById('classTeacher').value
-    };
-
-    try {
-      const res = await fetch(`/api/users/${userId}/schedule`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newClass)
-      });
-
-      if (res.ok) {
-        addClassForm.reset();
-        loadUserData();
-      }
-    } catch (err) {
-      alert("Failed to add class.");
-    }
+    await fetch('/api/admin/calendar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: document.getElementById('adminDate').value,
+        title: document.getElementById('adminDateTitle').value
+      })
+    });
+    initApp();
   });
 }
 
-// Delete Class Handler
-async function deleteClass(index) {
-  try {
-    const res = await fetch(`/api/users/${userId}/schedule/${index}`, {
-      method: 'DELETE'
+const adminMasterForm = document.getElementById('adminMasterForm');
+if (adminMasterForm) {
+  adminMasterForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await fetch('/api/admin/master-schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        period: document.getElementById('masterPeriod').value,
+        startTime: document.getElementById('masterStart').value,
+        endTime: document.getElementById('masterEnd').value,
+        label: document.getElementById('masterLabel').value
+      })
     });
+    initApp();
+  });
+}
 
-    if (res.ok) {
-      loadUserData();
-    }
-  } catch (err) {
-    alert("Failed to delete class.");
+async function deleteCalendarDate(date) {
+  await fetch(`/api/admin/calendar/${date}`, { method: 'DELETE' });
+  initApp();
+}
+
+async function deleteMasterSlot(id) {
+  await fetch(`/api/admin/master-schedule/${id}`, { method: 'DELETE' });
+  initApp();
+}
+
+async function loadAdminData() {
+  const res = await fetch('/api/admin/users');
+  if (res.ok) {
+    const users = await res.json();
+    document.getElementById('adminUsersTableBody').innerHTML = users.map(u => `
+      <tr>
+        <td>${u.username}</td>
+        <td>${u.name}</td>
+        <td><span class="badge">${u.role}</span></td>
+        <td><button onclick="deleteUser('${u._id}')" class="delete-btn">Delete</button></td>
+      </tr>
+    `).join('');
   }
 }
 
-// Load Admin User List
-async function loadAdminUserList() {
-  try {
-    const res = await fetch('/api/admin/users');
-    if (res.ok) {
-      const users = await res.json();
-      const tbody = document.getElementById('adminUsersTableBody');
-
-      tbody.innerHTML = users.map(u => `
-        <tr>
-          <td>${u.username}</td>
-          <td>${u.name}</td>
-          <td><span class="badge">${u.role || 'student'}</span></td>
-          <td><button onclick="deleteUser('${u._id}')" class="delete-btn">Delete</button></td>
-        </tr>
-      `).join('');
-    }
-  } catch (err) {
-    console.error("Failed to load admin user list.");
-  }
-}
-
-// Delete User from Admin
 async function deleteUser(id) {
-  if (!confirm("Are you sure you want to delete this user?")) return;
-  try {
-    const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-    if (res.ok) loadAdminUserList();
-  } catch (err) {
-    alert("Failed to delete user.");
+  if (confirm("Delete this user account?")) {
+    await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    loadAdminData();
   }
 }
 
-loadUserData();
+initApp();
