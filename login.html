@@ -1,17 +1,148 @@
-<!-- REGISTER FORM -->
-<form id="registerForm" style="display: none;">
-  <div class="form-group">
-    <label>Full Name</label>
-    <input type="text" id="regName" placeholder="e.g. John Ballenger" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Urbana High School Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="login-body">
+
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <h2>Urbana High School</h2>
+      <p id="portalSub">Sign in to your student schedule hub</p>
+    </div>
+
+    <!-- SIGN IN FORM -->
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" placeholder="e.g. john.b or admin" required autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="login-btn">Sign In</button>
+      <p class="toggle-link" onclick="toggleForm('register')">Need an account? Register here</p>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm" style="display: none;">
+      <div class="form-group">
+        <label for="regName">Full Name</label>
+        <input type="text" id="regName" placeholder="e.g. John Ballenger" required>
+      </div>
+
+      <div class="form-group">
+        <label for="regUsername">Username</label>
+        <input type="text" id="regUsername" placeholder="e.g. admin or student1" required autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label for="regPassword">Password</label>
+        <input type="password" id="regPassword" placeholder="Create a password" required autocomplete="new-password">
+      </div>
+
+      <button type="submit" class="login-btn">Create Account</button>
+      <p class="toggle-link" onclick="toggleForm('login')">Already have an account? Sign In</p>
+    </form>
+
+    <div id="authError" class="error-msg" style="display: none;"></div>
   </div>
-  <div class="form-group">
-    <label>Username</label>
-    <input type="text" id="regUsername" placeholder="e.g. admin or student1" required>
-  </div>
-  <div class="form-group">
-    <label>Password</label>
-    <input type="password" id="regPassword" placeholder="Create password" required>
-  </div>
-  <button type="submit" class="login-btn">Create Account</button>
-  <p class="toggle-link" onclick="toggleForm('login')">Already have an account? Sign In</p>
-</form>
+
+  <script>
+    // Toggle between Login and Register views
+    function toggleForm(mode) {
+      document.getElementById('authError').style.display = 'none';
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const portalSub = document.getElementById('portalSub');
+
+      if (mode === 'register') {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        portalSub.innerText = 'Create your Urbana High account';
+      } else {
+        registerForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        portalSub.innerText = 'Sign in to your student schedule hub';
+      }
+    }
+
+    // Handle Login Submit
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorDiv = document.getElementById('authError');
+      errorDiv.style.display = 'none';
+
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('uhs_user_id', data.userId);
+          localStorage.setItem('uhs_user_name', data.name);
+          localStorage.setItem('uhs_user_role', data.role);
+          window.location.href = 'index.html';
+        } else {
+          errorDiv.innerText = data.error || 'Login failed.';
+          errorDiv.style.display = 'block';
+        }
+      } catch (err) {
+        errorDiv.innerText = 'Server connection error. Check server logs.';
+        errorDiv.style.display = 'block';
+      }
+    });
+
+    // Handle Register Submit
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorDiv = document.getElementById('authError');
+      errorDiv.style.display = 'none';
+
+      const name = document.getElementById('regName').value.trim();
+      const username = document.getElementById('regUsername').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('uhs_user_id', data.userId);
+          localStorage.setItem('uhs_user_name', data.name);
+          localStorage.setItem('uhs_user_role', data.role);
+          window.location.href = 'index.html';
+        } else {
+          errorDiv.innerText = data.error || 'Registration failed.';
+          errorDiv.style.display = 'block';
+        }
+      } catch (err) {
+        errorDiv.innerText = 'Server connection error. Check server logs.';
+        errorDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
