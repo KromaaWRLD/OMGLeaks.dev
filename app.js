@@ -14,6 +14,7 @@ const adminNavItem = document.getElementById('adminNavItem');
 
 let currentActiveChatId = null;
 let cachedMasterSchedule = [];
+let chatPollingInterval = null; // Live Chat Poller
 
 if (userRole === 'admin' && adminNavItem) {
   adminNavItem.style.display = 'flex';
@@ -29,7 +30,7 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
-// Navigation Switcher
+// Navigation View Switcher
 navItems.forEach(item => {
   item.addEventListener('click', () => {
     navItems.forEach(nav => nav.classList.remove('active'));
@@ -41,13 +42,21 @@ navItems.forEach(item => {
     const activeSec = document.getElementById(`view-${path}`);
     if (activeSec) activeSec.style.display = 'block';
 
-    if (path === 'chat') loadChatChannels();
+    // Start live polling if switching to chat
+    if (path === 'chat') {
+      loadChatChannels();
+      startLiveChatPolling();
+    } else {
+      stopLiveChatPolling();
+    }
+
     if (sidenav.classList.contains('open')) toggleSidebar();
   });
 });
 
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
+    stopLiveChatPolling();
     localStorage.clear();
     window.location.href = 'login.html';
   });
@@ -61,9 +70,8 @@ async function initApp() {
   if (userRes.ok) {
     const user = await userRes.json();
     document.getElementById('userName').innerText = user.name;
-    document.getElementById('dashTotalClasses').innerText = (user.schedule || []).length;
     
-    // Set PFP Avatars
+    // Set PFP Avatar
     const firstLetter = (user.name || 'U').charAt(0).toUpperCase();
     document.getElementById('navPfpDisplay').innerText = firstLetter;
     document.getElementById('pfpPreview').innerText = firstLetter;
@@ -71,8 +79,6 @@ async function initApp() {
     if (user.avatarBg) {
       applyAvatarStyling(user.avatarBg, user.avatarColor || '#000000');
     }
-
-    renderUserSchedule(user.schedule || []);
   }
 
   const [calRes, masterRes, bannerRes] = await Promise.all([
@@ -99,7 +105,7 @@ async function initApp() {
   if (userRole === 'admin') loadAdminData();
 }
 
-// LIVE PERIOD COUNTDOWN TIMER (Feature #1)
+// LIVE PERIOD COUNTDOWN TIMER
 function startPeriodCountdown() {
   setInterval(updateCountdownDisplay, 1000);
   updateCountdownDisplay();
@@ -166,10 +172,9 @@ function timeToMinutes(timeStr) {
   return hours * 60 + minutes;
 }
 
-// PROFILE PICTURE (PFP) CUSTOMIZATION (Feature #6)
+// PROFILE PICTURE (PFP) CUSTOMIZATION
 async function setAvatarTheme(bgColor, textColor) {
   applyAvatarStyling(bgColor, textColor);
-
   await fetch(`/api/users/${userId}/avatar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -187,7 +192,24 @@ function applyAvatarStyling(bg, color) {
   previewPfp.style.color = color;
 }
 
-// STUDENT CHAT & GROUP MAKER
+// LIVE UPDATING STUDENT CHAT & GROUP SYSTEM
+function startLiveChatPolling() {
+  stopLiveChatPolling();
+  // Poll for new messages every 2 seconds
+  chatPollingInterval = setInterval(() => {
+    if (currentActiveChatId) {
+      loadMessages(true); // Silent update
+    }
+  }, 2000);
+}
+
+function stopLiveChatPolling() {
+  if (chatPollingInterval) {
+    clearInterval(chatPollingInterval);
+    chatPollingInterval = null;
+  }
+}
+
 async function loadChatChannels() {
   const container = document.getElementById('chatChannelsList');
   const res = await fetch(`/api/chat/channels/${userId}`);
@@ -195,11 +217,11 @@ async function loadChatChannels() {
   if (res.ok) {
     const channels = await res.json();
     if (channels.length === 0) {
-      container.innerHTML = '<p class="empty-msg">No chats yet. Create a group or message a classmate!</p>';
+      container.innerHTML = '<p class="empty-msg">No chats yet. Create a group!</p>';
       return;
     }
     container.innerHTML = channels.map(c => `
-      <div onclick="selectChatChannel('${c._id}', '${c.name}')" class="class-summary-item" style="cursor: pointer; padding: 0.6rem;">
+      <div onclick="selectChatChannel('${c._id}', '${c.name}')" class="class-summary-item" style="cursor: pointer; padding: 0.6rem; ${currentActiveChatId === c._id ? 'border-color: #ffffff;' : ''}">
         <div>
           <strong style="font-size: 0.9rem;">${c.name}</strong>
           <div style="font-size: 0.75rem; color: #888;">${c.isGroup ? 'Group Chat' : 'Direct Message'}</div>
@@ -211,28 +233,40 @@ async function loadChatChannels() {
 
 async function selectChatChannel(channelId, channelName) {
   currentActiveChatId = channelId;
-  document.getElementById('activeChatHeader').innerText = channelName;
-  loadMessages();
+  document.getElementById('activeChatHeader').innerHTML = `
+    <span>${channelName}</span>
+    <span id="liveStatusBadge" style="font-size: 0.75rem; color: #55ff55;"><i class="fa-solid fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Live Sync</span>
+  `;
+  loadMessages(false);
+  loadChatChannels();
 }
 
-async function loadMessages() {
+async function loadMessages(isSilent = false) {
   if (!currentActiveChatId) return;
   const historyEl = document.getElementById('messageHistory');
   const res = await fetch(`/api/chat/messages/${currentActiveChatId}`);
   
   if (res.ok) {
     const messages = await res.json();
+    
+    // Check if scrolled near bottom before rendering
+    const isAtBottom = historyEl.scrollHeight - historyEl.clientHeight <= historyEl.scrollTop + 50;
+
     if (messages.length === 0) {
       historyEl.innerHTML = '<p class="empty-msg">No messages here yet. Say hi!</p>';
       return;
     }
+
     historyEl.innerHTML = messages.map(m => `
       <div style="align-self: ${m.senderId === userId ? 'flex-end' : 'flex-start'}; max-width: 70%; background: ${m.senderId === userId ? '#ffffff' : '#1a1a1a'}; color: ${m.senderId === userId ? '#000000' : '#ffffff'}; padding: 0.5rem 0.75rem; border-radius: 8px;">
         <div style="font-size: 0.7rem; color: ${m.senderId === userId ? '#555' : '#aaa'}; font-weight: bold;">${m.senderName}</div>
         <div>${m.text}</div>
       </div>
     `).join('');
-    historyEl.scrollTop = historyEl.scrollHeight;
+
+    if (!isSilent || isAtBottom) {
+      historyEl.scrollTop = historyEl.scrollHeight;
+    }
   }
 }
 
@@ -256,7 +290,7 @@ document.getElementById('sendMessageForm').addEventListener('submit', async (e) 
   });
 
   input.value = '';
-  loadMessages();
+  loadMessages(false);
 });
 
 // Group Modal Trigger
@@ -286,7 +320,7 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
   const groupName = document.getElementById('groupNameInput').value;
   const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
   const memberIds = Array.from(checkboxes).map(cb => cb.value);
-  memberIds.push(userId); // Add self
+  memberIds.push(userId);
 
   await fetch('/api/chat/channels', {
     method: 'POST',
@@ -344,23 +378,6 @@ function renderMasterSchedule(master) {
   `).join('');
 }
 
-function renderUserSchedule(schedule) {
-  const tbody = document.getElementById('scheduleTableBody');
-  if (schedule.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No classes added yet.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = schedule.map((item, idx) => `
-    <tr>
-      <td><strong>${item.period}</strong></td>
-      <td>${item.className}</td>
-      <td>${item.room}</td>
-      <td>${item.teacher}</td>
-      <td><button onclick="deleteClass(${idx})" class="delete-btn">Delete</button></td>
-    </tr>
-  `).join('');
-}
-
 function renderCalendarEvents(events) {
   const container = document.getElementById('calendarList');
   if (events.length === 0) {
@@ -375,7 +392,7 @@ function renderCalendarEvents(events) {
   `).join('');
 }
 
-// ADMIN ANNOUNCEMENT BANNER CONTROL
+// ADMIN ANNOUNCEMENT CONTROL
 const adminBannerForm = document.getElementById('adminBannerForm');
 if (adminBannerForm) {
   adminBannerForm.addEventListener('submit', async (e) => {
