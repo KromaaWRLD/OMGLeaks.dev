@@ -2,8 +2,12 @@
   "name": "urbana-high-hub",
   "version": "1.0.0",
   "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "express": "^4.18.2",
-    "mongoose": "^7.0.0"
+    "mongoose": "^7.5.0"
   }
 }
