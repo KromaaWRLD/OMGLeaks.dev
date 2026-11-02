@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 
-app.use(express.json({ limit: '10mb' })); // Increased limit for base64 image uploads
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters?retryWrites=true&w=majority';
@@ -18,8 +18,7 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log('✅ Connected to MongoDB Atlas (coldwinters)'))
 .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
-// --- SCHEMAS --- //
-
+// SCHEMAS
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
@@ -46,7 +45,7 @@ const ChatChannelSchema = new mongoose.Schema({
   name: String,
   isGroup: { type: Boolean, default: false },
   members: [String],
-  adminId: String // Group Admin User ID
+  adminId: String
 });
 
 const ChatMessageSchema = new mongoose.Schema({
@@ -56,7 +55,7 @@ const ChatMessageSchema = new mongoose.Schema({
   text: String,
   imageUrl: String,
   edited: { type: Boolean, default: false },
-  readBy: [String], // Array of User IDs who read this message
+  readBy: [String],
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -72,19 +71,16 @@ const ChatChannel = mongoose.model('ChatChannel', ChatChannelSchema);
 const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 const SystemConfig = mongoose.model('SystemConfig', SystemConfigSchema);
 
-// In-Memory Typing State
-const typingState = {}; // { channelId: { userId: username } }
+const typingState = {};
 
-// --- MAINTENANCE MODE MIDDLEWARE --- //
+// MAINTENANCE MODE MIDDLEWARE
 app.use(async (req, res, next) => {
-  // Allow static files, auth endpoints, and admin configuration endpoints
   if (req.path.startsWith('/api/login') || req.path.startsWith('/api/register') || req.path.startsWith('/api/admin') || !req.path.startsWith('/api/')) {
     return next();
   }
 
   const maintenance = await SystemConfig.findOne({ key: 'maintenanceMode' });
   if (maintenance && maintenance.value === true) {
-    // Check if user making request is admin
     const userId = req.headers['x-user-id'];
     if (userId) {
       const user = await User.findById(userId);
@@ -95,11 +91,11 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// --- STATIC PAGE ROUTES --- //
+// STATIC ROUTES
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// --- AUTHENTICATION & USER MANAGEMENT --- //
+// AUTH & USER ROUTES
 app.post('/api/register', async (req, res) => {
   try {
     const { username, password, name } = req.body;
@@ -146,7 +142,6 @@ app.post('/api/users/:id/avatar', async (req, res) => {
   res.json({ success: true });
 });
 
-// SELF-SERVICE ACCOUNT DELETION (Feature #6)
 app.delete('/api/users/:id', async (req, res) => {
   try {
     const { password } = req.body;
@@ -157,7 +152,6 @@ app.delete('/api/users/:id', async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Incorrect password verification.' });
 
     await User.findByIdAndDelete(req.params.id);
-    // Remove from chat channels
     await ChatChannel.updateMany({}, { $pull: { members: req.params.id } });
     res.json({ success: true });
   } catch (err) {
@@ -165,13 +159,11 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-// --- CHAT & MESSAGING ROUTES --- //
-
+// CHAT & MESSAGING ROUTES
 app.get('/api/chat/channels/:userId', async (req, res) => {
   const userId = req.params.userId;
   const channels = await ChatChannel.find({ members: userId }).lean();
 
-  // Attach unread counts to each channel
   for (let channel of channels) {
     const unreadCount = await ChatMessage.countDocuments({
       channelId: channel._id,
@@ -189,11 +181,23 @@ app.post('/api/chat/channels', async (req, res) => {
   res.json(channel);
 });
 
+// GROUP DELETION ENDPOINT
+app.delete('/api/chat/channels/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  const channel = await ChatChannel.findById(req.params.id);
+
+  if (!channel) return res.status(404).json({ error: 'Channel not found.' });
+  if (channel.adminId !== userId) return res.status(403).json({ error: 'Only Group Admin can delete this group.' });
+
+  await ChatChannel.findByIdAndDelete(req.params.id);
+  await ChatMessage.deleteMany({ channelId: req.params.id });
+  res.json({ success: true });
+});
+
 app.get('/api/chat/messages/:channelId', async (req, res) => {
   const userId = req.headers['x-user-id'];
   const messages = await ChatMessage.find({ channelId: req.params.channelId }).sort({ createdAt: 1 });
 
-  // Mark as read for this user
   if (userId) {
     await ChatMessage.updateMany(
       { channelId: req.params.channelId, readBy: { $ne: userId } },
@@ -204,7 +208,6 @@ app.get('/api/chat/messages/:channelId', async (req, res) => {
   res.json(messages);
 });
 
-// MESSAGE CREATION (With Image Upload Support - Feature #7)
 app.post('/api/chat/messages', async (req, res) => {
   const { channelId, senderId, senderName, text, imageUrl } = req.body;
   const message = await ChatMessage.create({
@@ -216,7 +219,6 @@ app.post('/api/chat/messages', async (req, res) => {
     readBy: [senderId]
   });
 
-  // Clear typing status on message send
   if (typingState[channelId]) {
     delete typingState[channelId][senderId];
   }
@@ -224,7 +226,6 @@ app.post('/api/chat/messages', async (req, res) => {
   res.json(message);
 });
 
-// MESSAGE EDITING (Feature #4)
 app.put('/api/chat/messages/:id', async (req, res) => {
   const { text, senderId } = req.body;
   const msg = await ChatMessage.findById(req.params.id);
@@ -238,14 +239,12 @@ app.put('/api/chat/messages/:id', async (req, res) => {
   res.json(msg);
 });
 
-// MESSAGE DELETION (Feature #4)
 app.delete('/api/chat/messages/:id', async (req, res) => {
   const userId = req.headers['x-user-id'];
   const msg = await ChatMessage.findById(req.params.id);
 
   if (!msg) return res.status(404).json({ error: 'Message not found.' });
 
-  // Allow deletion by message sender or group admin
   const channel = await ChatChannel.findById(msg.channelId);
   const isGroupAdmin = channel && channel.adminId === userId;
 
@@ -257,7 +256,6 @@ app.delete('/api/chat/messages/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// LIVE TYPING INDICATORS (Feature #1)
 app.post('/api/chat/typing', (req, res) => {
   const { channelId, userId, userName, isTyping } = req.body;
   if (!typingState[channelId]) typingState[channelId] = {};
@@ -280,7 +278,7 @@ app.get('/api/chat/typing/:channelId', (req, res) => {
   res.json({ typers: activeTypers });
 });
 
-// --- SYSTEM CONFIG & MAINTENANCE MODE (Feature #5) --- //
+// SYSTEM CONFIG & MAINTENANCE MODE
 app.get('/api/config/maintenance', async (req, res) => {
   const maintenance = await SystemConfig.findOne({ key: 'maintenanceMode' });
   res.json({ maintenance: maintenance ? maintenance.value : false });
@@ -296,7 +294,7 @@ app.post('/api/admin/maintenance', async (req, res) => {
   res.json({ success: true, maintenance });
 });
 
-// --- CALENDAR & MASTER SCHEDULE ROUTES --- //
+// CALENDAR & MASTER SCHEDULE ROUTES
 app.get('/api/calendar', async (req, res) => res.json(await CalendarEvent.find()));
 app.get('/api/master-schedule', async (req, res) => res.json(await MasterSchedule.find()));
 
