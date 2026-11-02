@@ -34,7 +34,6 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
-// Custom Fetch Wrapper to attach User ID Header
 async function authFetch(url, options = {}) {
   options.headers = {
     ...options.headers,
@@ -109,14 +108,13 @@ async function initApp() {
   checkTodayStatus(events, cachedMasterSchedule);
   startPeriodCountdown();
 
-  // Load unread count badge periodically
   loadUnreadBadgeCount();
-  setInterval(loadUnreadBadgeCount, 4000);
+  setInterval(loadUnreadBadgeCount, 3000);
 
   if (userRole === 'admin') loadAdminData();
 }
 
-// UNREAD BADGE COUNT (Feature #2)
+// WORKING REAL-TIME UNREAD NOTIFICATIONS
 async function loadUnreadBadgeCount() {
   const res = await authFetch(`/api/chat/channels/${userId}`);
   if (res.ok) {
@@ -129,6 +127,11 @@ async function loadUnreadBadgeCount() {
       badge.style.display = 'inline-block';
     } else {
       badge.style.display = 'none';
+    }
+
+    // Refresh current channel list in background to update individual badges
+    if (document.getElementById('view-chat').style.display !== 'none') {
+      renderChatChannelsList(channels);
     }
   }
 }
@@ -200,7 +203,7 @@ function timeToMinutes(timeStr) {
   return hours * 60 + minutes;
 }
 
-// PROFILE PICTURE AVATAR SETTINGS
+// AVATAR SETTINGS
 async function setAvatarTheme(bgColor, textColor) {
   applyAvatarStyling(bgColor, textColor);
   await authFetch(`/api/users/${userId}/avatar`, {
@@ -220,7 +223,7 @@ function applyAvatarStyling(bg, color) {
   previewPfp.style.color = color;
 }
 
-// ACCOUNT DELETION SELF-SERVICE (Feature #6)
+// ACCOUNT DELETION
 document.getElementById('deleteAccountForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const password = document.getElementById('deleteAccountPass').value;
@@ -261,27 +264,60 @@ function stopLiveChatPolling() {
 }
 
 async function loadChatChannels() {
-  const container = document.getElementById('chatChannelsList');
   const res = await authFetch(`/api/chat/channels/${userId}`);
-  
   if (res.ok) {
     const channels = await res.json();
-    if (channels.length === 0) {
-      container.innerHTML = '<p class="empty-msg">No chats yet. Create a group!</p>';
-      return;
-    }
-    container.innerHTML = channels.map(c => `
-      <div onclick="selectChatChannel('${c._id}')" class="class-summary-item" style="cursor: pointer; padding: 0.6rem; ${currentActiveChatId === c._id ? 'border-color: #ffffff;' : ''}">
-        <div>
-          <strong style="font-size: 0.9rem;">${c.name}</strong>
-          <div style="font-size: 0.75rem; color: #888;">
-            ${c.isGroup ? 'Group Chat' : 'Direct Message'}
-            ${c.adminId === userId ? ' • <span style="color: #ffaa00;">Group Admin</span>' : ''}
+    renderChatChannelsList(channels);
+  }
+}
+
+function renderChatChannelsList(channels) {
+  const container = document.getElementById('chatChannelsList');
+  if (channels.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No chats yet. Create a group!</p>';
+    return;
+  }
+
+  container.innerHTML = channels.map(c => {
+    const isSelected = currentActiveChatId === c._id;
+    const isAdmin = c.adminId === userId;
+
+    return `
+      <div onclick="selectChatChannel('${c._id}')" class="class-summary-item" style="cursor: pointer; padding: 0.6rem; ${isSelected ? 'border-color: #ffffff;' : ''}">
+        <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="font-size: 0.9rem;">${c.name}</strong>
+            <div style="font-size: 0.75rem; color: #888;">
+              ${c.isGroup ? 'Group Chat' : 'Direct Message'}
+              ${isAdmin ? ' • <span style="color: #ffaa00;">Admin</span>' : ''}
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            ${c.unreadCount > 0 ? `<span class="badge" style="background: #ff3333; color: #fff;">${c.unreadCount}</span>` : ''}
+            ${(c.isGroup && isAdmin) ? `<i onclick="deleteGroupChannel(event, '${c._id}')" class="fa-solid fa-trash" style="color: #ff5555; cursor: pointer; font-size: 0.85rem;" title="Delete Group"></i>` : ''}
           </div>
         </div>
-        ${c.unreadCount > 0 ? `<span class="badge" style="background: #ff3333; color: #fff;">${c.unreadCount}</span>` : ''}
       </div>
-    `).join('');
+    `;
+  }).join('');
+}
+
+// GROUP DELETION
+async function deleteGroupChannel(event, channelId) {
+  event.stopPropagation();
+  if (!confirm("Are you sure you want to delete this group chat for all members?")) return;
+
+  const res = await authFetch(`/api/chat/channels/${channelId}`, { method: 'DELETE' });
+  if (res.ok) {
+    if (currentActiveChatId === channelId) {
+      currentActiveChatId = null;
+      document.getElementById('activeChatHeader').innerHTML = '<span>Select a conversation to start chatting</span>';
+      document.getElementById('messageHistory').innerHTML = '<p class="empty-msg">No conversation selected.</p>';
+    }
+    loadChatChannels();
+    loadUnreadBadgeCount();
+  } else {
+    alert("Failed to delete group.");
   }
 }
 
@@ -292,9 +328,9 @@ async function selectChatChannel(channelId) {
     const channels = await res.json();
     currentActiveChannelObj = channels.find(c => c._id === channelId);
     
+    // Header without Live Sync text
     document.getElementById('activeChatHeader').innerHTML = `
       <span>${currentActiveChannelObj ? currentActiveChannelObj.name : 'Chat'}</span>
-      <span style="font-size: 0.75rem; color: #55ff55;"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Live Sync</span>
     `;
   }
 
@@ -303,7 +339,7 @@ async function selectChatChannel(channelId) {
   loadUnreadBadgeCount();
 }
 
-// TYPING INDICATORS (Feature #1)
+// TYPING INDICATORS
 document.getElementById('chatInput').addEventListener('input', () => {
   if (!currentActiveChatId) return;
 
@@ -339,7 +375,7 @@ async function fetchTypingStatus() {
   }
 }
 
-// MESSAGES LOG & EDIT/DELETE (Feature #4)
+// MESSAGES LOG & EDIT/DELETE
 async function loadMessages(isSilent = false) {
   if (!currentActiveChatId) return;
   const historyEl = document.getElementById('messageHistory');
@@ -381,7 +417,7 @@ async function loadMessages(isSilent = false) {
   }
 }
 
-// IMAGE ATTACHMENT HANDLING (Feature #7)
+// IMAGE ATTACHMENT
 document.getElementById('chatImageInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -426,6 +462,7 @@ document.getElementById('sendMessageForm').addEventListener('submit', async (e) 
   cancelImageAttachment();
   sendTypingSignal(false);
   loadMessages(false);
+  loadUnreadBadgeCount();
 });
 
 async function editMessagePrompt(msgId, currentText) {
@@ -447,7 +484,7 @@ async function deleteMessage(msgId) {
   loadMessages(false);
 }
 
-// GROUP CHAT MAKER WITH ADMIN ASSIGNMENT (Feature #3)
+// GROUP CHAT CREATION
 document.getElementById('openGroupModalBtn').addEventListener('click', async () => {
   const modal = document.getElementById('groupModal');
   const userCheckboxes = document.getElementById('groupUserCheckboxes');
@@ -483,7 +520,7 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
       name: groupName,
       isGroup: true,
       members: memberIds,
-      adminId: userId // Set group creator as Group Admin
+      adminId: userId
     })
   });
 
@@ -491,7 +528,7 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
   loadChatChannels();
 });
 
-// MAINTENANCE MODE CONTROL (Feature #5)
+// MAINTENANCE MODE CONTROL
 async function checkMaintenanceStatus() {
   const res = await authFetch('/api/config/maintenance');
   if (res.ok) {
