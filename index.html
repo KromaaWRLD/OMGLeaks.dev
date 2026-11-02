@@ -3,234 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ColdWinters App</title>
-  
-  <!-- FontAwesome for Navigation Icons -->
+  <title>Urbana High School - Student Hub</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <style>
-    /* Global Resets & Layout */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      display: flex;
-      min-height: 100vh;
-      background-color: #0f172a; /* Slate 900 */
-      color: #f8fafc;
-    }
-
-    /* Mobile Toggle Button */
-    .mobile-toggle {
-      display: none;
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 50;
-      background-color: #4f46e5; /* Indigo 600 */
-      color: #ffffff;
-      border: none;
-      padding: 0.6rem 0.8rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1.2rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Overlay for Mobile Drawer */
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      z-index: 30;
-    }
-
-    /* Sidebar Main Styling */
-    .sidenav {
-      width: 260px;
-      background-color: #0f172a;
-      border-right: 1px solid #1e293b;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.2s ease-in-out;
-      z-index: 40;
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-    }
-
-    /* Header & Branding */
-    .nav-header {
-      padding: 1.5rem;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .brand-icon {
-      background-color: #4f46e5;
-      color: white;
-      padding: 0.5rem 0.6rem;
-      border-radius: 10px;
-      font-size: 1.2rem;
-    }
-
-    .brand-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      line-height: 1.2;
-    }
-
-    .brand-subtitle {
-      font-size: 0.75rem;
-      color: #94a3b8;
-    }
-
-    /* User Brief Box */
-    .user-card {
-      margin-top: 1.25rem;
-      background-color: rgba(30, 41, 59, 0.6);
-      border: 1px solid rgba(51, 65, 85, 0.5);
-      padding: 0.75rem;
-      border-radius: 8px;
-    }
-
-    .user-name {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #e2e8f0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .user-school {
-      font-size: 0.75rem;
-      color: #818cf8;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Navigation Menu */
-    .nav-menu {
-      flex: 1;
-      padding: 0 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      overflow-y: auto;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.65rem 0.75rem;
-      border-radius: 8px;
-      color: #94a3b8;
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-
-    .nav-item:hover {
-      background-color: rgba(30, 41, 59, 0.8);
-      color: #f1f5f9;
-    }
-
-    .nav-item.active {
-      background-color: #4f46e5;
-      color: #ffffff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .nav-item-content {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .nav-item i {
-      width: 18px;
-      text-align: center;
-    }
-
-    /* Badges */
-    .badge {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.15rem 0.5rem;
-      border-radius: 9999px;
-      background-color: rgba(99, 102, 241, 0.2);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.3);
-    }
-
-    .nav-item.active .badge {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: #ffffff;
-      border: none;
-    }
-
-    /* Footer */
-    .nav-footer {
-      padding: 1rem;
-      border-top: 1px solid #1e293b;
-      font-size: 0.75rem;
-      color: #64748b;
-      text-align: center;
-    }
-
-    /* Main Content Area */
-    .main-content {
-      margin-left: 260px;
-      padding: 2rem;
-      flex: 1;
-    }
-
-    /* Responsive Breakdown */
-    @media (max-width: 768px) {
-      .mobile-toggle {
-        display: block;
-      }
-
-      .sidenav {
-        transform: translateX(-100%);
-      }
-
-      .sidenav.open {
-        transform: translateX(0);
-      }
-
-      .sidebar-overlay.open {
-        display: block;
-      }
-
-      .main-content {
-        margin-left: 0;
-        padding-top: 5rem;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
   <!-- Mobile Toggle Button -->
-  <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">
+  <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Navigation">
     <i class="fa-solid fa-bars" id="toggleIcon"></i>
   </button>
 
@@ -245,14 +25,14 @@
           <i class="fa-solid fa-graduation-cap"></i>
         </div>
         <div>
-          <div class="brand-title">ColdWinters</div>
+          <div class="brand-title">Urbana High</div>
           <div class="brand-subtitle">Student Schedule Hub</div>
         </div>
       </div>
 
       <div class="user-card">
-        <div class="user-name" id="userName">Loading User...</div>
-        <div class="user-school" id="userSchool">ColdWinters High</div>
+        <div class="user-name" id="userName">Loading Student...</div>
+        <div class="user-school">Urbana High School</div>
       </div>
     </div>
 
@@ -304,90 +84,19 @@
     </nav>
 
     <div class="nav-footer">
-      Render Connected • DB: coldwinters
+      <button id="logoutBtn" class="logout-btn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Log Out</span>
+      </button>
     </div>
   </aside>
 
-  <!-- Content Workspace -->
+  <!-- Main Content Workspace -->
   <main class="main-content">
     <h1 id="pageTitle">Dashboard</h1>
-    <p style="color: #94a3b8; margin-top: 0.5rem;">Select an option from the side navigation to view section details.</p>
+    <p class="subtitle">Welcome to the Urbana High School schedule and class platform.</p>
   </main>
 
-  <!-- JavaScript Logic -->
-  <script>
-    // Elements
-    const sidenav = document.getElementById('sidenav');
-    const mobileToggle = document.getElementById('mobileToggle');
-    const toggleIcon = document.getElementById('toggleIcon');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    const navItems = document.querySelectorAll('.nav-item');
-    const pageTitle = document.getElementById('pageTitle');
-
-    // Toggle Mobile Sidebar Drawer
-    function toggleSidebar() {
-      const isOpen = sidenav.classList.toggle('open');
-      sidebarOverlay.classList.toggle('open', isOpen);
-      toggleIcon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
-    }
-
-    mobileToggle.addEventListener('click', toggleSidebar);
-    sidebarOverlay.addEventListener('click', toggleSidebar);
-
-    // Active Route Selection Handler
-    navItems.forEach(item => {
-      item.addEventListener('click', (e) => {
-        navItems.forEach(nav => nav.classList.remove('active'));
-        item.classList.add('active');
-
-        const path = item.getAttribute('data-path');
-        const label = item.querySelector('span').innerText;
-        pageTitle.innerText = label;
-
-        // Close sidebar on mobile select
-        if (sidenav.classList.contains('open')) {
-          toggleSidebar();
-        }
-      });
-    });
-
-    // Fetch Dynamic Data from Express / MongoDB API
-    async function loadUserData(userId) {
-      try {
-        // Replace with your production URL or relative API path on Render
-        const response = await fetch(`/api/users/${userId}/nav-summary`);
-        
-        if (response.ok) {
-          const data = await response.json();
-
-          // Update Profile Header
-          document.getElementById('userName').innerText = data.name || 'Student';
-          document.getElementById('userSchool').innerText = data.schoolName || 'ColdWinters High';
-
-          // Update Friend Request Badge
-          if (data.pendingRequests > 0) {
-            const friendBadge = document.getElementById('friendBadge');
-            friendBadge.innerText = `${data.pendingRequests} new`;
-            friendBadge.style.display = 'inline-block';
-          }
-
-          // Update Task Due Badge
-          if (data.dueAssignments > 0) {
-            const taskBadge = document.getElementById('taskBadge');
-            taskBadge.innerText = data.dueAssignments;
-            taskBadge.style.display = 'inline-block';
-          }
-        }
-      } catch (err) {
-        console.warn("Could not load MongoDB data directly (likely running locally without backend):", err);
-        // Fallback demo values for UI testing
-        document.getElementById('userName').innerText = 'Demo Student';
-        document.getElementById('userSchool').innerText = 'ColdWinters High';
-      }
-    }
-
-    // Initialize with demo/active user ID
-    loadUserData('USER_ID_HERE');
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
