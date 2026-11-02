@@ -68,7 +68,6 @@ app.get('/app', (req, res) => {
 
 // --- AUTHENTICATION ROUTES --- //
 
-// FIXED REGISTER / SIGNUP ENDPOINT (No Admin Key Option)
 app.post('/api/register', async (req, res) => {
   try {
     const { username, password, name } = req.body;
@@ -79,16 +78,14 @@ app.post('/api/register', async (req, res) => {
 
     const cleanUsername = username.trim().toLowerCase();
 
-    // Check for duplicate username
     const existingUser = await User.findOne({ username: cleanUsername });
     if (existingUser) {
       return res.status(400).json({ error: 'That username is already taken. Please pick another or log in.' });
     }
 
-    // Assign 'admin' role automatically IF username is 'admin', otherwise 'student'
+    // Assign 'admin' role automatically IF username is 'admin'
     const role = (cleanUsername === 'admin') ? 'admin' : 'student';
 
-    // Hash password & Save to MongoDB
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       username: cleanUsername,
@@ -97,8 +94,6 @@ app.post('/api/register', async (req, res) => {
       role,
       schedule: []
     });
-
-    console.log(`👤 New ${role} account created: ${newUser.username}`);
 
     res.status(201).json({
       userId: newUser._id,
@@ -112,7 +107,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// FIXED LOGIN ENDPOINT (Prevents Illegal Argument Crash)
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -123,18 +117,15 @@ app.post('/api/login', async (req, res) => {
 
     const cleanUsername = username.trim().toLowerCase();
 
-    // 1. Find user in MongoDB
     const user = await User.findOne({ username: cleanUsername });
     if (!user) {
       return res.status(400).json({ error: 'Account not found. Please register first!' });
     }
 
-    // Safety check: ensure user object actually has a stored password hash
     if (!user.password) {
-      return res.status(400).json({ error: 'Account data corrupted (missing password hash). Please re-register.' });
+      return res.status(400).json({ error: 'Account data corrupted. Please re-register.' });
     }
 
-    // 2. Compare hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: 'Incorrect password.' });
@@ -217,7 +208,7 @@ app.post('/api/admin/calendar', async (req, res) => {
   try {
     const event = await CalendarEvent.findOneAndUpdate(
       { date },
-      { date, title, isDayOff: isDayOff ?? true },
+      { date, title, isDayOff: isDayOff === 'true' || isDayOff === true },
       { upsert: true, new: true }
     );
     res.json(event);
@@ -272,7 +263,6 @@ app.delete('/api/admin/users/:id', async (req, res) => {
   }
 });
 
-// Start Server on 0.0.0.0 for Render Docker compatibility
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Urbana High Server listening on port ${PORT}`);
