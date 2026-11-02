@@ -14,7 +14,6 @@
     <i class="fa-solid fa-bars" id="toggleIcon"></i>
   </button>
 
-  <!-- Mobile Overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <!-- Side Navigation -->
@@ -67,18 +66,18 @@
         </div>
       </a>
 
-      <a href="#tasks" class="nav-item" data-path="tasks">
-        <div class="nav-item-content">
-          <i class="fa-solid fa-list-check"></i>
-          <span>Tasks & Homework</span>
-        </div>
-        <span class="badge" id="taskBadge" style="display: none;">0</span>
-      </a>
-
       <a href="#settings" class="nav-item" data-path="settings">
         <div class="nav-item-content">
           <i class="fa-solid fa-gear"></i>
           <span>Profile & Settings</span>
+        </div>
+      </a>
+
+      <!-- Admin Tab (Only Visible to Admin Users) -->
+      <a href="#admin" class="nav-item" id="adminNavItem" data-path="admin" style="display: none;">
+        <div class="nav-item-content">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Admin Panel</span>
         </div>
       </a>
     </nav>
@@ -91,10 +90,111 @@
     </div>
   </aside>
 
-  <!-- Main Content Workspace -->
+  <!-- Main Content Area -->
   <main class="main-content">
-    <h1 id="pageTitle">Dashboard</h1>
-    <p class="subtitle">Welcome to the Urbana High School schedule and class platform.</p>
+    
+    <!-- DASHBOARD VIEW -->
+    <section id="view-dashboard" class="view-section">
+      <h1>Dashboard</h1>
+      <p class="subtitle">Welcome back! Here is your daily overview at Urbana High.</p>
+
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <div class="card-title"><i class="fa-solid fa-clock"></i> Total Classes</div>
+          <div class="card-value" id="dashTotalClasses">0</div>
+        </div>
+        <div class="dash-card">
+          <div class="card-title"><i class="fa-solid fa-calendar-day"></i> School Today</div>
+          <div class="card-value" style="font-size: 1.2rem; color: #aaaaaa;">Urbana High Schedule</div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3><i class="fa-solid fa-list-ol"></i> Class Overview</h3>
+        <div id="dashClassList" class="class-summary-list">
+          <p class="empty-msg">No classes added to your schedule yet.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCHEDULE VIEW -->
+    <section id="view-schedule" class="view-section" style="display: none;">
+      <h1>My Schedule</h1>
+      <p class="subtitle">Manage and arrange your Urbana High class timetable.</p>
+
+      <!-- Add Class Form -->
+      <div class="content-block">
+        <h3>Add New Class</h3>
+        <form id="addClassForm" class="inline-form">
+          <input type="text" id="classPeriod" placeholder="Period (e.g. 1st)" required>
+          <input type="text" id="className" placeholder="Class Name (e.g. AP Chem)" required>
+          <input type="text" id="classRoom" placeholder="Room #" required>
+          <input type="text" id="classTeacher" placeholder="Teacher Name" required>
+          <button type="submit" class="action-btn"><i class="fa-solid fa-plus"></i> Add</button>
+        </form>
+      </div>
+
+      <!-- Schedule Table -->
+      <div class="content-block">
+        <h3>Current Schedule</h3>
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Class Name</th>
+              <th>Room</th>
+              <th>Teacher</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleTableBody">
+            <tr><td colspan="5" class="empty-msg">Loading schedule...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CLASSMATE SHARING VIEW -->
+    <section id="view-sharing" class="view-section" style="display: none;">
+      <h1>Classmate Sharing</h1>
+      <p class="subtitle">Find friends with matching class periods at Urbana High.</p>
+    </section>
+
+    <!-- STUDY GROUPS VIEW -->
+    <section id="view-study" class="view-section" style="display: none;">
+      <h1>Study Groups & Notes</h1>
+      <p class="subtitle">Shared guides and study materials.</p>
+    </section>
+
+    <!-- SETTINGS VIEW -->
+    <section id="view-settings" class="view-section" style="display: none;">
+      <h1>Profile & Settings</h1>
+      <p class="subtitle">Update account details and privacy controls.</p>
+    </section>
+
+    <!-- ADMIN PANEL VIEW -->
+    <section id="view-admin" class="view-section" style="display: none;">
+      <h1>Admin Panel</h1>
+      <p class="subtitle">Manage students and system configurations for Urbana High.</p>
+
+      <div class="content-block">
+        <h3>Registered Students</h3>
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersTableBody">
+            <tr><td colspan="4" class="empty-msg">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
   </main>
 
   <script src="app.js"></script>
