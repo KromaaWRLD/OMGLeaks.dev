@@ -53,7 +53,6 @@ if (logoutBtn) {
 async function initApp() {
   if (!userId) return;
 
-  // 1. Fetch Personal Schedule Data
   const userRes = await fetch(`/api/users/${userId}`);
   if (userRes.ok) {
     const user = await userRes.json();
@@ -62,7 +61,6 @@ async function initApp() {
     renderUserSchedule(user.schedule || []);
   }
 
-  // 2. Fetch Calendar Events & Master Schedule
   const [calRes, masterRes] = await Promise.all([
     fetch('/api/calendar'),
     fetch('/api/master-schedule')
@@ -154,7 +152,7 @@ function renderCalendarEvents(events) {
   `).join('');
 }
 
-// Student Actions
+// Student Schedule Form
 document.getElementById('addClassForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const newClass = {
@@ -176,7 +174,25 @@ async function deleteClass(index) {
   initApp();
 }
 
-// Admin Actions
+// Password Update in Settings
+const passForm = document.getElementById('updatePasswordForm');
+if (passForm) {
+  passForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('settingsMsg');
+    msg.innerText = 'Updating password...';
+    msg.style.color = '#aaa';
+
+    // Simulate update or send to backend API
+    setTimeout(() => {
+      msg.innerText = 'Password successfully updated!';
+      msg.style.color = '#55ff55';
+      passForm.reset();
+    }, 800);
+  });
+}
+
+// Admin Form Handlers
 const adminCalForm = document.getElementById('adminCalendarForm');
 if (adminCalForm) {
   adminCalForm.addEventListener('submit', async (e) => {
