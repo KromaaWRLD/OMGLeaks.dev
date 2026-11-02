@@ -19,9 +19,7 @@
   <aside class="sidenav" id="sidenav">
     <div class="nav-header">
       <div class="brand">
-        <div class="brand-icon">
-          <i class="fa-solid fa-graduation-cap"></i>
-        </div>
+        <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
         <div>
           <div class="brand-title">Urbana High</div>
           <div class="brand-subtitle">Student Hub</div>
@@ -29,9 +27,7 @@
       </div>
 
       <div class="user-card" style="display: flex; align-items: center; gap: 0.75rem;">
-        <div class="pfp-avatar" id="navPfpDisplay" style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
-          U
-        </div>
+        <div class="pfp-avatar" id="navPfpDisplay" style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">U</div>
         <div>
           <div class="user-name" id="userName">Loading Student...</div>
           <div class="user-school">Urbana High School</div>
@@ -39,13 +35,17 @@
       </div>
     </div>
 
-    <!-- Navigation Menu (My Schedule Tab Removed) -->
     <nav class="nav-menu">
       <a href="#dashboard" class="nav-item active" data-path="dashboard">
         <div class="nav-item-content"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></div>
       </a>
       <a href="#chat" class="nav-item" data-path="chat">
-        <div class="nav-item-content"><i class="fa-solid fa-comments"></i><span>Student Chat</span></div>
+        <div class="nav-item-content">
+          <i class="fa-solid fa-comments"></i>
+          <span>Student Chat</span>
+        </div>
+        <!-- Unread Badge (Feature #2) -->
+        <span class="badge" id="totalUnreadBadge" style="display: none; background: #ff3333; color: #fff;">0</span>
       </a>
       <a href="#calendar" class="nav-item" data-path="calendar">
         <div class="nav-item-content"><i class="fa-solid fa-calendar"></i><span>School Calendar</span></div>
@@ -63,16 +63,8 @@
     </div>
   </aside>
 
-  <!-- Main Content Area -->
+  <!-- Main Content Workspace -->
   <main class="main-content">
-
-    <!-- Emergency Announcement Banner (Set by Admin) -->
-    <div id="emergencyBanner" style="display: none; background: #ff3333; color: #ffffff; padding: 0.8rem 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; align-items: center; justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span id="bannerText">School Announcement</span>
-      </div>
-    </div>
 
     <!-- DASHBOARD VIEW -->
     <section id="view-dashboard" class="view-section">
@@ -80,10 +72,9 @@
       <p class="subtitle">Welcome back! Here is your daily overview at Urbana High.</p>
 
       <div class="dashboard-grid">
-        <!-- Live Period Countdown Card -->
         <div class="dash-card">
-          <div class="card-title"><i class="fa-solid fa-stopwatch"></i> Current Period Countdown</div>
-          <div class="card-value" id="periodCountdown" style="font-size: 1.5rem; color: #ffffff;">Calculating...</div>
+          <div class="card-title"><i class="fa-solid fa-stopwatch"></i> Period Countdown</div>
+          <div class="card-value" id="periodCountdown" style="font-size: 1.5rem;">Calculating...</div>
           <div id="countdownSubtext" style="font-size: 0.8rem; color: #888888; margin-top: 0.25rem;">Checking Master Schedule...</div>
         </div>
 
@@ -99,12 +90,12 @@
       </div>
     </section>
 
-    <!-- LIVE CHAT & GROUP MAKER VIEW -->
+    <!-- LIVE CHAT VIEW -->
     <section id="view-chat" class="view-section" style="display: none;">
       <h1>Student Chat & Groups</h1>
-      <p class="subtitle">Direct message classmates or create group study chats (Live Updating).</p>
+      <p class="subtitle">Direct message classmates or create group study chats.</p>
 
-      <div style="display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; height: 520px;">
+      <div style="display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; height: 530px;">
         
         <!-- Channels & Groups List -->
         <div class="content-block" style="display: flex; flex-direction: column; padding: 1rem; margin-bottom: 0;">
@@ -121,12 +112,28 @@
         <div class="content-block" style="display: flex; flex-direction: column; padding: 1rem; margin-bottom: 0;">
           <div id="activeChatHeader" style="padding-bottom: 0.75rem; border-bottom: 1px solid #222222; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
             <span>Select a conversation to start chatting</span>
-            <span id="liveStatusBadge" style="font-size: 0.75rem; color: #55ff55; display: none;"><i class="fa-solid fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Live Sync</span>
           </div>
+
+          <!-- Typing Indicator Banner (Feature #1) -->
+          <div id="typingBanner" style="font-size: 0.75rem; color: #55ff55; font-style: italic; min-height: 18px; margin-top: 0.25rem;"></div>
+
           <div id="messageHistory" style="flex: 1; overflow-y: auto; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.75rem;">
             <p class="empty-msg">No conversation selected.</p>
           </div>
-          <form id="sendMessageForm" style="display: flex; gap: 0.5rem;">
+
+          <!-- Image Preview Bar (Feature #7) -->
+          <div id="imagePreviewContainer" style="display: none; padding: 0.5rem; background: #111; border-radius: 6px; margin-bottom: 0.5rem; align-items: center; justify-content: space-between;">
+            <img id="imagePreviewThumb" src="" style="max-height: 40px; border-radius: 4px;">
+            <button type="button" onclick="cancelImageAttachment()" class="delete-btn" style="padding: 0.2rem 0.4rem;"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <form id="sendMessageForm" style="display: flex; gap: 0.5rem; align-items: center;">
+            <!-- File Input for Image Upload (Feature #7) -->
+            <label class="action-btn" style="padding: 0.6rem 0.8rem; cursor: pointer;">
+              <i class="fa-solid fa-image"></i>
+              <input type="file" id="chatImageInput" accept="image/*" style="display: none;">
+            </label>
+
             <input type="text" id="chatInput" placeholder="Type your message..." required style="flex: 1; background: #111111; border: 1px solid #222222; color: #ffffff; padding: 0.6rem; border-radius: 6px;">
             <button type="submit" class="action-btn">Send</button>
           </form>
@@ -134,7 +141,7 @@
 
       </div>
 
-      <!-- Create Group Chat Modal -->
+      <!-- Create Group Chat Modal (Feature #3: Group Admin Role) -->
       <div id="groupModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center;">
         <div class="content-block" style="width: 100%; max-width: 400px; margin-bottom: 0;">
           <h3>Create New Group Chat</h3>
@@ -146,7 +153,7 @@
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
               <button type="button" onclick="closeGroupModal()" class="delete-btn" style="color: #ccc;">Cancel</button>
-              <button type="submit" class="action-btn">Create Group</button>
+              <button type="submit" class="action-btn">Create Group (As Admin)</button>
             </div>
           </form>
         </div>
@@ -166,17 +173,15 @@
     <!-- SETTINGS & PROFILE VIEW -->
     <section id="view-settings" class="view-section" style="display: none;">
       <h1>Profile & Settings</h1>
-      <p class="subtitle">Update account avatar, security settings, and preferences.</p>
+      <p class="subtitle">Update account avatar, security settings, or delete account.</p>
 
-      <!-- Profile Avatar / PFP Picker -->
+      <!-- Profile Avatar Picker -->
       <div class="content-block">
         <h3><i class="fa-solid fa-user-circle"></i> Profile Picture Avatar Color</h3>
         <div style="display: flex; align-items: center; gap: 1.5rem; margin-top: 1rem;">
-          <div id="pfpPreview" style="width: 64px; height: 64px; border-radius: 50%; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: bold;">
-            U
-          </div>
+          <div id="pfpPreview" style="width: 64px; height: 64px; border-radius: 50%; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: bold;">U</div>
           <div>
-            <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.5rem;">Choose your avatar color theme:</div>
+            <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.5rem;">Choose your avatar theme:</div>
             <div style="display: flex; gap: 0.5rem;">
               <button onclick="setAvatarTheme('#ffffff', '#000000')" style="width: 28px; height: 28px; border-radius: 50%; background: #ffffff; border: 2px solid #555; cursor: pointer;"></button>
               <button onclick="setAvatarTheme('#ff5555', '#ffffff')" style="width: 28px; height: 28px; border-radius: 50%; background: #ff5555; border: none; cursor: pointer;"></button>
@@ -187,21 +192,30 @@
           </div>
         </div>
       </div>
+
+      <!-- Account Deletion Self-Service (Feature #6) -->
+      <div class="content-block" style="border-color: #552222;">
+        <h3 style="color: #ff5555;"><i class="fa-solid fa-user-slash"></i> Delete Account</h3>
+        <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 1rem;">Permanently remove your account and chat data from Urbana High Hub.</p>
+        <form id="deleteAccountForm" class="inline-form" style="grid-template-columns: 1fr auto;">
+          <input type="password" id="deleteAccountPass" placeholder="Confirm Password" required style="background: #111; border: 1px solid #442222; color: #fff;">
+          <button type="submit" class="delete-btn" style="background: #ff3333; color: #fff; font-weight: bold;">Delete Account Permanently</button>
+        </form>
+      </div>
     </section>
 
     <!-- ADMIN PANEL VIEW -->
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
-      <p class="subtitle">Broadcast announcements, set master bell schedules, and manage users.</p>
+      <p class="subtitle">Broadcast announcements, toggle maintenance mode, and manage users.</p>
 
-      <!-- Announcement Banner Control -->
+      <!-- Maintenance Mode Toggle (Feature #5) -->
       <div class="content-block">
-        <h3><i class="fa-solid fa-bullhorn"></i> Emergency Alert & Announcement Banner</h3>
-        <form id="adminBannerForm" class="inline-form" style="grid-template-columns: 1fr auto auto;">
-          <input type="text" id="adminBannerText" placeholder="Announcement text (e.g. 2-Hour Delay Tomorrow)" required>
-          <button type="submit" class="action-btn">Broadcast Banner</button>
-          <button type="button" onclick="clearAdminBanner()" class="delete-btn">Clear Banner</button>
-        </form>
+        <h3><i class="fa-solid fa-power-off"></i> Maintenance Mode Control</h3>
+        <div style="display: flex; align-items: center; justify-content: space-between; max-width: 400px;">
+          <span style="font-size: 0.9rem; color: #ccc;">Lock app for system maintenance:</span>
+          <button id="toggleMaintenanceBtn" onclick="toggleMaintenanceMode()" class="action-btn">Loading...</button>
+        </div>
       </div>
 
       <!-- Date Override Creator -->
