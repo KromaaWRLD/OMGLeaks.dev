@@ -12,6 +12,9 @@ const navItems = document.querySelectorAll('.nav-item');
 const logoutBtn = document.getElementById('logoutBtn');
 const adminNavItem = document.getElementById('adminNavItem');
 
+let currentActiveChatId = null;
+let cachedMasterSchedule = [];
+
 if (userRole === 'admin' && adminNavItem) {
   adminNavItem.style.display = 'flex';
 }
@@ -38,6 +41,7 @@ navItems.forEach(item => {
     const activeSec = document.getElementById(`view-${path}`);
     if (activeSec) activeSec.style.display = 'block';
 
+    if (path === 'chat') loadChatChannels();
     if (sidenav.classList.contains('open')) toggleSidebar();
   });
 });
@@ -58,37 +62,256 @@ async function initApp() {
     const user = await userRes.json();
     document.getElementById('userName').innerText = user.name;
     document.getElementById('dashTotalClasses').innerText = (user.schedule || []).length;
+    
+    // Set PFP Avatars
+    const firstLetter = (user.name || 'U').charAt(0).toUpperCase();
+    document.getElementById('navPfpDisplay').innerText = firstLetter;
+    document.getElementById('pfpPreview').innerText = firstLetter;
+
+    if (user.avatarBg) {
+      applyAvatarStyling(user.avatarBg, user.avatarColor || '#000000');
+    }
+
     renderUserSchedule(user.schedule || []);
   }
 
-  const [calRes, masterRes] = await Promise.all([
+  const [calRes, masterRes, bannerRes] = await Promise.all([
     fetch('/api/calendar'),
-    fetch('/api/master-schedule')
+    fetch('/api/master-schedule'),
+    fetch('/api/announcement')
   ]);
 
   const events = calRes.ok ? await calRes.json() : [];
-  const master = masterRes.ok ? await masterRes.json() : [];
+  cachedMasterSchedule = masterRes.ok ? await masterRes.json() : [];
+  
+  if (bannerRes.ok) {
+    const banner = await bannerRes.json();
+    if (banner && banner.text) {
+      document.getElementById('bannerText').innerText = banner.text;
+      document.getElementById('emergencyBanner').style.display = 'flex';
+    }
+  }
 
   renderCalendarEvents(events);
-  checkTodayStatus(events, master);
+  checkTodayStatus(events, cachedMasterSchedule);
+  startPeriodCountdown();
 
   if (userRole === 'admin') loadAdminData();
 }
 
-// Check Daily Status vs Everyday Master Schedule
+// LIVE PERIOD COUNTDOWN TIMER (Feature #1)
+function startPeriodCountdown() {
+  setInterval(updateCountdownDisplay, 1000);
+  updateCountdownDisplay();
+}
+
+function updateCountdownDisplay() {
+  const countdownEl = document.getElementById('periodCountdown');
+  const subtextEl = document.getElementById('countdownSubtext');
+
+  if (!cachedMasterSchedule || cachedMasterSchedule.length === 0) {
+    countdownEl.innerText = "No Bell Schedule";
+    subtextEl.innerText = "Ask admin to set master bell slots.";
+    return;
+  }
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const secondsLeft = 59 - now.getSeconds();
+
+  let activePeriod = null;
+  let nextPeriod = null;
+
+  for (let i = 0; i < cachedMasterSchedule.length; i++) {
+    const slot = cachedMasterSchedule[i];
+    const startMins = timeToMinutes(slot.startTime);
+    const endMins = timeToMinutes(slot.endTime);
+
+    if (currentMinutes >= startMins && currentMinutes < endMins) {
+      activePeriod = { ...slot, endMins };
+      break;
+    } else if (currentMinutes < startMins && !nextPeriod) {
+      nextPeriod = { ...slot, startMins };
+    }
+  }
+
+  if (activePeriod) {
+    const minsLeft = activePeriod.endMins - currentMinutes - 1;
+    countdownEl.innerText = `${minsLeft}m ${secondsLeft}s left`;
+    subtextEl.innerText = `Currently in Period: ${activePeriod.period} (${activePeriod.label || 'Class'})`;
+    countdownEl.style.color = '#55ff55';
+  } else if (nextPeriod) {
+    const minsUntil = nextPeriod.startMins - currentMinutes - 1;
+    countdownEl.innerText = `Starts in ${minsUntil}m ${secondsLeft}s`;
+    subtextEl.innerText = `Next up: Period ${nextPeriod.period} at ${nextPeriod.startTime}`;
+    countdownEl.style.color = '#ffaa00';
+  } else {
+    countdownEl.innerText = "School Day Ended";
+    subtextEl.innerText = "No upcoming classes remaining today.";
+    countdownEl.style.color = '#888888';
+  }
+}
+
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+  if (!match) return 0;
+  let hours = parseInt(match[1]);
+  const minutes = parseInt(match[2]);
+  const ampm = match[3] ? match[3].toUpperCase() : null;
+
+  if (ampm === 'PM' && hours < 12) hours += 12;
+  if (ampm === 'AM' && hours === 12) hours = 0;
+
+  return hours * 60 + minutes;
+}
+
+// PROFILE PICTURE (PFP) CUSTOMIZATION (Feature #6)
+async function setAvatarTheme(bgColor, textColor) {
+  applyAvatarStyling(bgColor, textColor);
+
+  await fetch(`/api/users/${userId}/avatar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ avatarBg: bgColor, avatarColor: textColor })
+  });
+}
+
+function applyAvatarStyling(bg, color) {
+  const navPfp = document.getElementById('navPfpDisplay');
+  const previewPfp = document.getElementById('pfpPreview');
+
+  navPfp.style.background = bg;
+  navPfp.style.color = color;
+  previewPfp.style.background = bg;
+  previewPfp.style.color = color;
+}
+
+// STUDENT CHAT & GROUP MAKER
+async function loadChatChannels() {
+  const container = document.getElementById('chatChannelsList');
+  const res = await fetch(`/api/chat/channels/${userId}`);
+  
+  if (res.ok) {
+    const channels = await res.json();
+    if (channels.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No chats yet. Create a group or message a classmate!</p>';
+      return;
+    }
+    container.innerHTML = channels.map(c => `
+      <div onclick="selectChatChannel('${c._id}', '${c.name}')" class="class-summary-item" style="cursor: pointer; padding: 0.6rem;">
+        <div>
+          <strong style="font-size: 0.9rem;">${c.name}</strong>
+          <div style="font-size: 0.75rem; color: #888;">${c.isGroup ? 'Group Chat' : 'Direct Message'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+async function selectChatChannel(channelId, channelName) {
+  currentActiveChatId = channelId;
+  document.getElementById('activeChatHeader').innerText = channelName;
+  loadMessages();
+}
+
+async function loadMessages() {
+  if (!currentActiveChatId) return;
+  const historyEl = document.getElementById('messageHistory');
+  const res = await fetch(`/api/chat/messages/${currentActiveChatId}`);
+  
+  if (res.ok) {
+    const messages = await res.json();
+    if (messages.length === 0) {
+      historyEl.innerHTML = '<p class="empty-msg">No messages here yet. Say hi!</p>';
+      return;
+    }
+    historyEl.innerHTML = messages.map(m => `
+      <div style="align-self: ${m.senderId === userId ? 'flex-end' : 'flex-start'}; max-width: 70%; background: ${m.senderId === userId ? '#ffffff' : '#1a1a1a'}; color: ${m.senderId === userId ? '#000000' : '#ffffff'}; padding: 0.5rem 0.75rem; border-radius: 8px;">
+        <div style="font-size: 0.7rem; color: ${m.senderId === userId ? '#555' : '#aaa'}; font-weight: bold;">${m.senderName}</div>
+        <div>${m.text}</div>
+      </div>
+    `).join('');
+    historyEl.scrollTop = historyEl.scrollHeight;
+  }
+}
+
+document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentActiveChatId) return alert('Please select a chat channel first.');
+
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  await fetch('/api/chat/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      channelId: currentActiveChatId,
+      senderId: userId,
+      senderName: document.getElementById('userName').innerText,
+      text
+    })
+  });
+
+  input.value = '';
+  loadMessages();
+});
+
+// Group Modal Trigger
+document.getElementById('openGroupModalBtn').addEventListener('click', async () => {
+  const modal = document.getElementById('groupModal');
+  const userCheckboxes = document.getElementById('groupUserCheckboxes');
+  
+  const res = await fetch('/api/admin/users');
+  if (res.ok) {
+    const users = await res.json();
+    userCheckboxes.innerHTML = users.filter(u => u._id !== userId).map(u => `
+      <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" value="${u._id}" class="group-member-checkbox">
+        ${u.name} (@${u.username})
+      </label>
+    `).join('');
+  }
+  modal.style.display = 'flex';
+});
+
+function closeGroupModal() {
+  document.getElementById('groupModal').style.display = 'none';
+}
+
+document.getElementById('createGroupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const groupName = document.getElementById('groupNameInput').value;
+  const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
+  const memberIds = Array.from(checkboxes).map(cb => cb.value);
+  memberIds.push(userId); // Add self
+
+  await fetch('/api/chat/channels', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: groupName,
+      isGroup: true,
+      members: memberIds
+    })
+  });
+
+  closeGroupModal();
+  loadChatChannels();
+});
+
+// DASHBOARD HELPERS
 function checkTodayStatus(events, masterSchedule) {
   const today = new Date().toISOString().split('T')[0];
   const dayEvent = events.find(e => e.date === today);
-
   const statusEl = document.getElementById('dashTodayStatus');
 
   if (dayEvent && dayEvent.isDayOff) {
     statusEl.innerText = `NO SCHOOL: ${dayEvent.title}`;
     statusEl.style.color = '#ff5555';
-    document.getElementById('dashMasterSchedule').innerHTML = `
-      <div class="content-block">
-        <p class="empty-msg">No classes today due to <strong>${dayEvent.title}</strong>.</p>
-      </div>`;
+    document.getElementById('dashMasterSchedule').innerHTML = `<div class="content-block"><p class="empty-msg">No classes scheduled today due to <strong>${dayEvent.title}</strong>.</p></div>`;
     return;
   }
 
@@ -152,47 +375,27 @@ function renderCalendarEvents(events) {
   `).join('');
 }
 
-// Student Schedule Form
-document.getElementById('addClassForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const newClass = {
-    period: document.getElementById('classPeriod').value,
-    className: document.getElementById('className').value,
-    room: document.getElementById('classRoom').value,
-    teacher: document.getElementById('classTeacher').value
-  };
-  await fetch(`/api/users/${userId}/schedule`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(newClass)
-  });
-  initApp();
-});
-
-async function deleteClass(index) {
-  await fetch(`/api/users/${userId}/schedule/${index}`, { method: 'DELETE' });
-  initApp();
-}
-
-// Password Update in Settings
-const passForm = document.getElementById('updatePasswordForm');
-if (passForm) {
-  passForm.addEventListener('submit', async (e) => {
+// ADMIN ANNOUNCEMENT BANNER CONTROL
+const adminBannerForm = document.getElementById('adminBannerForm');
+if (adminBannerForm) {
+  adminBannerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = document.getElementById('settingsMsg');
-    msg.innerText = 'Updating password...';
-    msg.style.color = '#aaa';
-
-    // Simulate update or send to backend API
-    setTimeout(() => {
-      msg.innerText = 'Password successfully updated!';
-      msg.style.color = '#55ff55';
-      passForm.reset();
-    }, 800);
+    const text = document.getElementById('adminBannerText').value;
+    await fetch('/api/admin/announcement', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    initApp();
   });
 }
 
-// Admin Form Handlers
+async function clearAdminBanner() {
+  await fetch('/api/admin/announcement', { method: 'DELETE' });
+  document.getElementById('emergencyBanner').style.display = 'none';
+}
+
+// ADMIN FORM HANDLERS
 const adminCalForm = document.getElementById('adminCalendarForm');
 if (adminCalForm) {
   adminCalForm.addEventListener('submit', async (e) => {
