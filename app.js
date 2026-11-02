@@ -13,8 +13,12 @@ const logoutBtn = document.getElementById('logoutBtn');
 const adminNavItem = document.getElementById('adminNavItem');
 
 let currentActiveChatId = null;
+let currentActiveChannelObj = null;
 let cachedMasterSchedule = [];
-let chatPollingInterval = null; // Live Chat Poller
+let chatPollingInterval = null;
+let typingTimeout = null;
+let attachedBase64Image = null;
+let isMaintenanceActive = false;
 
 if (userRole === 'admin' && adminNavItem) {
   adminNavItem.style.display = 'flex';
@@ -30,6 +34,20 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
+// Custom Fetch Wrapper to attach User ID Header
+async function authFetch(url, options = {}) {
+  options.headers = {
+    ...options.headers,
+    'x-user-id': userId
+  };
+  const res = await fetch(url, options);
+  if (res.status === 503 && userRole !== 'admin') {
+    const data = await res.json();
+    alert(data.error || 'System is currently down for maintenance.');
+  }
+  return res;
+}
+
 // Navigation View Switcher
 navItems.forEach(item => {
   item.addEventListener('click', () => {
@@ -42,7 +60,6 @@ navItems.forEach(item => {
     const activeSec = document.getElementById(`view-${path}`);
     if (activeSec) activeSec.style.display = 'block';
 
-    // Start live polling if switching to chat
     if (path === 'chat') {
       loadChatChannels();
       startLiveChatPolling();
@@ -62,16 +79,15 @@ if (logoutBtn) {
   });
 }
 
-// APP INITIALIZATION
+// INITIALIZATION
 async function initApp() {
   if (!userId) return;
 
-  const userRes = await fetch(`/api/users/${userId}`);
+  const userRes = await authFetch(`/api/users/${userId}`);
   if (userRes.ok) {
     const user = await userRes.json();
     document.getElementById('userName').innerText = user.name;
     
-    // Set PFP Avatar
     const firstLetter = (user.name || 'U').charAt(0).toUpperCase();
     document.getElementById('navPfpDisplay').innerText = firstLetter;
     document.getElementById('pfpPreview').innerText = firstLetter;
@@ -81,31 +97,43 @@ async function initApp() {
     }
   }
 
-  const [calRes, masterRes, bannerRes] = await Promise.all([
-    fetch('/api/calendar'),
-    fetch('/api/master-schedule'),
-    fetch('/api/announcement')
+  const [calRes, masterRes] = await Promise.all([
+    authFetch('/api/calendar'),
+    authFetch('/api/master-schedule')
   ]);
 
   const events = calRes.ok ? await calRes.json() : [];
   cachedMasterSchedule = masterRes.ok ? await masterRes.json() : [];
-  
-  if (bannerRes.ok) {
-    const banner = await bannerRes.json();
-    if (banner && banner.text) {
-      document.getElementById('bannerText').innerText = banner.text;
-      document.getElementById('emergencyBanner').style.display = 'flex';
-    }
-  }
 
   renderCalendarEvents(events);
   checkTodayStatus(events, cachedMasterSchedule);
   startPeriodCountdown();
 
+  // Load unread count badge periodically
+  loadUnreadBadgeCount();
+  setInterval(loadUnreadBadgeCount, 4000);
+
   if (userRole === 'admin') loadAdminData();
 }
 
-// LIVE PERIOD COUNTDOWN TIMER
+// UNREAD BADGE COUNT (Feature #2)
+async function loadUnreadBadgeCount() {
+  const res = await authFetch(`/api/chat/channels/${userId}`);
+  if (res.ok) {
+    const channels = await res.json();
+    const totalUnread = channels.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+    const badge = document.getElementById('totalUnreadBadge');
+    
+    if (totalUnread > 0) {
+      badge.innerText = totalUnread;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+// LIVE PERIOD COUNTDOWN
 function startPeriodCountdown() {
   setInterval(updateCountdownDisplay, 1000);
   updateCountdownDisplay();
@@ -172,10 +200,10 @@ function timeToMinutes(timeStr) {
   return hours * 60 + minutes;
 }
 
-// PROFILE PICTURE (PFP) CUSTOMIZATION
+// PROFILE PICTURE AVATAR SETTINGS
 async function setAvatarTheme(bgColor, textColor) {
   applyAvatarStyling(bgColor, textColor);
-  await fetch(`/api/users/${userId}/avatar`, {
+  await authFetch(`/api/users/${userId}/avatar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ avatarBg: bgColor, avatarColor: textColor })
@@ -192,13 +220,35 @@ function applyAvatarStyling(bg, color) {
   previewPfp.style.color = color;
 }
 
-// LIVE UPDATING STUDENT CHAT & GROUP SYSTEM
+// ACCOUNT DELETION SELF-SERVICE (Feature #6)
+document.getElementById('deleteAccountForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const password = document.getElementById('deleteAccountPass').value;
+  if (!confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) return;
+
+  const res = await authFetch(`/api/users/${userId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  });
+
+  if (res.ok) {
+    alert("Account deleted.");
+    localStorage.clear();
+    window.location.href = 'login.html';
+  } else {
+    const data = await res.json();
+    alert(data.error || "Failed to delete account.");
+  }
+});
+
+// LIVE CHAT & CHANNELS
 function startLiveChatPolling() {
   stopLiveChatPolling();
-  // Poll for new messages every 2 seconds
   chatPollingInterval = setInterval(() => {
     if (currentActiveChatId) {
-      loadMessages(true); // Silent update
+      loadMessages(true);
+      fetchTypingStatus();
     }
   }, 2000);
 }
@@ -212,7 +262,7 @@ function stopLiveChatPolling() {
 
 async function loadChatChannels() {
   const container = document.getElementById('chatChannelsList');
-  const res = await fetch(`/api/chat/channels/${userId}`);
+  const res = await authFetch(`/api/chat/channels/${userId}`);
   
   if (res.ok) {
     const channels = await res.json();
@@ -221,35 +271,82 @@ async function loadChatChannels() {
       return;
     }
     container.innerHTML = channels.map(c => `
-      <div onclick="selectChatChannel('${c._id}', '${c.name}')" class="class-summary-item" style="cursor: pointer; padding: 0.6rem; ${currentActiveChatId === c._id ? 'border-color: #ffffff;' : ''}">
+      <div onclick="selectChatChannel('${c._id}')" class="class-summary-item" style="cursor: pointer; padding: 0.6rem; ${currentActiveChatId === c._id ? 'border-color: #ffffff;' : ''}">
         <div>
           <strong style="font-size: 0.9rem;">${c.name}</strong>
-          <div style="font-size: 0.75rem; color: #888;">${c.isGroup ? 'Group Chat' : 'Direct Message'}</div>
+          <div style="font-size: 0.75rem; color: #888;">
+            ${c.isGroup ? 'Group Chat' : 'Direct Message'}
+            ${c.adminId === userId ? ' • <span style="color: #ffaa00;">Group Admin</span>' : ''}
+          </div>
         </div>
+        ${c.unreadCount > 0 ? `<span class="badge" style="background: #ff3333; color: #fff;">${c.unreadCount}</span>` : ''}
       </div>
     `).join('');
   }
 }
 
-async function selectChatChannel(channelId, channelName) {
+async function selectChatChannel(channelId) {
   currentActiveChatId = channelId;
-  document.getElementById('activeChatHeader').innerHTML = `
-    <span>${channelName}</span>
-    <span id="liveStatusBadge" style="font-size: 0.75rem; color: #55ff55;"><i class="fa-solid fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Live Sync</span>
-  `;
+  const res = await authFetch(`/api/chat/channels/${userId}`);
+  if (res.ok) {
+    const channels = await res.json();
+    currentActiveChannelObj = channels.find(c => c._id === channelId);
+    
+    document.getElementById('activeChatHeader').innerHTML = `
+      <span>${currentActiveChannelObj ? currentActiveChannelObj.name : 'Chat'}</span>
+      <span style="font-size: 0.75rem; color: #55ff55;"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Live Sync</span>
+    `;
+  }
+
   loadMessages(false);
   loadChatChannels();
+  loadUnreadBadgeCount();
 }
 
+// TYPING INDICATORS (Feature #1)
+document.getElementById('chatInput').addEventListener('input', () => {
+  if (!currentActiveChatId) return;
+
+  sendTypingSignal(true);
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => sendTypingSignal(false), 2000);
+});
+
+async function sendTypingSignal(isTyping) {
+  await authFetch('/api/chat/typing', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      channelId: currentActiveChatId,
+      userId,
+      userName: document.getElementById('userName').innerText,
+      isTyping
+    })
+  });
+}
+
+async function fetchTypingStatus() {
+  if (!currentActiveChatId) return;
+  const res = await authFetch(`/api/chat/typing/${currentActiveChatId}`);
+  if (res.ok) {
+    const data = await res.json();
+    const banner = document.getElementById('typingBanner');
+    if (data.typers && data.typers.length > 0) {
+      banner.innerText = `${data.typers.join(', ')} ${data.typers.length > 1 ? 'are' : 'is'} typing...`;
+    } else {
+      banner.innerText = '';
+    }
+  }
+}
+
+// MESSAGES LOG & EDIT/DELETE (Feature #4)
 async function loadMessages(isSilent = false) {
   if (!currentActiveChatId) return;
   const historyEl = document.getElementById('messageHistory');
-  const res = await fetch(`/api/chat/messages/${currentActiveChatId}`);
+  const res = await authFetch(`/api/chat/messages/${currentActiveChatId}`);
   
   if (res.ok) {
     const messages = await res.json();
-    
-    // Check if scrolled near bottom before rendering
     const isAtBottom = historyEl.scrollHeight - historyEl.clientHeight <= historyEl.scrollTop + 50;
 
     if (messages.length === 0) {
@@ -257,17 +354,51 @@ async function loadMessages(isSilent = false) {
       return;
     }
 
-    historyEl.innerHTML = messages.map(m => `
-      <div style="align-self: ${m.senderId === userId ? 'flex-end' : 'flex-start'}; max-width: 70%; background: ${m.senderId === userId ? '#ffffff' : '#1a1a1a'}; color: ${m.senderId === userId ? '#000000' : '#ffffff'}; padding: 0.5rem 0.75rem; border-radius: 8px;">
-        <div style="font-size: 0.7rem; color: ${m.senderId === userId ? '#555' : '#aaa'}; font-weight: bold;">${m.senderName}</div>
-        <div>${m.text}</div>
-      </div>
-    `).join('');
+    historyEl.innerHTML = messages.map(m => {
+      const isMine = m.senderId === userId;
+      const isGroupAdmin = currentActiveChannelObj && currentActiveChannelObj.adminId === userId;
+      const canDelete = isMine || isGroupAdmin;
+
+      return `
+        <div style="align-self: ${isMine ? 'flex-end' : 'flex-start'}; max-width: 75%; background: ${isMine ? '#ffffff' : '#1a1a1a'}; color: ${isMine ? '#000000' : '#ffffff'}; padding: 0.6rem 0.8rem; border-radius: 8px; position: relative;" class="chat-bubble">
+          <div style="font-size: 0.7rem; color: ${isMine ? '#555' : '#aaa'}; font-weight: bold; display: flex; justify-content: space-between; gap: 1rem;">
+            <span>${m.senderName} ${m.edited ? '(edited)' : ''}</span>
+            <div>
+              ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer; margin-right: 0.4rem;" title="Edit"></i>` : ''}
+              ${canDelete ? `<i onclick="deleteMessage('${m._id}')" class="fa-solid fa-trash" style="cursor: pointer; color: #ff5555;" title="Delete"></i>` : ''}
+            </div>
+          </div>
+
+          ${m.text ? `<div style="margin-top: 0.25rem;">${m.text}</div>` : ''}
+          ${m.imageUrl ? `<img src="${m.imageUrl}" style="max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 0.5rem; display: block;">` : ''}
+        </div>
+      `;
+    }).join('');
 
     if (!isSilent || isAtBottom) {
       historyEl.scrollTop = historyEl.scrollHeight;
     }
   }
+}
+
+// IMAGE ATTACHMENT HANDLING (Feature #7)
+document.getElementById('chatImageInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    attachedBase64Image = evt.target.result;
+    document.getElementById('imagePreviewThumb').src = attachedBase64Image;
+    document.getElementById('imagePreviewContainer').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+});
+
+function cancelImageAttachment() {
+  attachedBase64Image = null;
+  document.getElementById('chatImageInput').value = '';
+  document.getElementById('imagePreviewContainer').style.display = 'none';
 }
 
 document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
@@ -276,29 +407,52 @@ document.getElementById('sendMessageForm').addEventListener('submit', async (e) 
 
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text) return;
 
-  await fetch('/api/chat/messages', {
+  if (!text && !attachedBase64Image) return;
+
+  await authFetch('/api/chat/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       channelId: currentActiveChatId,
       senderId: userId,
       senderName: document.getElementById('userName').innerText,
-      text
+      text,
+      imageUrl: attachedBase64Image
     })
   });
 
   input.value = '';
+  cancelImageAttachment();
+  sendTypingSignal(false);
   loadMessages(false);
 });
 
-// Group Modal Trigger
+async function editMessagePrompt(msgId, currentText) {
+  const newText = prompt("Edit your message:", currentText);
+  if (newText === null || newText.trim() === "") return;
+
+  await authFetch(`/api/chat/messages/${msgId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: newText.trim(), senderId: userId })
+  });
+
+  loadMessages(false);
+}
+
+async function deleteMessage(msgId) {
+  if (!confirm("Delete this message?")) return;
+  await authFetch(`/api/chat/messages/${msgId}`, { method: 'DELETE' });
+  loadMessages(false);
+}
+
+// GROUP CHAT MAKER WITH ADMIN ASSIGNMENT (Feature #3)
 document.getElementById('openGroupModalBtn').addEventListener('click', async () => {
   const modal = document.getElementById('groupModal');
   const userCheckboxes = document.getElementById('groupUserCheckboxes');
   
-  const res = await fetch('/api/admin/users');
+  const res = await authFetch('/api/admin/users');
   if (res.ok) {
     const users = await res.json();
     userCheckboxes.innerHTML = users.filter(u => u._id !== userId).map(u => `
@@ -322,19 +476,47 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
   const memberIds = Array.from(checkboxes).map(cb => cb.value);
   memberIds.push(userId);
 
-  await fetch('/api/chat/channels', {
+  await authFetch('/api/chat/channels', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: groupName,
       isGroup: true,
-      members: memberIds
+      members: memberIds,
+      adminId: userId // Set group creator as Group Admin
     })
   });
 
   closeGroupModal();
   loadChatChannels();
 });
+
+// MAINTENANCE MODE CONTROL (Feature #5)
+async function checkMaintenanceStatus() {
+  const res = await authFetch('/api/config/maintenance');
+  if (res.ok) {
+    const data = await res.json();
+    isMaintenanceActive = data.maintenance;
+    const btn = document.getElementById('toggleMaintenanceBtn');
+    if (btn) {
+      btn.innerText = isMaintenanceActive ? 'Turn OFF Maintenance' : 'Turn ON Maintenance';
+      btn.style.background = isMaintenanceActive ? '#ff5555' : '#ffffff';
+      btn.style.color = isMaintenanceActive ? '#ffffff' : '#000000';
+    }
+  }
+}
+
+async function toggleMaintenanceMode() {
+  const res = await authFetch('/api/admin/maintenance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ maintenance: !isMaintenanceActive })
+  });
+
+  if (res.ok) {
+    checkMaintenanceStatus();
+  }
+}
 
 // DASHBOARD HELPERS
 function checkTodayStatus(events, masterSchedule) {
@@ -392,32 +574,12 @@ function renderCalendarEvents(events) {
   `).join('');
 }
 
-// ADMIN ANNOUNCEMENT CONTROL
-const adminBannerForm = document.getElementById('adminBannerForm');
-if (adminBannerForm) {
-  adminBannerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = document.getElementById('adminBannerText').value;
-    await fetch('/api/admin/announcement', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-    initApp();
-  });
-}
-
-async function clearAdminBanner() {
-  await fetch('/api/admin/announcement', { method: 'DELETE' });
-  document.getElementById('emergencyBanner').style.display = 'none';
-}
-
 // ADMIN FORM HANDLERS
 const adminCalForm = document.getElementById('adminCalendarForm');
 if (adminCalForm) {
   adminCalForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await fetch('/api/admin/calendar', {
+    await authFetch('/api/admin/calendar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -434,7 +596,7 @@ const adminMasterForm = document.getElementById('adminMasterForm');
 if (adminMasterForm) {
   adminMasterForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await fetch('/api/admin/master-schedule', {
+    await authFetch('/api/admin/master-schedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -449,17 +611,18 @@ if (adminMasterForm) {
 }
 
 async function deleteCalendarDate(date) {
-  await fetch(`/api/admin/calendar/${date}`, { method: 'DELETE' });
+  await authFetch(`/api/admin/calendar/${date}`, { method: 'DELETE' });
   initApp();
 }
 
 async function deleteMasterSlot(id) {
-  await fetch(`/api/admin/master-schedule/${id}`, { method: 'DELETE' });
+  await authFetch(`/api/admin/master-schedule/${id}`, { method: 'DELETE' });
   initApp();
 }
 
 async function loadAdminData() {
-  const res = await fetch('/api/admin/users');
+  checkMaintenanceStatus();
+  const res = await authFetch('/api/admin/users');
   if (res.ok) {
     const users = await res.json();
     document.getElementById('adminUsersTableBody').innerHTML = users.map(u => `
@@ -475,7 +638,7 @@ async function loadAdminData() {
 
 async function deleteUser(id) {
   if (confirm("Delete this user account?")) {
-    await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    await authFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
     loadAdminData();
   }
 }
