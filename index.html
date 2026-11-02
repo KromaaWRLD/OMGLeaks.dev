@@ -3,61 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Urbana High School - Hub</title>
+  <title>Urbana High School - Student Hub</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <button class="mobile-toggle" id="mobileToggle"><i class="fa-solid fa-bars" id="toggleIcon"></i></button>
+  <!-- Mobile Toggle Button -->
+  <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Navigation">
+    <i class="fa-solid fa-bars" id="toggleIcon"></i>
+  </button>
+
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- Sidenav -->
+  <!-- Side Navigation -->
   <aside class="sidenav" id="sidenav">
     <div class="nav-header">
       <div class="brand">
-        <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div class="brand-icon">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
         <div>
           <div class="brand-title">Urbana High</div>
           <div class="brand-subtitle">Student Schedule Hub</div>
         </div>
       </div>
+
       <div class="user-card">
         <div class="user-name" id="userName">Loading Student...</div>
         <div class="user-school">Urbana High School</div>
       </div>
     </div>
 
+    <!-- Navigation Menu Links -->
     <nav class="nav-menu">
       <a href="#dashboard" class="nav-item active" data-path="dashboard">
-        <div class="nav-item-content"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></div>
+        <div class="nav-item-content">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </div>
       </a>
+
       <a href="#schedule" class="nav-item" data-path="schedule">
-        <div class="nav-item-content"><i class="fa-solid fa-calendar-days"></i><span>My Schedule</span></div>
+        <div class="nav-item-content">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>My Schedule</span>
+        </div>
       </a>
+
       <a href="#calendar" class="nav-item" data-path="calendar">
-        <div class="nav-item-content"><i class="fa-solid fa-calendar"></i><span>School Calendar</span></div>
+        <div class="nav-item-content">
+          <i class="fa-solid fa-calendar"></i>
+          <span>School Calendar</span>
+        </div>
       </a>
+
       <a href="#settings" class="nav-item" data-path="settings">
-        <div class="nav-item-content"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+        <div class="nav-item-content">
+          <i class="fa-solid fa-gear"></i>
+          <span>Profile & Settings</span>
+        </div>
       </a>
+
+      <!-- Admin Tab (Only Visible to Admin Users) -->
       <a href="#admin" class="nav-item" id="adminNavItem" data-path="admin" style="display: none;">
-        <div class="nav-item-content"><i class="fa-solid fa-shield-halved"></i><span>Admin Panel</span></div>
+        <div class="nav-item-content">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Admin Panel</span>
+        </div>
       </a>
     </nav>
 
     <div class="nav-footer">
-      <button id="logoutBtn" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
+      <button id="logoutBtn" class="logout-btn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Log Out</span>
+      </button>
     </div>
   </aside>
 
-  <!-- Main View Workspace -->
+  <!-- Main Content Workspace -->
   <main class="main-content">
-
+    
     <!-- DASHBOARD VIEW -->
     <section id="view-dashboard" class="view-section">
       <h1>Dashboard</h1>
-      <p class="subtitle">Daily overview for Urbana High School.</p>
+      <p class="subtitle">Welcome back! Here is your daily overview at Urbana High.</p>
 
       <div class="dashboard-grid">
         <div class="dash-card">
@@ -65,40 +96,50 @@
           <div class="card-value" id="dashTodayStatus" style="font-size: 1.25rem;">Checking...</div>
         </div>
         <div class="dash-card">
-          <div class="card-title"><i class="fa-solid fa-book"></i> Total Enrolled Classes</div>
+          <div class="card-title"><i class="fa-solid fa-book"></i> Total Personal Classes</div>
           <div class="card-value" id="dashTotalClasses">0</div>
         </div>
       </div>
 
       <div class="content-block">
-        <h3>Today's Bell & Period Schedule</h3>
-        <div id="dashMasterSchedule">Loading schedule template...</div>
+        <h3><i class="fa-solid fa-clock"></i> Today's Bell & Period Schedule</h3>
+        <div id="dashMasterSchedule">Loading schedule...</div>
       </div>
     </section>
 
-    <!-- MY SCHEDULE VIEW -->
+    <!-- SCHEDULE VIEW -->
     <section id="view-schedule" class="view-section" style="display: none;">
-      <h1>My Classes</h1>
-      <p class="subtitle">Manage your class lineup.</p>
+      <h1>My Schedule</h1>
+      <p class="subtitle">Manage and arrange your personal class timetable.</p>
 
+      <!-- Add Class Form -->
       <div class="content-block">
-        <h3>Add Class</h3>
+        <h3>Add New Class</h3>
         <form id="addClassForm" class="inline-form">
           <input type="text" id="classPeriod" placeholder="Period (e.g. 1st)" required>
-          <input type="text" id="className" placeholder="Class Name" required>
+          <input type="text" id="className" placeholder="Class Name (e.g. AP Chem)" required>
           <input type="text" id="classRoom" placeholder="Room #" required>
-          <input type="text" id="classTeacher" placeholder="Teacher" required>
-          <button type="submit" class="action-btn">Add Class</button>
+          <input type="text" id="classTeacher" placeholder="Teacher Name" required>
+          <button type="submit" class="action-btn"><i class="fa-solid fa-plus"></i> Add Class</button>
         </form>
       </div>
 
+      <!-- Personal Schedule Table -->
       <div class="content-block">
         <h3>Your Current Schedule</h3>
         <table class="schedule-table">
           <thead>
-            <tr><th>Period</th><th>Class Name</th><th>Room</th><th>Teacher</th><th>Action</th></tr>
+            <tr>
+              <th>Period</th>
+              <th>Class Name</th>
+              <th>Room</th>
+              <th>Teacher</th>
+              <th>Action</th>
+            </tr>
           </thead>
-          <tbody id="scheduleTableBody"></tbody>
+          <tbody id="scheduleTableBody">
+            <tr><td colspan="5" class="empty-msg">Loading schedule...</td></tr>
+          </tbody>
         </table>
       </div>
     </section>
@@ -106,32 +147,45 @@
     <!-- CALENDAR VIEW -->
     <section id="view-calendar" class="view-section" style="display: none;">
       <h1>School Calendar</h1>
-      <p class="subtitle">Check holidays, teacher workdays, and days off.</p>
+      <p class="subtitle">Check holidays, teacher workdays, and special schedule days.</p>
 
       <div class="content-block">
-        <h3>Upcoming Scheduled Days Off</h3>
+        <h3>Upcoming Scheduled Overrides & Days Off</h3>
         <div id="calendarList">Loading calendar...</div>
+      </div>
+    </section>
+
+    <!-- SETTINGS VIEW -->
+    <section id="view-settings" class="view-section" style="display: none;">
+      <h1>Profile & Settings</h1>
+      <p class="subtitle">Update account details and preferences.</p>
+      <div class="content-block">
+        <p style="color: #888888;">Account management options will appear here.</p>
       </div>
     </section>
 
     <!-- ADMIN PANEL VIEW -->
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
-      <p class="subtitle">Set master schedules and manage days off.</p>
+      <p class="subtitle">Set master bell schedules and manage calendar overrides.</p>
 
-      <!-- Day Off / Holiday Creator -->
+      <!-- Date Override / Day Off Creator -->
       <div class="content-block">
-        <h3><i class="fa-solid fa-calendar-plus"></i> Day Off / Holiday Creator</h3>
+        <h3><i class="fa-solid fa-calendar-plus"></i> Date Schedule Override / Day Off</h3>
         <form id="adminCalendarForm" class="inline-form">
           <input type="date" id="adminDate" required>
-          <input type="text" id="adminDateTitle" placeholder="Event Name (e.g. Winter Break)" required>
-          <button type="submit" class="action-btn">Set Day Off</button>
+          <input type="text" id="adminDateTitle" placeholder="Reason (e.g. Winter Break, 2-Hr Delay)" required>
+          <select id="adminIsDayOff" style="background:#111; color:#fff; border:1px solid #222; padding:0.6rem; border-radius:6px;">
+            <option value="true">Full Day Off (No School)</option>
+            <option value="false">Special Schedule Day</option>
+          </select>
+          <button type="submit" class="action-btn">Save Override</button>
         </form>
       </div>
 
-      <!-- Master Schedule Creator -->
+      <!-- Master Bell Schedule Creator -->
       <div class="content-block">
-        <h3><i class="fa-solid fa-clock"></i> Master Bell Schedule Creator</h3>
+        <h3><i class="fa-solid fa-clock"></i> Master Everyday Bell Schedule Creator</h3>
         <form id="adminMasterForm" class="inline-form">
           <input type="text" id="masterPeriod" placeholder="Period (e.g. 1st)" required>
           <input type="text" id="masterStart" placeholder="Start (e.g. 8:00 AM)" required>
@@ -141,12 +195,21 @@
         </form>
       </div>
 
-      <!-- Users Management -->
+      <!-- User Accounts Management -->
       <div class="content-block">
         <h3>Registered Accounts</h3>
         <table class="schedule-table">
-          <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr></thead>
-          <tbody id="adminUsersTableBody"></tbody>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersTableBody">
+            <tr><td colspan="4" class="empty-msg">Loading accounts...</td></tr>
+          </tbody>
         </table>
       </div>
     </section>
