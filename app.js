@@ -26,7 +26,7 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
-// Route Switcher
+// Navigation Switcher
 navItems.forEach(item => {
   item.addEventListener('click', () => {
     navItems.forEach(nav => nav.classList.remove('active'));
@@ -49,11 +49,11 @@ if (logoutBtn) {
   });
 }
 
-// MAIN DATA LOADER
+// APP INITIALIZATION
 async function initApp() {
   if (!userId) return;
 
-  // Fetch User Info
+  // 1. Fetch Personal Schedule Data
   const userRes = await fetch(`/api/users/${userId}`);
   if (userRes.ok) {
     const user = await userRes.json();
@@ -62,22 +62,65 @@ async function initApp() {
     renderUserSchedule(user.schedule || []);
   }
 
-  // Fetch Calendar Days Off
-  const calRes = await fetch('/api/calendar');
-  if (calRes.ok) {
-    const events = await calRes.json();
-    renderCalendarEvents(events);
-    checkTodayStatus(events);
-  }
+  // 2. Fetch Calendar Events & Master Schedule
+  const [calRes, masterRes] = await Promise.all([
+    fetch('/api/calendar'),
+    fetch('/api/master-schedule')
+  ]);
 
-  // Fetch Master Schedule Template
-  const masterRes = await fetch('/api/master-schedule');
-  if (masterRes.ok) {
-    const master = await masterRes.json();
-    renderMasterSchedule(master);
-  }
+  const events = calRes.ok ? await calRes.json() : [];
+  const master = masterRes.ok ? await masterRes.json() : [];
+
+  renderCalendarEvents(events);
+  checkTodayStatus(events, master);
 
   if (userRole === 'admin') loadAdminData();
+}
+
+// Check Daily Status vs Everyday Master Schedule
+function checkTodayStatus(events, masterSchedule) {
+  const today = new Date().toISOString().split('T')[0];
+  const dayEvent = events.find(e => e.date === today);
+
+  const statusEl = document.getElementById('dashTodayStatus');
+
+  if (dayEvent && dayEvent.isDayOff) {
+    statusEl.innerText = `NO SCHOOL: ${dayEvent.title}`;
+    statusEl.style.color = '#ff5555';
+    document.getElementById('dashMasterSchedule').innerHTML = `
+      <div class="content-block">
+        <p class="empty-msg">No classes today due to <strong>${dayEvent.title}</strong>.</p>
+      </div>`;
+    return;
+  }
+
+  if (dayEvent && !dayEvent.isDayOff) {
+    statusEl.innerText = `Special Schedule: ${dayEvent.title}`;
+    statusEl.style.color = '#ffaa00';
+  } else {
+    statusEl.innerText = 'Regular Everyday Schedule';
+    statusEl.style.color = '#55ff55';
+  }
+
+  renderMasterSchedule(masterSchedule);
+}
+
+function renderMasterSchedule(master) {
+  const container = document.getElementById('dashMasterSchedule');
+  if (!master || master.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No master bell schedule set by admin yet.</p>';
+    return;
+  }
+
+  container.innerHTML = master.map(m => `
+    <div class="class-summary-item">
+      <div>
+        <strong>${m.period}:</strong> ${m.startTime} – ${m.endTime}
+        <span style="font-size: 0.8rem; color: #888; margin-left: 0.5rem;">(${m.label || 'Standard Class'})</span>
+      </div>
+      ${userRole === 'admin' ? `<button onclick="deleteMasterSlot('${m._id}')" class="delete-btn">Delete Slot</button>` : ''}
+    </div>
+  `).join('');
 }
 
 function renderUserSchedule(schedule) {
@@ -97,20 +140,6 @@ function renderUserSchedule(schedule) {
   `).join('');
 }
 
-function checkTodayStatus(events) {
-  const today = new Date().toISOString().split('T')[0];
-  const dayOffToday = events.find(e => e.date === today);
-
-  const statusEl = document.getElementById('dashTodayStatus');
-  if (dayOffToday) {
-    statusEl.innerText = `NO SCHOOL: ${dayOffToday.title}`;
-    statusEl.style.color = '#ff5555';
-  } else {
-    statusEl.innerText = 'Regular Urbana High School Day';
-    statusEl.style.color = '#55ff55';
-  }
-}
-
 function renderCalendarEvents(events) {
   const container = document.getElementById('calendarList');
   if (events.length === 0) {
@@ -119,27 +148,13 @@ function renderCalendarEvents(events) {
   }
   container.innerHTML = events.map(e => `
     <div class="class-summary-item">
-      <div><strong>${e.date}</strong> - ${e.title}</div>
+      <div><strong>${e.date}</strong> - ${e.title} ${e.isDayOff ? '(No School)' : '(Special Schedule)'}</div>
       ${userRole === 'admin' ? `<button onclick="deleteCalendarDate('${e.date}')" class="delete-btn">Remove</button>` : ''}
     </div>
   `).join('');
 }
 
-function renderMasterSchedule(master) {
-  const container = document.getElementById('dashMasterSchedule');
-  if (master.length === 0) {
-    container.innerHTML = '<p class="empty-msg">Master bell schedule has not been set by admin.</p>';
-    return;
-  }
-  container.innerHTML = master.map(m => `
-    <div class="class-summary-item">
-      <div><strong>${m.period}:</strong> ${m.startTime} - ${m.endTime} (${m.label || 'Standard Class'})</div>
-      ${userRole === 'admin' ? `<button onclick="deleteMasterSlot('${m._id}')" class="delete-btn">Delete Slot</button>` : ''}
-    </div>
-  `).join('');
-}
-
-// SCHEDULE FORM
+// Student Actions
 document.getElementById('addClassForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const newClass = {
@@ -161,7 +176,7 @@ async function deleteClass(index) {
   initApp();
 }
 
-// ADMIN FORM ACTIONS
+// Admin Actions
 const adminCalForm = document.getElementById('adminCalendarForm');
 if (adminCalForm) {
   adminCalForm.addEventListener('submit', async (e) => {
@@ -171,7 +186,8 @@ if (adminCalForm) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         date: document.getElementById('adminDate').value,
-        title: document.getElementById('adminDateTitle').value
+        title: document.getElementById('adminDateTitle').value,
+        isDayOff: document.getElementById('adminIsDayOff').value
       })
     });
     initApp();
