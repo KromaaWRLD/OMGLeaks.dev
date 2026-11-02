@@ -1,6 +1,7 @@
 {
   "name": "urbana-high-hub",
   "version": "1.0.0",
+  "description": "Urbana High Student Schedule Hub",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
