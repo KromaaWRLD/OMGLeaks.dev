@@ -1,139 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Urbana High - Account Portal</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body class="login-body">
-
-  <div class="login-card">
-    <div class="login-header">
-      <div class="login-icon">
-        <i class="fa-solid fa-graduation-cap"></i>
-      </div>
-      <h2>Urbana High School</h2>
-      <p id="portalSub">Sign in to your student hub</p>
-    </div>
-
-    <!-- LOGIN FORM -->
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="loginUsername" placeholder="e.g. john.b" required>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" required>
-      </div>
-      <button type="submit" class="login-btn">Sign In</button>
-      <p class="toggle-link" onclick="toggleForm('register')">Need an account? Register here</p>
-    </form>
-
-    <!-- REGISTER FORM -->
-    <form id="registerForm" style="display: none;">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="regName" placeholder="e.g. John Ballenger" required>
-      </div>
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="regUsername" placeholder="e.g. john.b" required>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="regPassword" placeholder="Create password" required>
-      </div>
-      <div class="form-group">
-        <label>Admin Password (Optional)</label>
-        <input type="password" id="regAdminKey" placeholder="Leave blank for student">
-      </div>
-      <button type="submit" class="login-btn">Create Account</button>
-      <p class="toggle-link" onclick="toggleForm('login')">Already have an account? Sign In</p>
-    </form>
-
-    <div id="authError" class="error-msg" style="display: none;"></div>
+<!-- REGISTER FORM -->
+<form id="registerForm" style="display: none;">
+  <div class="form-group">
+    <label>Full Name</label>
+    <input type="text" id="regName" placeholder="e.g. John Ballenger" required>
   </div>
-
-  <script>
-    function toggleForm(mode) {
-      document.getElementById('authError').style.display = 'none';
-      if (mode === 'register') {
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('registerForm').style.display = 'block';
-        document.getElementById('portalSub').innerText = 'Create your Urbana High account';
-      } else {
-        document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-        document.getElementById('portalSub').innerText = 'Sign in to your student hub';
-      }
-    }
-
-    // Login Handler
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const errorDiv = document.getElementById('authError');
-      errorDiv.style.display = 'none';
-
-      const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
-
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('uhs_user_id', data.userId);
-          localStorage.setItem('uhs_user_name', data.name);
-          localStorage.setItem('uhs_user_role', data.role);
-          window.location.href = 'index.html';
-        } else {
-          errorDiv.innerText = data.error;
-          errorDiv.style.display = 'block';
-        }
-      } catch (err) {
-        errorDiv.innerText = 'Server error.';
-        errorDiv.style.display = 'block';
-      }
-    });
-
-    // Register Handler
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const errorDiv = document.getElementById('authError');
-      errorDiv.style.display = 'none';
-
-      const name = document.getElementById('regName').value;
-      const username = document.getElementById('regUsername').value;
-      const password = document.getElementById('regPassword').value;
-      const adminKey = document.getElementById('regAdminKey').value;
-
-      try {
-        const res = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, username, password, adminKey })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('uhs_user_id', data.userId);
-          localStorage.setItem('uhs_user_name', data.name);
-          localStorage.setItem('uhs_user_role', data.role);
-          window.location.href = 'index.html';
-        } else {
-          errorDiv.innerText = data.error;
-          errorDiv.style.display = 'block';
-        }
-      } catch (err) {
-        errorDiv.innerText = 'Server error.';
-        errorDiv.style.display = 'block';
-      }
-    });
-  </script>
-</body>
-</html>
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" id="regUsername" placeholder="e.g. admin or student1" required>
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="regPassword" placeholder="Create password" required>
+  </div>
+  <button type="submit" class="login-btn">Create Account</button>
+  <p class="toggle-link" onclick="toggleForm('login')">Already have an account? Sign In</p>
+</form>
