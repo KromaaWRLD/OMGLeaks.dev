@@ -5,28 +5,36 @@ const path = require('path');
 
 const app = express();
 
+// Body Parser Middleware with Payload Limit Checks
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Payload error catcher
+// Serve Static Files from Current Root Directory
+app.use(express.static(path.join(__dirname)));
+
+// Payload Size Error Handler
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') {
-    return res.status(413).json({ error: 'Image file too large! Please pick a smaller image.' });
+    return res.status(413).json({ error: 'Uploaded file/image is too large. Please select a smaller file.' });
   }
   next();
 });
 
+// Environment Configurations
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters?retryWrites=true&w=majority';
 
+// Connect to MongoDB Atlas
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000
 })
 .then(() => console.log('✅ Connected to MongoDB Atlas (coldwinters)'))
 .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
-// SCHEMAS
+// --- SCHEMAS --- //
+
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
@@ -88,7 +96,7 @@ const SystemConfig = mongoose.model('SystemConfig', SystemConfigSchema);
 
 const typingState = {};
 
-// server.js - Maintenance Middleware Fix
+// --- MAINTENANCE MODE MIDDLEWARE --- //
 app.use(async (req, res, next) => {
   if (
     req.path.startsWith('/api/login') ||
@@ -106,7 +114,7 @@ app.use(async (req, res, next) => {
       const userId = req.headers['x-user-id'];
       if (userId) {
         const user = await User.findById(userId);
-        if (user && user.role === 'admin') return next(); // Bypass for Admins
+        if (user && user.role === 'admin') return next();
       }
       return res.status(503).json({
         error: 'MAINTENANCE_LOCK',
@@ -119,11 +127,27 @@ app.use(async (req, res, next) => {
   }
   next();
 });
-// STATIC ROUTES
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
-app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// AUTH & USER ROUTES
+// --- PAGE ROUTING --- //
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// --- AUTHENTICATION & USER ROUTES --- //
+
 app.post('/api/register', async (req, res) => {
   try {
     const { username, password, name } = req.body;
@@ -146,6 +170,8 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required.' });
+
     const cleanUsername = username.trim().toLowerCase();
     const user = await User.findOne({ username: cleanUsername });
 
@@ -160,8 +186,13 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.get('/api/users/:id', async (req, res) => {
-  const user = await User.findById(req.params.id, '-password');
-  res.json(user);
+  try {
+    const user = await User.findById(req.params.id, '-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching user data' });
+  }
 });
 
 app.post('/api/users/:id/avatar', async (req, res) => {
@@ -187,24 +218,24 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-// DIRECT MESSAGING & CHAT CHANNELS
+// --- CHAT & DIRECT MESSAGING ROUTES --- //
+
 app.post('/api/chat/dm', async (req, res) => {
   const { targetUserId } = req.body;
   const currentUserId = req.headers['x-user-id'];
 
   if (!targetUserId || !currentUserId) return res.status(400).json({ error: 'Missing parameters' });
 
-  // Check if DM channel already exists between these two users
   let channel = await ChatChannel.findOne({
     isGroup: false,
-    members: { $all: [currentUserId, targetUserId],$size: 2 }
+    members: { $all: [currentUserId, targetUserId], $size: 2 }
   });
 
   if (!channel) {
     const targetUser = await User.findById(targetUserId);
     const currentUser = await User.findById(currentUserId);
     channel = await ChatChannel.create({
-      name: `${currentUser.name} & ${targetUser.name}`,
+      name: `${currentUser ? currentUser.name : 'User'} & ${targetUser ? targetUser.name : 'User'}`,
       isGroup: false,
       members: [currentUserId, targetUserId]
     });
@@ -234,7 +265,6 @@ app.post('/api/chat/channels', async (req, res) => {
   res.json(channel);
 });
 
-// LEAVE GROUP CHAT
 app.post('/api/chat/channels/:id/leave', async (req, res) => {
   const userId = req.headers['x-user-id'];
   const channel = await ChatChannel.findById(req.params.id);
@@ -243,7 +273,6 @@ app.post('/api/chat/channels/:id/leave', async (req, res) => {
 
   channel.members = channel.members.filter(m => m !== userId);
 
-  // If the admin leaves, assign next member as admin
   if (channel.adminId === userId && channel.members.length > 0) {
     channel.adminId = channel.members[0];
   }
@@ -252,7 +281,6 @@ app.post('/api/chat/channels/:id/leave', async (req, res) => {
   res.json({ success: true });
 });
 
-// GROUP ADMIN REASSIGNMENT
 app.post('/api/chat/channels/:id/reassign-admin', async (req, res) => {
   const currentAdminId = req.headers['x-user-id'];
   const { newAdminId } = req.body;
@@ -271,8 +299,7 @@ app.delete('/api/chat/channels/:id', async (req, res) => {
   const channel = await ChatChannel.findById(req.params.id);
 
   if (!channel) return res.status(404).json({ error: 'Channel not found.' });
-  
-  // Allow group admin or site admin to delete
+
   const user = await User.findById(userId);
   if (channel.adminId !== userId && (!user || user.role !== 'admin')) {
     return res.status(403).json({ error: 'Unauthorized.' });
@@ -318,7 +345,7 @@ app.post('/api/chat/messages', async (req, res) => {
 app.put('/api/chat/messages/:id', async (req, res) => {
   const { text, senderId } = req.body;
   const msg = await ChatMessage.findById(req.params.id);
-  
+
   if (!msg) return res.status(404).json({ error: 'Message not found.' });
   if (msg.senderId !== senderId) return res.status(403).json({ error: 'Unauthorized edit.' });
 
@@ -369,11 +396,9 @@ app.get('/api/chat/typing/:channelId', (req, res) => {
   res.json({ typers: activeTypers });
 });
 
-// LINKS & RESOURCES MANAGER
-app.get('/api/resources', async (req, res) => {
-  const links = await ResourceLink.find();
-  res.json(links);
-});
+// --- RESOURCES & ADMIN OVERRIDES --- //
+
+app.get('/api/resources', async (req, res) => res.json(await ResourceLink.find()));
 
 app.post('/api/admin/resources', async (req, res) => {
   const link = await ResourceLink.create(req.body);
@@ -385,7 +410,6 @@ app.delete('/api/admin/resources/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// ADMIN OVERRIDES: ROLE & PASSWORD
 app.post('/api/admin/users/:id/role', async (req, res) => {
   const { role } = req.body;
   const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
@@ -399,7 +423,6 @@ app.post('/api/admin/users/:id/reset-password', async (req, res) => {
   res.json({ success: true });
 });
 
-// SCHEDULE PRESET SWITCHER
 app.post('/api/admin/master-schedule/preset', async (req, res) => {
   const { preset } = req.body;
   await MasterSchedule.deleteMany({});
@@ -445,7 +468,7 @@ app.post('/api/admin/master-schedule/preset', async (req, res) => {
   res.json(created);
 });
 
-// MAINTENANCE MODE API
+// MAINTENANCE MODE CONFIG
 app.get('/api/config/maintenance', async (req, res) => {
   const maintenance = await SystemConfig.findOne({ key: 'maintenanceMode' });
   res.json(maintenance ? maintenance.value : { active: false, message: '', estimatedTime: '' });
@@ -461,7 +484,7 @@ app.post('/api/admin/maintenance', async (req, res) => {
   res.json({ success: true, maintenance: config.value });
 });
 
-// CALENDAR & MASTER SCHEDULE ROUTES
+// CALENDAR & MASTER SCHEDULE
 app.get('/api/calendar', async (req, res) => res.json(await CalendarEvent.find()));
 app.get('/api/master-schedule', async (req, res) => res.json(await MasterSchedule.find()));
 
@@ -491,5 +514,11 @@ app.delete('/api/admin/users/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+// Catch-all Fallback for Undefined SPA Routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Start Server Listening on All Interfaces
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Urbana High Server listening on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Urbana High Server running on port ${PORT}`));
