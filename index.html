@@ -99,7 +99,6 @@
 
       <div style="display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; height: 530px;">
         
-        <!-- Channels & Student List -->
         <div class="content-block" style="display: flex; flex-direction: column; padding: 1rem; margin-bottom: 0;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h3 style="margin-bottom: 0;">Conversations</h3>
@@ -115,21 +114,18 @@
           </div>
         </div>
 
-        <!-- Live Message Log -->
         <div class="content-block" style="display: flex; flex-direction: column; padding: 1rem; margin-bottom: 0;">
           <div id="activeChatHeader" style="padding-bottom: 0.75rem; border-bottom: 1px solid #222222; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
             <span>Select a conversation to start chatting</span>
             <div id="channelActionBtns" style="display: flex; gap: 0.5rem;"></div>
           </div>
 
-          <!-- Typing Indicator Banner -->
           <div id="typingBanner" style="font-size: 0.75rem; color: #55ff55; font-style: italic; min-height: 18px; margin-top: 0.25rem;"></div>
 
           <div id="messageHistory" style="flex: 1; overflow-y: auto; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.75rem;">
             <p class="empty-msg">No conversation selected.</p>
           </div>
 
-          <!-- Image Preview Bar -->
           <div id="imagePreviewContainer" style="display: none; padding: 0.5rem; background: #111; border-radius: 6px; margin-bottom: 0.5rem; align-items: center; justify-content: space-between;">
             <img id="imagePreviewThumb" src="" style="max-height: 40px; border-radius: 4px;">
             <button type="button" onclick="cancelImageAttachment()" class="delete-btn" style="padding: 0.2rem 0.4rem;"><i class="fa-solid fa-xmark"></i></button>
@@ -148,7 +144,7 @@
 
       </div>
 
-      <!-- Create Group Chat Modal -->
+      <!-- Create Group Modal -->
       <div id="groupModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center;">
         <div class="content-block" style="width: 100%; max-width: 400px; margin-bottom: 0;">
           <h3>Create New Group Chat</h3>
@@ -227,7 +223,6 @@
       <h1>Admin Control Panel</h1>
       <p class="subtitle">Broadcast announcements, manage users, set schedule presets, and resources.</p>
 
-      <!-- Schedule Preset Switcher -->
       <div class="content-block">
         <h3><i class="fa-solid fa-sliders"></i> Schedule Preset Switcher</h3>
         <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Switch master bell schedule slots instantly across the entire app.</p>
@@ -238,7 +233,6 @@
         </div>
       </div>
 
-      <!-- Links & Resources Manager -->
       <div class="content-block">
         <h3><i class="fa-solid fa-folder-plus"></i> Links & Resources Manager</h3>
         <form id="addResourceForm" class="inline-form" style="grid-template-columns: 1fr 1fr 1fr auto; margin-bottom: 1rem;">
@@ -250,7 +244,6 @@
         <div id="adminResourcesList"></div>
       </div>
 
-      <!-- Maintenance Mode Control -->
       <div class="content-block">
         <h3><i class="fa-solid fa-power-off"></i> Maintenance Mode Control Panel</h3>
         <form id="adminMaintenanceForm" style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 500px; margin-top: 1rem;">
@@ -264,7 +257,6 @@
         </form>
       </div>
 
-      <!-- User & Role Management -->
       <div class="content-block">
         <h3>Registered Accounts (Role & Password Overrides)</h3>
         <table class="schedule-table">
@@ -288,7 +280,7 @@
     <div style="background: #141414; border: 1px solid #222; padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.85rem; color: #ffaa00;">
       <i class="fa-solid fa-clock"></i> Expected return: <span id="maintTime">Soon</span>
     </div>
-    <button onclick="localStorage.clear(); window.location.href='login.html';" class="delete-btn" style="margin-top: 2rem; padding: 0.5rem 1rem;">Back to Sign In</button>
+    <button onclick="localStorage.clear(); window.location.href='/login.html';" class="delete-btn" style="margin-top: 2rem; padding: 0.5rem 1rem;">Back to Sign In</button>
   </div>
 
   <script src="app.js"></script>
