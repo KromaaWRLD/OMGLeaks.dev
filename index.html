@@ -26,7 +26,7 @@
         </div>
       </div>
 
-      <div class="user-card" style="display: flex; align-items: center; gap: 0.75rem;">
+      <div class="user-card" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;" onclick="openUserProfileModal(userId)">
         <div class="pfp-avatar" id="navPfpDisplay" style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">U</div>
         <div>
           <div class="user-name" id="userName">Loading Student...</div>
@@ -95,7 +95,7 @@
     <!-- LIVE CHAT VIEW -->
     <section id="view-chat" class="view-section" style="display: none;">
       <h1>Student Chat & Groups</h1>
-      <p class="subtitle">Direct message classmates or create group study chats.</p>
+      <p class="subtitle">Direct message classmates or create group study chats (Messages auto-delete after 24 hours).</p>
 
       <div style="display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; height: 530px;">
         
@@ -221,22 +221,22 @@
     <!-- ADMIN PANEL VIEW -->
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
-      <p class="subtitle">Broadcast announcements, manage users, set schedule presets, and resources.</p>
+      <p class="subtitle">Broadcast announcements, manage users, set schedule presets, assign verification badges, and edit resources.</p>
 
-<div class="content-block">
-  <h3><i class="fa-solid fa-sliders"></i> Schedule Preset Switcher</h3>
-  <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Switch master bell schedule slots instantly across Urbana High Hub.</p>
-  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-    <button onclick="applySchedulePreset('normal')" class="action-btn">Standard Bell</button>
-    <button onclick="applySchedulePreset('delay2hr')" class="action-btn" style="background: #ffaa00; color: #000;">2-Hr Delay</button>
-    <button onclick="applySchedulePreset('climbertime')" class="action-btn" style="background: #55ff55; color: #000;">ClimberTime</button>
-    <button onclick="applySchedulePreset('pm_assembly')" class="action-btn" style="background: #5599ff; color: #fff;">PM Assembly</button>
-    <button onclick="applySchedulePreset('activity')" class="action-btn" style="background: #aa55ff; color: #fff;">Activity Day</button>
-    <button onclick="applySchedulePreset('exam1')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 1</button>
-    <button onclick="applySchedulePreset('exam2')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 2</button>
-    <button onclick="applySchedulePreset('exam3')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 3</button>
-  </div>
-</div>
+      <div class="content-block">
+        <h3><i class="fa-solid fa-sliders"></i> Schedule Preset Switcher</h3>
+        <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Switch master bell schedule slots instantly across Urbana High Hub.</p>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button onclick="applySchedulePreset('normal')" class="action-btn">Standard Bell</button>
+          <button onclick="applySchedulePreset('delay2hr')" class="action-btn" style="background: #ffaa00; color: #000;">2-Hr Delay</button>
+          <button onclick="applySchedulePreset('climbertime')" class="action-btn" style="background: #55ff55; color: #000;">ClimberTime</button>
+          <button onclick="applySchedulePreset('pm_assembly')" class="action-btn" style="background: #5599ff; color: #fff;">PM Assembly</button>
+          <button onclick="applySchedulePreset('activity')" class="action-btn" style="background: #aa55ff; color: #fff;">Activity Day</button>
+          <button onclick="applySchedulePreset('exam1')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 1</button>
+          <button onclick="applySchedulePreset('exam2')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 2</button>
+          <button onclick="applySchedulePreset('exam3')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 3</button>
+        </div>
+      </div>
 
       <div class="content-block">
         <h3><i class="fa-solid fa-folder-plus"></i> Links & Resources Manager</h3>
@@ -263,10 +263,10 @@
       </div>
 
       <div class="content-block">
-        <h3>Registered Accounts (Role & Password Overrides)</h3>
+        <h3>Registered Accounts (Roles, Verification Badges & Passwords)</h3>
         <table class="schedule-table">
           <thead>
-            <tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr>
+            <tr><th>Username</th><th>Name</th><th>Role</th><th>Verification Badge</th><th>Actions</th></tr>
           </thead>
           <tbody id="adminUsersTableBody"></tbody>
         </table>
@@ -274,6 +274,30 @@
     </section>
 
   </main>
+
+  <!-- USER PROFILE MODAL -->
+  <div id="userProfileModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center;">
+    <div class="content-block" style="width: 100%; max-width: 380px; text-align: center; margin-bottom: 0; padding: 2rem; position: relative;">
+      <button onclick="closeUserProfileModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #888; font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div id="modalProfilePfp" style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: bold; background: #ffffff; color: #000000;">U</div>
+      
+      <h2 id="modalProfileName" style="margin-bottom: 0.25rem; font-size: 1.4rem;">Student Name</h2>
+      <div id="modalProfileUsername" style="color: #888; font-size: 0.85rem; margin-bottom: 0.75rem;">@username</div>
+      
+      <div id="modalProfileBadgeContainer" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.25rem; flex-wrap: wrap;"></div>
+
+      <div style="background: #111; padding: 0.75rem; border-radius: 6px; border: 1px solid #222; margin-bottom: 1.25rem; font-size: 0.8rem; color: #aaa;">
+        <div><i class="fa-solid fa-calendar-days" style="margin-right: 0.4rem;"></i> Account Created: <span id="modalProfileCreated" style="color: #fff;">-</span></div>
+        <div style="margin-top: 0.4rem;"><i class="fa-solid fa-user-shield" style="margin-right: 0.4rem;"></i> Access Role: <span id="modalProfileRole" style="color: #fff; text-transform: capitalize;">-</span></div>
+      </div>
+
+      <div id="modalProfileActions"></div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none;"></div>
 
   <!-- MAINTENANCE LOCK OVERLAY -->
   <div id="maintenanceOverlay" style="display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
