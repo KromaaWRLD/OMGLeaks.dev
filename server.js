@@ -5,14 +5,11 @@ const path = require('path');
 
 const app = express();
 
-// Body Parser Middleware with Payload Limit Controls
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Serve Static Files from Root Directory
 app.use(express.static(path.join(__dirname)));
 
-// Payload Size Error Catcher
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') {
     return res.status(413).json({ error: 'Uploaded file or image is too large. Please choose a smaller file.' });
@@ -20,10 +17,8 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// Environment Configurations
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters?retryWrites=true&w=majority';
 
-// MongoDB Atlas Connection Setup
 mongoose.connect(MONGODB_URI, {
   serverSelectionTimeoutMS: 10000,
   socketTimeoutMS: 45000
@@ -33,15 +28,15 @@ mongoose.connect(MONGODB_URI, {
   console.error('❌ MongoDB Connection Error Details:', err.message);
 });
 
-// --- SCHEMAS & MODELS --- //
-
+// SCHEMAS & MODELS
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   name: { type: String, required: true, trim: true },
   role: { type: String, default: 'student' },
   avatarBg: { type: String, default: '#ffffff' },
-  avatarColor: { type: String, default: '#000000' }
+  avatarColor: { type: String, default: '#000000' },
+  badges: [{ type: String }] // Verification Badges
 }, { timestamps: true });
 
 const CalendarEventSchema = new mongoose.Schema({
@@ -64,6 +59,7 @@ const ChatChannelSchema = new mongoose.Schema({
   adminId: String
 });
 
+// CHAT MESSAGE SCHEMA WITH 24-HOUR AUTO-DELETE EXPIRATION
 const ChatMessageSchema = new mongoose.Schema({
   channelId: String,
   senderId: String,
@@ -72,7 +68,7 @@ const ChatMessageSchema = new mongoose.Schema({
   imageUrl: String,
   edited: { type: Boolean, default: false },
   readBy: [String],
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now, expires: 86400 } // Auto-deletes after 24 hours (86,400 seconds)
 });
 
 const ResourceLinkSchema = new mongoose.Schema({
@@ -96,7 +92,7 @@ const SystemConfig = mongoose.model('SystemConfig', SystemConfigSchema);
 
 const typingState = {};
 
-// --- MAINTENANCE MODE MIDDLEWARE --- //
+// MAINTENANCE MIDDLEWARE
 app.use(async (req, res, next) => {
   if (
     req.path.startsWith('/api/login') ||
@@ -128,15 +124,13 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// --- PAGE ROUTING --- //
-
+// PAGE ROUTING
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// --- AUTHENTICATION & USER MANAGEMENT --- //
-
+// AUTHENTICATION & USER MANAGEMENT
 app.post('/api/register', async (req, res) => {
   try {
     const { username, password, name } = req.body;
@@ -148,7 +142,7 @@ app.post('/api/register', async (req, res) => {
 
     const role = (cleanUsername === 'admin') ? 'admin' : 'student';
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ username: cleanUsername, password: hashedPassword, name: name.trim(), role });
+    const newUser = await User.create({ username: cleanUsername, password: hashedPassword, name: name.trim(), role, badges: [] });
 
     res.status(201).json({ userId: newUser._id, name: newUser.name, role: newUser.role });
   } catch (err) {
@@ -180,7 +174,7 @@ app.get('/api/users/:id', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (err) {
-    res.status(500).json({ error: 'Error fetching user data' });
+    res.status(500).json({ error: 'Error fetching user profile' });
   }
 });
 
@@ -207,8 +201,28 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-// --- CHAT & DIRECT MESSAGING ROUTES --- //
+// ADMIN USER BADGE MANAGEMENT
+app.post('/api/admin/users/:id/badges', async (req, res) => {
+  const { badge } = req.body;
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { $addToSet: { badges: badge } },
+    { new: true }
+  );
+  res.json({ badges: user.badges });
+});
 
+app.delete('/api/admin/users/:id/badges', async (req, res) => {
+  const { badge } = req.body;
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { $pull: { badges: badge } },
+    { new: true }
+  );
+  res.json({ badges: user.badges });
+});
+
+// CHAT & DIRECT MESSAGING ROUTES
 app.post('/api/chat/dm', async (req, res) => {
   const { targetUserId } = req.body;
   const currentUserId = req.headers['x-user-id'];
@@ -385,8 +399,7 @@ app.get('/api/chat/typing/:channelId', (req, res) => {
   res.json({ typers: activeTypers });
 });
 
-// --- RESOURCES & ADMIN CONTROLS --- //
-
+// RESOURCES & ADMIN CONTROLS
 app.get('/api/resources', async (req, res) => res.json(await ResourceLink.find()));
 
 app.post('/api/admin/resources', async (req, res) => {
@@ -417,7 +430,6 @@ app.post('/api/admin/master-schedule/preset', async (req, res) => {
   await MasterSchedule.deleteMany({});
 
   let slots = [];
-
   switch (preset) {
     case 'normal':
       slots = [
@@ -513,12 +525,13 @@ app.post('/api/admin/master-schedule/preset', async (req, res) => {
       break;
 
     default:
-      return res.status(400).json({ error: 'Invalid preset option selected.' });
+      return res.status(400).json({ error: 'Invalid preset option.' });
   }
 
   const created = await MasterSchedule.insertMany(slots);
   res.json(created);
 });
+
 // MAINTENANCE CONFIG
 app.get('/api/config/maintenance', async (req, res) => {
   const maintenance = await SystemConfig.findOne({ key: 'maintenanceMode' });
@@ -565,11 +578,9 @@ app.delete('/api/admin/users/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// Catch-all SPA Route Fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'login.html'));
 });
 
-// Start Express Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Urbana High Server listening on port ${PORT}`));
