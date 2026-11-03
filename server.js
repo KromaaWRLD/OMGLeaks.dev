@@ -6,7 +6,15 @@ const path = require('path');
 const app = express();
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(__dirname));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Payload error catcher
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Image file too large! Please pick a smaller image.' });
+  }
+  next();
+});
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://27johnballenger_db_user:iBZYg2Mdo4Xv7c19@winter.upuzovj.mongodb.net/coldwinters?retryWrites=true&w=majority';
 
