@@ -33,24 +33,34 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
-// app.js - authFetch Fix
+// Custom Fetch Wrapper to attach User ID Header & handle maintenance
 async function authFetch(url, options = {}) {
   options.headers = {
     ...options.headers,
     'x-user-id': userId
   };
+
   try {
     const res = await fetch(url, options);
+
     if (res.status === 503 && userRole !== 'admin') {
       const data = await res.json();
-      document.getElementById('maintMessage').innerText = data.message || 'Under Maintenance';
-      document.getElementById('maintTime').innerText = data.estimatedTime || 'Soon';
-      document.getElementById('maintenanceOverlay').style.display = 'flex';
+      const overlay = document.getElementById('maintenanceOverlay');
+      if (overlay) {
+        document.getElementById('maintMessage').innerText = data.message || 'Under Maintenance';
+        document.getElementById('maintTime').innerText = data.estimatedTime || 'Soon';
+        overlay.style.display = 'flex';
+      }
     }
+
     return res;
   } catch (err) {
-    console.error('Fetch error:', err);
-    return { ok: false, json: async () => ({ error: 'Connection failed' }) };
+    console.error('Connection error while fetching:', url, err);
+    return {
+      ok: false,
+      status: 500,
+      json: async () => ({ error: 'Unable to connect to server. Check network connection.' })
+    };
   }
 }
 
@@ -424,7 +434,7 @@ async function fetchTypingStatus() {
   }
 }
 
-// MESSAGES LOG
+// MESSAGES LOG & EDITING
 async function loadMessages(isSilent = false) {
   if (!currentActiveChatId) return;
   const historyEl = document.getElementById('messageHistory');
@@ -466,7 +476,7 @@ async function loadMessages(isSilent = false) {
   }
 }
 
-// IMAGE ATTACHMENT
+// IMAGE ATTACHMENTS
 document.getElementById('chatImageInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -533,7 +543,7 @@ async function deleteMessage(msgId) {
   loadMessages(false);
 }
 
-// GROUP CHAT CREATION
+// GROUP CREATION MODAL
 document.getElementById('openGroupModalBtn').addEventListener('click', async () => {
   const modal = document.getElementById('groupModal');
   const userCheckboxes = document.getElementById('groupUserCheckboxes');
@@ -633,6 +643,62 @@ async function deleteResourceLink(id) {
   loadResourcesList();
 }
 
+// DASHBOARD SCHEDULE HELPERS
+function checkTodayStatus(events, masterSchedule) {
+  const today = new Date().toISOString().split('T')[0];
+  const dayEvent = events.find(e => e.date === today);
+  const statusEl = document.getElementById('dashTodayStatus');
+
+  if (dayEvent && dayEvent.isDayOff) {
+    statusEl.innerText = `NO SCHOOL: ${dayEvent.title}`;
+    statusEl.style.color = '#ff5555';
+    document.getElementById('dashMasterSchedule').innerHTML = `<div class="content-block"><p class="empty-msg">No classes scheduled today due to <strong>${dayEvent.title}</strong>.</p></div>`;
+    return;
+  }
+
+  if (dayEvent && !dayEvent.isDayOff) {
+    statusEl.innerText = `Special Schedule: ${dayEvent.title}`;
+    statusEl.style.color = '#ffaa00';
+  } else {
+    statusEl.innerText = 'Regular Everyday Schedule';
+    statusEl.style.color = '#55ff55';
+  }
+
+  renderMasterSchedule(masterSchedule);
+}
+
+function renderMasterSchedule(master) {
+  const container = document.getElementById('dashMasterSchedule');
+  if (!master || master.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No master bell schedule set by admin yet.</p>';
+    return;
+  }
+
+  container.innerHTML = master.map(m => `
+    <div class="class-summary-item">
+      <div>
+        <strong>${m.period}:</strong> ${m.startTime} – ${m.endTime}
+        <span style="font-size: 0.8rem; color: #888; margin-left: 0.5rem;">(${m.label || 'Standard Class'})</span>
+      </div>
+      ${userRole === 'admin' ? `<button onclick="deleteMasterSlot('${m._id}')" class="delete-btn">Delete Slot</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderCalendarEvents(events) {
+  const container = document.getElementById('calendarList');
+  if (events.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No upcoming days off listed.</p>';
+    return;
+  }
+  container.innerHTML = events.map(e => `
+    <div class="class-summary-item">
+      <div><strong>${e.date}</strong> - ${e.title} ${e.isDayOff ? '(No School)' : '(Special Schedule)'}</div>
+      ${userRole === 'admin' ? `<button onclick="deleteCalendarDate('${e.date}')" class="delete-btn">Remove</button>` : ''}
+    </div>
+  `).join('');
+}
+
 // ADMIN FUNCTIONS
 async function applySchedulePreset(preset) {
   if (!confirm(`Apply the ${preset} schedule preset to the entire app?`)) return;
@@ -667,6 +733,42 @@ async function adminResetPassword(targetUserId) {
     body: JSON.stringify({ newPassword })
   });
   alert("Password reset successfully.");
+}
+
+async function checkMaintenanceStatus() {
+  const res = await authFetch('/api/config/maintenance');
+  if (res.ok) {
+    const data = await res.json();
+    if (userRole === 'admin') {
+      const toggle = document.getElementById('maintActiveToggle');
+      const notice = document.getElementById('maintNoticeInput');
+      const time = document.getElementById('maintTimeInput');
+      if (toggle) toggle.checked = data.active || false;
+      if (notice) notice.value = data.message || '';
+      if (time) time.value = data.estimatedTime || '';
+    }
+  }
+}
+
+const maintForm = document.getElementById('adminMaintenanceForm');
+if (maintForm) {
+  maintForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const active = document.getElementById('maintActiveToggle').checked;
+    const message = document.getElementById('maintNoticeInput').value;
+    const estimatedTime = document.getElementById('maintTimeInput').value;
+
+    const res = await authFetch('/api/admin/maintenance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active, message, estimatedTime })
+    });
+
+    if (res.ok) {
+      alert("Maintenance settings saved successfully.");
+      checkMaintenanceStatus();
+    }
+  });
 }
 
 async function loadAdminData() {
