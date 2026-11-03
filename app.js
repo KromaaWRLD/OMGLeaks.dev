@@ -18,7 +18,6 @@ let cachedMasterSchedule = [];
 let chatPollingInterval = null;
 let typingTimeout = null;
 let attachedBase64Image = null;
-let isMaintenanceActive = false;
 
 if (userRole === 'admin' && adminNavItem) {
   adminNavItem.style.display = 'flex';
@@ -40,14 +39,16 @@ async function authFetch(url, options = {}) {
     'x-user-id': userId
   };
   const res = await fetch(url, options);
-  if (res.status === 503 && userRole !== 'admin') {
+  if (res.status === 530 && userRole !== 'admin') {
     const data = await res.json();
-    alert(data.error || 'System is currently down for maintenance.');
+    document.getElementById('maintMessage').innerText = data.message || 'Under Maintenance';
+    document.getElementById('maintTime').innerText = data.estimatedTime || 'Soon';
+    document.getElementById('maintenanceOverlay').style.display = 'flex';
   }
   return res;
 }
 
-// Navigation View Switcher
+// Navigation Switcher
 navItems.forEach(item => {
   item.addEventListener('click', () => {
     navItems.forEach(nav => nav.classList.remove('active'));
@@ -61,11 +62,13 @@ navItems.forEach(item => {
 
     if (path === 'chat') {
       loadChatChannels();
+      loadDMStudentList();
       startLiveChatPolling();
     } else {
       stopLiveChatPolling();
     }
 
+    if (path === 'resources') loadResourcesList();
     if (sidenav.classList.contains('open')) toggleSidebar();
   });
 });
@@ -114,7 +117,7 @@ async function initApp() {
   if (userRole === 'admin') loadAdminData();
 }
 
-// WORKING REAL-TIME UNREAD NOTIFICATIONS
+// UNREAD BADGE COUNT
 async function loadUnreadBadgeCount() {
   const res = await authFetch(`/api/chat/channels/${userId}`);
   if (res.ok) {
@@ -129,14 +132,13 @@ async function loadUnreadBadgeCount() {
       badge.style.display = 'none';
     }
 
-    // Refresh current channel list in background to update individual badges
     if (document.getElementById('view-chat').style.display !== 'none') {
       renderChatChannelsList(channels);
     }
   }
 }
 
-// LIVE PERIOD COUNTDOWN
+// PERIOD COUNTDOWN TIMER
 function startPeriodCountdown() {
   setInterval(updateCountdownDisplay, 1000);
   updateCountdownDisplay();
@@ -223,29 +225,35 @@ function applyAvatarStyling(bg, color) {
   previewPfp.style.color = color;
 }
 
-// ACCOUNT DELETION
-document.getElementById('deleteAccountForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const password = document.getElementById('deleteAccountPass').value;
-  if (!confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) return;
+// DIRECT MESSAGING & CHAT CHANNELS
+async function loadDMStudentList() {
+  const container = document.getElementById('dmStudentList');
+  const res = await authFetch('/api/admin/users');
+  if (res.ok) {
+    const users = await res.json();
+    container.innerHTML = users.filter(u => u._id !== userId).map(u => `
+      <div onclick="openDirectMessage('${u._id}')" style="cursor: pointer; padding: 0.3rem 0.5rem; background: #111; border-radius: 4px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center;">
+        <span>${u.name}</span>
+        <i class="fa-solid fa-paper-plane" style="font-size: 0.7rem; color: #888;"></i>
+      </div>
+    `).join('');
+  }
+}
 
-  const res = await authFetch(`/api/users/${userId}`, {
-    method: 'DELETE',
+async function openDirectMessage(targetUserId) {
+  const res = await authFetch('/api/chat/dm', {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password })
+    body: JSON.stringify({ targetUserId })
   });
 
   if (res.ok) {
-    alert("Account deleted.");
-    localStorage.clear();
-    window.location.href = 'login.html';
-  } else {
-    const data = await res.json();
-    alert(data.error || "Failed to delete account.");
+    const channel = await res.json();
+    loadChatChannels();
+    selectChatChannel(channel._id);
   }
-});
+}
 
-// LIVE CHAT & CHANNELS
 function startLiveChatPolling() {
   stopLiveChatPolling();
   chatPollingInterval = setInterval(() => {
@@ -274,7 +282,7 @@ async function loadChatChannels() {
 function renderChatChannelsList(channels) {
   const container = document.getElementById('chatChannelsList');
   if (channels.length === 0) {
-    container.innerHTML = '<p class="empty-msg">No chats yet. Create a group!</p>';
+    container.innerHTML = '<p class="empty-msg">No chats yet. Pick a student below to DM!</p>';
     return;
   }
 
@@ -294,31 +302,11 @@ function renderChatChannelsList(channels) {
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             ${c.unreadCount > 0 ? `<span class="badge" style="background: #ff3333; color: #fff;">${c.unreadCount}</span>` : ''}
-            ${(c.isGroup && isAdmin) ? `<i onclick="deleteGroupChannel(event, '${c._id}')" class="fa-solid fa-trash" style="color: #ff5555; cursor: pointer; font-size: 0.85rem;" title="Delete Group"></i>` : ''}
           </div>
         </div>
       </div>
     `;
   }).join('');
-}
-
-// GROUP DELETION
-async function deleteGroupChannel(event, channelId) {
-  event.stopPropagation();
-  if (!confirm("Are you sure you want to delete this group chat for all members?")) return;
-
-  const res = await authFetch(`/api/chat/channels/${channelId}`, { method: 'DELETE' });
-  if (res.ok) {
-    if (currentActiveChatId === channelId) {
-      currentActiveChatId = null;
-      document.getElementById('activeChatHeader').innerHTML = '<span>Select a conversation to start chatting</span>';
-      document.getElementById('messageHistory').innerHTML = '<p class="empty-msg">No conversation selected.</p>';
-    }
-    loadChatChannels();
-    loadUnreadBadgeCount();
-  } else {
-    alert("Failed to delete group.");
-  }
 }
 
 async function selectChatChannel(channelId) {
@@ -328,10 +316,24 @@ async function selectChatChannel(channelId) {
     const channels = await res.json();
     currentActiveChannelObj = channels.find(c => c._id === channelId);
     
-    // Header without Live Sync text
-    document.getElementById('activeChatHeader').innerHTML = `
-      <span>${currentActiveChannelObj ? currentActiveChannelObj.name : 'Chat'}</span>
-    `;
+    const actionContainer = document.getElementById('channelActionBtns');
+    actionContainer.innerHTML = '';
+
+    if (currentActiveChannelObj && currentActiveChannelObj.isGroup) {
+      const isGroupAdmin = currentActiveChannelObj.adminId === userId;
+
+      if (isGroupAdmin) {
+        actionContainer.innerHTML += `
+          <button onclick="reassignGroupAdmin('${currentActiveChannelObj._id}')" class="action-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Reassign Admin</button>
+          <button onclick="deleteGroupChannel('${currentActiveChannelObj._id}')" class="delete-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Delete Group</button>
+        `;
+      }
+      actionContainer.innerHTML += `
+        <button onclick="leaveGroupChannel('${currentActiveChannelObj._id}')" class="delete-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #444;">Leave Group</button>
+      `;
+    }
+
+    document.getElementById('activeChatHeader').querySelector('span').innerText = currentActiveChannelObj ? currentActiveChannelObj.name : 'Chat';
   }
 
   loadMessages(false);
@@ -339,10 +341,51 @@ async function selectChatChannel(channelId) {
   loadUnreadBadgeCount();
 }
 
+async function leaveGroupChannel(channelId) {
+  if (!confirm("Are you sure you want to leave this group chat?")) return;
+  const res = await authFetch(`/api/chat/channels/${channelId}/leave`, { method: 'POST' });
+  if (res.ok) {
+    currentActiveChatId = null;
+    document.getElementById('activeChatHeader').querySelector('span').innerText = 'Select a conversation to start chatting';
+    document.getElementById('messageHistory').innerHTML = '<p class="empty-msg">No conversation selected.</p>';
+    document.getElementById('channelActionBtns').innerHTML = '';
+    loadChatChannels();
+  }
+}
+
+async function reassignGroupAdmin(channelId) {
+  const newAdminId = prompt("Enter the User ID of the new Group Admin:");
+  if (!newAdminId) return;
+
+  const res = await authFetch(`/api/chat/channels/${channelId}/reassign-admin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newAdminId })
+  });
+
+  if (res.ok) {
+    alert("Group Admin reassigned.");
+    selectChatChannel(channelId);
+  } else {
+    alert("Failed to reassign group admin.");
+  }
+}
+
+async function deleteGroupChannel(channelId) {
+  if (!confirm("Are you sure you want to delete this group chat for all members?")) return;
+  const res = await authFetch(`/api/chat/channels/${channelId}`, { method: 'DELETE' });
+  if (res.ok) {
+    currentActiveChatId = null;
+    document.getElementById('activeChatHeader').querySelector('span').innerText = 'Select a conversation to start chatting';
+    document.getElementById('messageHistory').innerHTML = '<p class="empty-msg">No conversation selected.</p>';
+    document.getElementById('channelActionBtns').innerHTML = '';
+    loadChatChannels();
+  }
+}
+
 // TYPING INDICATORS
 document.getElementById('chatInput').addEventListener('input', () => {
   if (!currentActiveChatId) return;
-
   sendTypingSignal(true);
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(() => sendTypingSignal(false), 2000);
@@ -375,7 +418,7 @@ async function fetchTypingStatus() {
   }
 }
 
-// MESSAGES LOG & EDIT/DELETE
+// MESSAGES LOG
 async function loadMessages(isSilent = false) {
   if (!currentActiveChatId) return;
   const historyEl = document.getElementById('messageHistory');
@@ -393,18 +436,18 @@ async function loadMessages(isSilent = false) {
     historyEl.innerHTML = messages.map(m => {
       const isMine = m.senderId === userId;
       const isGroupAdmin = currentActiveChannelObj && currentActiveChannelObj.adminId === userId;
-      const canDelete = isMine || isGroupAdmin;
+      const isSiteAdmin = userRole === 'admin';
+      const canDelete = isMine || isGroupAdmin || isSiteAdmin;
 
       return `
-        <div style="align-self: ${isMine ? 'flex-end' : 'flex-start'}; max-width: 75%; background: ${isMine ? '#ffffff' : '#1a1a1a'}; color: ${isMine ? '#000000' : '#ffffff'}; padding: 0.6rem 0.8rem; border-radius: 8px; position: relative;" class="chat-bubble">
+        <div style="align-self: ${isMine ? 'flex-end' : 'flex-start'}; max-width: 75%; background: ${isMine ? '#ffffff' : '#1a1a1a'}; color: ${isMine ? '#000000' : '#ffffff'}; padding: 0.6rem 0.8rem; border-radius: 8px;" class="chat-bubble">
           <div style="font-size: 0.7rem; color: ${isMine ? '#555' : '#aaa'}; font-weight: bold; display: flex; justify-content: space-between; gap: 1rem;">
             <span>${m.senderName} ${m.edited ? '(edited)' : ''}</span>
             <div>
-              ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer; margin-right: 0.4rem;" title="Edit"></i>` : ''}
-              ${canDelete ? `<i onclick="deleteMessage('${m._id}')" class="fa-solid fa-trash" style="cursor: pointer; color: #ff5555;" title="Delete"></i>` : ''}
+              ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer; margin-right: 0.4rem;"></i>` : ''}
+              ${canDelete ? `<i onclick="deleteMessage('${m._id}')" class="fa-solid fa-trash" style="cursor: pointer; color: #ff5555;"></i>` : ''}
             </div>
           </div>
-
           ${m.text ? `<div style="margin-top: 0.25rem;">${m.text}</div>` : ''}
           ${m.imageUrl ? `<img src="${m.imageUrl}" style="max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 0.5rem; display: block;">` : ''}
         </div>
@@ -528,137 +571,102 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
   loadChatChannels();
 });
 
-// MAINTENANCE MODE CONTROL
-async function checkMaintenanceStatus() {
-  const res = await authFetch('/api/config/maintenance');
+// LINKS & RESOURCES
+async function loadResourcesList() {
+  const res = await authFetch('/api/resources');
   if (res.ok) {
-    const data = await res.json();
-    isMaintenanceActive = data.maintenance;
-    const btn = document.getElementById('toggleMaintenanceBtn');
-    if (btn) {
-      btn.innerText = isMaintenanceActive ? 'Turn OFF Maintenance' : 'Turn ON Maintenance';
-      btn.style.background = isMaintenanceActive ? '#ff5555' : '#ffffff';
-      btn.style.color = isMaintenanceActive ? '#ffffff' : '#000000';
+    const links = await res.json();
+    const container = document.getElementById('publicResourcesList');
+    if (links.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No resource links added yet.</p>';
+      return;
+    }
+    container.innerHTML = links.map(l => `
+      <a href="${l.url}" target="_blank" style="text-decoration: none; color: #fff; background: #111; border: 1px solid #222; padding: 1rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fa-solid ${l.icon || 'fa-link'}" style="font-size: 1.25rem;"></i>
+        <div>
+          <strong>${l.title}</strong>
+          <div style="font-size: 0.75rem; color: #888;">Open portal</div>
+        </div>
+      </a>
+    `).join('');
+
+    if (userRole === 'admin') {
+      const adminContainer = document.getElementById('adminResourcesList');
+      if (adminContainer) {
+        adminContainer.innerHTML = links.map(l => `
+          <div class="class-summary-item">
+            <div><strong>${l.title}</strong> (${l.url})</div>
+            <button onclick="deleteResourceLink('${l._id}')" class="delete-btn">Remove</button>
+          </div>
+        `).join('');
+      }
     }
   }
 }
 
-async function toggleMaintenanceMode() {
-  const res = await authFetch('/api/admin/maintenance', {
+const addResForm = document.getElementById('addResourceForm');
+if (addResForm) {
+  addResForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await authFetch('/api/admin/resources', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: document.getElementById('resTitle').value,
+        url: document.getElementById('resUrl').value,
+        icon: document.getElementById('resIcon').value
+      })
+    });
+    loadResourcesList();
+  });
+}
+
+async function deleteResourceLink(id) {
+  await authFetch(`/api/admin/resources/${id}`, { method: 'DELETE' });
+  loadResourcesList();
+}
+
+// ADMIN FUNCTIONS
+async function applySchedulePreset(preset) {
+  if (!confirm(`Apply the ${preset} schedule preset to the entire app?`)) return;
+  const res = await authFetch('/api/admin/master-schedule/preset', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ maintenance: !isMaintenanceActive })
+    body: JSON.stringify({ preset })
   });
 
   if (res.ok) {
-    checkMaintenanceStatus();
-  }
-}
-
-// DASHBOARD HELPERS
-function checkTodayStatus(events, masterSchedule) {
-  const today = new Date().toISOString().split('T')[0];
-  const dayEvent = events.find(e => e.date === today);
-  const statusEl = document.getElementById('dashTodayStatus');
-
-  if (dayEvent && dayEvent.isDayOff) {
-    statusEl.innerText = `NO SCHOOL: ${dayEvent.title}`;
-    statusEl.style.color = '#ff5555';
-    document.getElementById('dashMasterSchedule').innerHTML = `<div class="content-block"><p class="empty-msg">No classes scheduled today due to <strong>${dayEvent.title}</strong>.</p></div>`;
-    return;
-  }
-
-  if (dayEvent && !dayEvent.isDayOff) {
-    statusEl.innerText = `Special Schedule: ${dayEvent.title}`;
-    statusEl.style.color = '#ffaa00';
-  } else {
-    statusEl.innerText = 'Regular Everyday Schedule';
-    statusEl.style.color = '#55ff55';
-  }
-
-  renderMasterSchedule(masterSchedule);
-}
-
-function renderMasterSchedule(master) {
-  const container = document.getElementById('dashMasterSchedule');
-  if (!master || master.length === 0) {
-    container.innerHTML = '<p class="empty-msg">No master bell schedule set by admin yet.</p>';
-    return;
-  }
-
-  container.innerHTML = master.map(m => `
-    <div class="class-summary-item">
-      <div>
-        <strong>${m.period}:</strong> ${m.startTime} – ${m.endTime}
-        <span style="font-size: 0.8rem; color: #888; margin-left: 0.5rem;">(${m.label || 'Standard Class'})</span>
-      </div>
-      ${userRole === 'admin' ? `<button onclick="deleteMasterSlot('${m._id}')" class="delete-btn">Delete Slot</button>` : ''}
-    </div>
-  `).join('');
-}
-
-function renderCalendarEvents(events) {
-  const container = document.getElementById('calendarList');
-  if (events.length === 0) {
-    container.innerHTML = '<p class="empty-msg">No upcoming days off listed.</p>';
-    return;
-  }
-  container.innerHTML = events.map(e => `
-    <div class="class-summary-item">
-      <div><strong>${e.date}</strong> - ${e.title} ${e.isDayOff ? '(No School)' : '(Special Schedule)'}</div>
-      ${userRole === 'admin' ? `<button onclick="deleteCalendarDate('${e.date}')" class="delete-btn">Remove</button>` : ''}
-    </div>
-  `).join('');
-}
-
-// ADMIN FORM HANDLERS
-const adminCalForm = document.getElementById('adminCalendarForm');
-if (adminCalForm) {
-  adminCalForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await authFetch('/api/admin/calendar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        date: document.getElementById('adminDate').value,
-        title: document.getElementById('adminDateTitle').value,
-        isDayOff: document.getElementById('adminIsDayOff').value
-      })
-    });
+    alert("Schedule preset applied successfully!");
     initApp();
+  }
+}
+
+async function updateUserRole(targetUserId, newRole) {
+  await authFetch(`/api/admin/users/${targetUserId}/role`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: newRole })
   });
+  loadAdminData();
 }
 
-const adminMasterForm = document.getElementById('adminMasterForm');
-if (adminMasterForm) {
-  adminMasterForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await authFetch('/api/admin/master-schedule', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        period: document.getElementById('masterPeriod').value,
-        startTime: document.getElementById('masterStart').value,
-        endTime: document.getElementById('masterEnd').value,
-        label: document.getElementById('masterLabel').value
-      })
-    });
-    initApp();
+async function adminResetPassword(targetUserId) {
+  const newPassword = prompt("Enter new password for this user:");
+  if (!newPassword) return;
+
+  await authFetch(`/api/admin/users/${targetUserId}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newPassword })
   });
-}
-
-async function deleteCalendarDate(date) {
-  await authFetch(`/api/admin/calendar/${date}`, { method: 'DELETE' });
-  initApp();
-}
-
-async function deleteMasterSlot(id) {
-  await authFetch(`/api/admin/master-schedule/${id}`, { method: 'DELETE' });
-  initApp();
+  alert("Password reset successfully.");
 }
 
 async function loadAdminData() {
   checkMaintenanceStatus();
+  loadResourcesList();
+
   const res = await authFetch('/api/admin/users');
   if (res.ok) {
     const users = await res.json();
@@ -666,8 +674,16 @@ async function loadAdminData() {
       <tr>
         <td>${u.username}</td>
         <td>${u.name}</td>
-        <td><span class="badge">${u.role}</span></td>
-        <td><button onclick="deleteUser('${u._id}')" class="delete-btn">Delete</button></td>
+        <td>
+          <select onchange="updateUserRole('${u._id}', this.value)" style="background:#111; color:#fff; border:1px solid #222; padding:0.3rem; border-radius:4px;">
+            <option value="student" ${u.role === 'student' ? 'selected' : ''}>Student</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+        </td>
+        <td style="display: flex; gap: 0.4rem;">
+          <button onclick="adminResetPassword('${u._id}')" class="action-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Reset Pass</button>
+          <button onclick="deleteUser('${u._id}')" class="delete-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Delete</button>
+        </td>
       </tr>
     `).join('');
   }
