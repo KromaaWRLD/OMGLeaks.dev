@@ -223,15 +223,20 @@
       <h1>Admin Control Panel</h1>
       <p class="subtitle">Broadcast announcements, manage users, set schedule presets, and resources.</p>
 
-      <div class="content-block">
-        <h3><i class="fa-solid fa-sliders"></i> Schedule Preset Switcher</h3>
-        <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Switch master bell schedule slots instantly across the entire app.</p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button onclick="applySchedulePreset('normal')" class="action-btn">Standard 8-Period Bell</button>
-          <button onclick="applySchedulePreset('delay2hr')" class="action-btn" style="background: #ffaa00; color: #000;">2-Hour Delay Schedule</button>
-          <button onclick="applySchedulePreset('assembly')" class="action-btn" style="background: #5599ff; color: #fff;">Assembly / Pep Rally Schedule</button>
-        </div>
-      </div>
+<div class="content-block">
+  <h3><i class="fa-solid fa-sliders"></i> Schedule Preset Switcher</h3>
+  <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Switch master bell schedule slots instantly across Urbana High Hub.</p>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <button onclick="applySchedulePreset('normal')" class="action-btn">Standard Bell</button>
+    <button onclick="applySchedulePreset('delay2hr')" class="action-btn" style="background: #ffaa00; color: #000;">2-Hr Delay</button>
+    <button onclick="applySchedulePreset('climbertime')" class="action-btn" style="background: #55ff55; color: #000;">ClimberTime</button>
+    <button onclick="applySchedulePreset('pm_assembly')" class="action-btn" style="background: #5599ff; color: #fff;">PM Assembly</button>
+    <button onclick="applySchedulePreset('activity')" class="action-btn" style="background: #aa55ff; color: #fff;">Activity Day</button>
+    <button onclick="applySchedulePreset('exam1')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 1</button>
+    <button onclick="applySchedulePreset('exam2')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 2</button>
+    <button onclick="applySchedulePreset('exam3')" class="action-btn" style="background: #ff5555; color: #fff;">Exam Day 3</button>
+  </div>
+</div>
 
       <div class="content-block">
         <h3><i class="fa-solid fa-folder-plus"></i> Links & Resources Manager</h3>
