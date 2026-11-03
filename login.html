@@ -15,7 +15,7 @@
         <i class="fa-solid fa-graduation-cap"></i>
       </div>
       <h2>Urbana High School</h2>
-      <p id="portalSub">Sign in to your student schedule hub</p>
+      <p id="portalSub">Sign in to your student hub</p>
     </div>
 
     <!-- SIGN IN FORM -->
@@ -59,7 +59,6 @@
   </div>
 
   <script>
-    // Toggle between Login and Register views
     function toggleForm(mode) {
       document.getElementById('authError').style.display = 'none';
       const loginForm = document.getElementById('loginForm');
@@ -73,11 +72,10 @@
       } else {
         registerForm.style.display = 'none';
         loginForm.style.display = 'block';
-        portalSub.innerText = 'Sign in to your student schedule hub';
+        portalSub.innerText = 'Sign in to your student hub';
       }
     }
 
-    // Handle Login Submit
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const errorDiv = document.getElementById('authError');
@@ -99,18 +97,17 @@
           localStorage.setItem('uhs_user_id', data.userId);
           localStorage.setItem('uhs_user_name', data.name);
           localStorage.setItem('uhs_user_role', data.role);
-          window.location.href = 'index.html';
+          window.location.href = '/index.html';
         } else {
           errorDiv.innerText = data.error || 'Login failed.';
           errorDiv.style.display = 'block';
         }
       } catch (err) {
-        errorDiv.innerText = 'Server connection error. Check server logs.';
+        errorDiv.innerText = 'Server connection error. Please try again.';
         errorDiv.style.display = 'block';
       }
     });
 
-    // Handle Register Submit
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const errorDiv = document.getElementById('authError');
@@ -133,13 +130,13 @@
           localStorage.setItem('uhs_user_id', data.userId);
           localStorage.setItem('uhs_user_name', data.name);
           localStorage.setItem('uhs_user_role', data.role);
-          window.location.href = 'index.html';
+          window.location.href = '/index.html';
         } else {
           errorDiv.innerText = data.error || 'Registration failed.';
           errorDiv.style.display = 'block';
         }
       } catch (err) {
-        errorDiv.innerText = 'Server connection error. Check server logs.';
+        errorDiv.innerText = 'Server connection error. Please try again.';
         errorDiv.style.display = 'block';
       }
     });
