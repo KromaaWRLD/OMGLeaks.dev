@@ -33,19 +33,25 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
+// app.js - authFetch Fix
 async function authFetch(url, options = {}) {
   options.headers = {
     ...options.headers,
     'x-user-id': userId
   };
-  const res = await fetch(url, options);
-  if (res.status === 530 && userRole !== 'admin') {
-    const data = await res.json();
-    document.getElementById('maintMessage').innerText = data.message || 'Under Maintenance';
-    document.getElementById('maintTime').innerText = data.estimatedTime || 'Soon';
-    document.getElementById('maintenanceOverlay').style.display = 'flex';
+  try {
+    const res = await fetch(url, options);
+    if (res.status === 503 && userRole !== 'admin') {
+      const data = await res.json();
+      document.getElementById('maintMessage').innerText = data.message || 'Under Maintenance';
+      document.getElementById('maintTime').innerText = data.estimatedTime || 'Soon';
+      document.getElementById('maintenanceOverlay').style.display = 'flex';
+    }
+    return res;
+  } catch (err) {
+    console.error('Fetch error:', err);
+    return { ok: false, json: async () => ({ error: 'Connection failed' }) };
   }
-  return res;
 }
 
 // Navigation Switcher
