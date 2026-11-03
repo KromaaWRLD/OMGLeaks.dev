@@ -80,7 +80,7 @@ const SystemConfig = mongoose.model('SystemConfig', SystemConfigSchema);
 
 const typingState = {};
 
-// MAINTENANCE MIDDLEWARE
+// server.js - Maintenance Middleware Fix
 app.use(async (req, res, next) => {
   if (
     req.path.startsWith('/api/login') ||
@@ -98,9 +98,9 @@ app.use(async (req, res, next) => {
       const userId = req.headers['x-user-id'];
       if (userId) {
         const user = await User.findById(userId);
-        if (user && user.role === 'admin') return next();
+        if (user && user.role === 'admin') return next(); // Bypass for Admins
       }
-      return res.status(530).json({
+      return res.status(503).json({
         error: 'MAINTENANCE_LOCK',
         message: maintenance.value.message || 'System is undergoing scheduled maintenance.',
         estimatedTime: maintenance.value.estimatedTime || 'Soon'
@@ -111,7 +111,6 @@ app.use(async (req, res, next) => {
   }
   next();
 });
-
 // STATIC ROUTES
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
