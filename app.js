@@ -18,6 +18,7 @@ let cachedMasterSchedule = [];
 let chatPollingInterval = null;
 let typingTimeout = null;
 let attachedBase64Image = null;
+let selectedModalUserId = null;
 
 if (userRole === 'admin' && adminNavItem) {
   adminNavItem.style.display = 'flex';
@@ -33,45 +34,43 @@ if (mobileToggle) {
   sidebarOverlay.addEventListener('click', toggleSidebar);
 }
 
-// TOAST NOTIFICATION SYSTEM (Feature #4)
-function showToast(message, type = 'success') {
+// TOAST NOTIFICATION SYSTEM
+function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
   
+  let icon = 'fa-info-circle';
+  let borderBg = '#222';
+  if (type === 'success') { icon = 'fa-circle-check'; borderBg = '#55ff55'; }
+  if (type === 'error') { icon = 'fa-triangle-exclamation'; borderBg = '#ff5555'; }
+
   toast.style.cssText = `
-    background: ${type === 'error' ? '#ff3333' : '#ffffff'};
-    color: ${type === 'error' ? '#ffffff' : '#000000'};
-    padding: 0.75rem 1.25rem;
-    border-radius: 8px;
+    background: #111111;
+    color: #ffffff;
+    border-left: 4px solid ${borderBg};
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
     font-size: 0.85rem;
-    font-weight: 600;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    min-width: 220px;
     pointer-events: auto;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
+    animation: fadeIn 0.3s ease;
   `;
 
-  const icon = type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-check';
-  toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
-
+  toast.innerHTML = `<i class="fa-solid ${icon}" style="color: ${borderBg}"></i> <span>${message}</span>`;
   container.appendChild(toast);
 
   setTimeout(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
-  }, 10);
-
-  setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
+    toast.style.transition = 'opacity 0.3s ease';
     setTimeout(() => toast.remove(), 300);
-  }, 3500);
+  }, 3000);
 }
 
+// Custom Fetch Wrapper
 async function authFetch(url, options = {}) {
   options.headers = {
     ...options.headers,
@@ -93,8 +92,7 @@ async function authFetch(url, options = {}) {
 
     return res;
   } catch (err) {
-    console.error('Connection error while fetching:', url, err);
-    showToast('Unable to connect to server. Check network connection.', 'error');
+    showToast('Network error while reaching server.', 'error');
     return {
       ok: false,
       status: 500,
@@ -132,7 +130,8 @@ if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
     stopLiveChatPolling();
     localStorage.clear();
-    window.location.href = 'login.html';
+    showToast('Logged out successfully', 'info');
+    setTimeout(() => window.location.href = 'login.html', 500);
   });
 }
 
@@ -170,6 +169,93 @@ async function initApp() {
   setInterval(loadUnreadBadgeCount, 3000);
 
   if (userRole === 'admin') loadAdminData();
+}
+
+// USER PROFILE MODAL & BADGES
+async function openProfileModal(targetUserId) {
+  selectedModalUserId = targetUserId;
+  const res = await authFetch(`/api/users/${targetUserId}`);
+  if (!res.ok) return showToast('Could not load profile.', 'error');
+
+  const user = await res.json();
+  
+  const pfp = document.getElementById('modalPfp');
+  pfp.innerText = (user.name || 'U').charAt(0).toUpperCase();
+  pfp.style.background = user.avatarBg || '#ffffff';
+  pfp.style.color = user.avatarColor || '#000000';
+
+  document.getElementById('modalName').innerText = user.name;
+  document.getElementById('modalUsername').innerText = `@${user.username}`;
+  document.getElementById('modalRoleBadge').innerText = user.role || 'STUDENT';
+
+  // Created date formatting
+  const createdDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown';
+  document.getElementById('modalCreatedDate').innerText = createdDate;
+
+  // Render Badges
+  renderModalBadges(user.badges || []);
+
+  // Show Admin badge controls if viewing as Admin
+  const adminControls = document.getElementById('adminBadgeControls');
+  adminControls.style.display = (userRole === 'admin') ? 'block' : 'none';
+
+  document.getElementById('userProfileModal').style.display = 'flex';
+}
+
+function renderModalBadges(badges) {
+  const listContainer = document.getElementById('modalBadgesList');
+  if (!badges || badges.length === 0) {
+    listContainer.innerHTML = '<span style="font-size: 0.75rem; color: #666;">No verification badges assigned.</span>';
+    return;
+  }
+
+  listContainer.innerHTML = badges.map(b => `
+    <span style="background: #111; border: 1px solid #333; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; color: #ffaa00; display: inline-flex; align-items: center; gap: 0.3rem;">
+      <i class="fa-solid fa-certificate"></i> ${b}
+      ${userRole === 'admin' ? `<i onclick="removeBadgeFromUser('${b}')" class="fa-solid fa-xmark" style="cursor: pointer; color: #ff5555; margin-left: 0.2rem;"></i>` : ''}
+    </span>
+  `).join('');
+}
+
+function closeProfileModal() {
+  document.getElementById('userProfileModal').style.display = 'none';
+  selectedModalUserId = null;
+}
+
+async function addBadgeToUser() {
+  if (!selectedModalUserId) return;
+  const input = document.getElementById('newBadgeInput');
+  const badgeText = input.value.trim();
+  if (!badgeText) return;
+
+  const res = await authFetch(`/api/admin/users/${selectedModalUserId}/badges`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ badge: badgeText })
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    input.value = '';
+    renderModalBadges(data.badges);
+    showToast('Badge added to user', 'success');
+  }
+}
+
+async function removeBadgeFromUser(badgeText) {
+  if (!selectedModalUserId) return;
+
+  const res = await authFetch(`/api/admin/users/${selectedModalUserId}/badges`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ badge: badgeText })
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    renderModalBadges(data.badges);
+    showToast('Badge removed', 'info');
+  }
 }
 
 // UNREAD BADGE COUNT
@@ -268,10 +354,7 @@ async function setAvatarTheme(bgColor, textColor) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ avatarBg: bgColor, avatarColor: textColor })
   });
-
-  if (res.ok) {
-    showToast("Profile theme updated!");
-  }
+  if (res.ok) showToast('Avatar styling updated', 'success');
 }
 
 function applyAvatarStyling(bg, color) {
@@ -284,65 +367,6 @@ function applyAvatarStyling(bg, color) {
   previewPfp.style.color = color;
 }
 
-// USER PROFILE MODAL SYSTEM (Feature #3)
-async function openUserProfileModal(targetUserId) {
-  const res = await authFetch(`/api/users/${targetUserId}`);
-  if (res.ok) {
-    const user = await res.json();
-    const modal = document.getElementById('userProfileModal');
-    
-    document.getElementById('modalProfileName').innerText = user.name;
-    document.getElementById('modalProfileUsername').innerText = `@${user.username}`;
-    document.getElementById('modalProfileRole').innerText = user.role;
-    
-    // Formatted account creation date
-    const createdDate = new Date(user.createdAt || Date.now()).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
-    });
-    document.getElementById('modalProfileCreated').innerText = createdDate;
-
-    // Avatar
-    const pfp = document.getElementById('modalProfilePfp');
-    pfp.innerText = (user.name || 'U').charAt(0).toUpperCase();
-    pfp.style.background = user.avatarBg || '#ffffff';
-    pfp.style.color = user.avatarColor || '#000000';
-
-    // Verification Badges (Feature #1)
-    const badgeContainer = document.getElementById('modalProfileBadgeContainer');
-    badgeContainer.innerHTML = '';
-    
-    if (user.role === 'admin') {
-      badgeContainer.innerHTML += `<span style="background: #ffffff; color: #000; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-shield-halved"></i> Site Admin</span>`;
-    }
-    
-    if (user.verificationBadge && user.verificationBadge !== 'none') {
-      let badgeLabel = user.verificationBadge;
-      if (badgeLabel === 'verified_staff') badgeLabel = 'Verified Staff';
-      if (badgeLabel === 'student_leader') badgeLabel = 'Student Leader';
-
-      badgeContainer.innerHTML += `<span style="background: #5599ff; color: #fff; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> ${badgeLabel}</span>`;
-    }
-
-    // Modal Actions (DM option if not self)
-    const actions = document.getElementById('modalProfileActions');
-    if (user._id !== userId) {
-      actions.innerHTML = `
-        <button onclick="closeUserProfileModal(); openDirectMessage('${user._id}')" class="action-btn" style="width: 100%; justify-content: center;">
-          <i class="fa-solid fa-paper-plane"></i> Send Direct Message
-        </button>
-      `;
-    } else {
-      actions.innerHTML = '';
-    }
-
-    modal.style.display = 'flex';
-  }
-}
-
-function closeUserProfileModal() {
-  document.getElementById('userProfileModal').style.display = 'none';
-}
-
 // DIRECT MESSAGING & CHAT CHANNELS
 async function loadDMStudentList() {
   const container = document.getElementById('dmStudentList');
@@ -350,9 +374,9 @@ async function loadDMStudentList() {
   if (res.ok) {
     const users = await res.json();
     container.innerHTML = users.filter(u => u._id !== userId).map(u => `
-      <div onclick="openUserProfileModal('${u._id}')" style="cursor: pointer; padding: 0.38rem 0.5rem; background: #111; border-radius: 4px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center;">
-        <span>${u.name}</span>
-        <i class="fa-solid fa-user-circle" style="font-size: 0.8rem; color: #888;"></i>
+      <div style="cursor: pointer; padding: 0.38rem 0.5rem; background: #111; border-radius: 4px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center;" onclick="openDirectMessage('${u._id}')">
+        <span onclick="event.stopPropagation(); openProfileModal('${u._id}')" style="color: #fff; text-decoration: underline;">${u.name}</span>
+        <i class="fa-solid fa-paper-plane" style="font-size: 0.7rem; color: #888;"></i>
       </div>
     `).join('');
   }
@@ -369,7 +393,7 @@ async function openDirectMessage(targetUserId) {
     const channel = await res.json();
     loadChatChannels();
     selectChatChannel(channel._id);
-    showToast("Opened Direct Conversation");
+    showToast('Direct message opened', 'info');
   }
 }
 
@@ -469,7 +493,7 @@ async function leaveGroupChannel(channelId) {
     document.getElementById('messageHistory').innerHTML = '<p class="empty-msg">No conversation selected.</p>';
     document.getElementById('channelActionBtns').innerHTML = '';
     loadChatChannels();
-    showToast("Left group conversation");
+    showToast('Left group chat', 'info');
   }
 }
 
@@ -484,10 +508,10 @@ async function reassignGroupAdmin(channelId) {
   });
 
   if (res.ok) {
-    showToast("Group Admin reassigned.");
+    showToast('Group Admin reassigned', 'success');
     selectChatChannel(channelId);
   } else {
-    showToast("Failed to reassign group admin.", "error");
+    showToast('Failed to reassign group admin', 'error');
   }
 }
 
@@ -500,7 +524,7 @@ async function deleteGroupChannel(channelId) {
     document.getElementById('messageHistory').innerHTML = '<p class="empty-msg">No conversation selected.</p>';
     document.getElementById('channelActionBtns').innerHTML = '';
     loadChatChannels();
-    showToast("Group deleted");
+    showToast('Group deleted', 'info');
   }
 }
 
@@ -563,7 +587,7 @@ async function loadMessages(isSilent = false) {
       return `
         <div style="align-self: ${isMine ? 'flex-end' : 'flex-start'}; max-width: 75%; background: ${isMine ? '#ffffff' : '#1a1a1a'}; color: ${isMine ? '#000000' : '#ffffff'}; padding: 0.6rem 0.8rem; border-radius: 8px;" class="chat-bubble">
           <div style="font-size: 0.7rem; color: ${isMine ? '#555' : '#aaa'}; font-weight: bold; display: flex; justify-content: space-between; gap: 1rem;">
-            <span onclick="openUserProfileModal('${m.senderId}')" style="cursor: pointer; text-decoration: underline;">${m.senderName} ${m.edited ? '(edited)' : ''}</span>
+            <span onclick="openProfileModal('${m.senderId}')" style="cursor: pointer; text-decoration: underline;">${m.senderName} ${m.edited ? '(edited)' : ''}</span>
             <div>
               ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer; margin-right: 0.4rem;"></i>` : ''}
               ${canDelete ? `<i onclick="deleteMessage('${m._id}')" class="fa-solid fa-trash" style="cursor: pointer; color: #ff5555;"></i>` : ''}
@@ -603,7 +627,7 @@ function cancelImageAttachment() {
 
 document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!currentActiveChatId) return alert('Please select a chat channel first.');
+  if (!currentActiveChatId) return showToast('Please select a chat channel first.', 'error');
 
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
@@ -628,8 +652,6 @@ document.getElementById('sendMessageForm').addEventListener('submit', async (e) 
     sendTypingSignal(false);
     loadMessages(false);
     loadUnreadBadgeCount();
-  } else {
-    showToast("Failed to send message", "error");
   }
 });
 
@@ -644,8 +666,8 @@ async function editMessagePrompt(msgId, currentText) {
   });
 
   if (res.ok) {
-    showToast("Message updated");
     loadMessages(false);
+    showToast('Message edited', 'success');
   }
 }
 
@@ -653,8 +675,8 @@ async function deleteMessage(msgId) {
   if (!confirm("Delete this message?")) return;
   const res = await authFetch(`/api/chat/messages/${msgId}`, { method: 'DELETE' });
   if (res.ok) {
-    showToast("Message removed");
     loadMessages(false);
+    showToast('Message removed', 'info');
   }
 }
 
@@ -666,4 +688,272 @@ document.getElementById('openGroupModalBtn').addEventListener('click', async () 
   const res = await authFetch('/api/admin/users');
   if (res.ok) {
     const users = await res.json();
-    userCheckboxes.innerHTML = users.
+    userCheckboxes.innerHTML = users.filter(u => u._id !== userId).map(u => `
+      <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" value="${u._id}" class="group-member-checkbox">
+        ${u.name} (@${u.username})
+      </label>
+    `).join('');
+  }
+  modal.style.display = 'flex';
+});
+
+function closeGroupModal() {
+  document.getElementById('groupModal').style.display = 'none';
+}
+
+document.getElementById('createGroupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const groupName = document.getElementById('groupNameInput').value;
+  const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
+  const memberIds = Array.from(checkboxes).map(cb => cb.value);
+  memberIds.push(userId);
+
+  const res = await authFetch('/api/chat/channels', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: groupName,
+      isGroup: true,
+      members: memberIds,
+      adminId: userId
+    })
+  });
+
+  if (res.ok) {
+    closeGroupModal();
+    loadChatChannels();
+    showToast('Group chat created!', 'success');
+  }
+});
+
+// LINKS & RESOURCES
+async function loadResourcesList() {
+  const res = await authFetch('/api/resources');
+  if (res.ok) {
+    const links = await res.json();
+    const container = document.getElementById('publicResourcesList');
+    if (links.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No resource links added yet.</p>';
+      return;
+    }
+    container.innerHTML = links.map(l => `
+      <a href="${l.url}" target="_blank" style="text-decoration: none; color: #fff; background: #111; border: 1px solid #222; padding: 1rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fa-solid ${l.icon || 'fa-link'}" style="font-size: 1.25rem;"></i>
+        <div>
+          <strong>${l.title}</strong>
+          <div style="font-size: 0.75rem; color: #888;">Open portal</div>
+        </div>
+      </a>
+    `).join('');
+
+    if (userRole === 'admin') {
+      const adminContainer = document.getElementById('adminResourcesList');
+      if (adminContainer) {
+        adminContainer.innerHTML = links.map(l => `
+          <div class="class-summary-item">
+            <div><strong>${l.title}</strong> (${l.url})</div>
+            <button onclick="deleteResourceLink('${l._id}')" class="delete-btn">Remove</button>
+          </div>
+        `).join('');
+      }
+    }
+  }
+}
+
+const addResForm = document.getElementById('addResourceForm');
+if (addResForm) {
+  addResForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const res = await authFetch('/api/admin/resources', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: document.getElementById('resTitle').value,
+        url: document.getElementById('resUrl').value,
+        icon: document.getElementById('resIcon').value
+      })
+    });
+    if (res.ok) {
+      loadResourcesList();
+      showToast('Resource added', 'success');
+    }
+  });
+}
+
+async function deleteResourceLink(id) {
+  const res = await authFetch(`/api/admin/resources/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    loadResourcesList();
+    showToast('Resource removed', 'info');
+  }
+}
+
+// DASHBOARD SCHEDULE HELPERS
+function checkTodayStatus(events, masterSchedule) {
+  const today = new Date().toISOString().split('T')[0];
+  const dayEvent = events.find(e => e.date === today);
+  const statusEl = document.getElementById('dashTodayStatus');
+
+  if (dayEvent && dayEvent.isDayOff) {
+    statusEl.innerText = `NO SCHOOL: ${dayEvent.title}`;
+    statusEl.style.color = '#ff5555';
+    document.getElementById('dashMasterSchedule').innerHTML = `<div class="content-block"><p class="empty-msg">No classes scheduled today due to <strong>${dayEvent.title}</strong>.</p></div>`;
+    return;
+  }
+
+  if (dayEvent && !dayEvent.isDayOff) {
+    statusEl.innerText = `Special Schedule: ${dayEvent.title}`;
+    statusEl.style.color = '#ffaa00';
+  } else {
+    statusEl.innerText = 'Regular Everyday Schedule';
+    statusEl.style.color = '#55ff55';
+  }
+
+  renderMasterSchedule(masterSchedule);
+}
+
+function renderMasterSchedule(master) {
+  const container = document.getElementById('dashMasterSchedule');
+  if (!master || master.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No master bell schedule set by admin yet.</p>';
+    return;
+  }
+
+  container.innerHTML = master.map(m => `
+    <div class="class-summary-item">
+      <div>
+        <strong>${m.period}:</strong> ${m.startTime} – ${m.endTime}
+        <span style="font-size: 0.8rem; color: #888; margin-left: 0.5rem;">(${m.label || 'Standard Class'})</span>
+      </div>
+      ${userRole === 'admin' ? `<button onclick="deleteMasterSlot('${m._id}')" class="delete-btn">Delete Slot</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderCalendarEvents(events) {
+  const container = document.getElementById('calendarList');
+  if (events.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No upcoming days off listed.</p>';
+    return;
+  }
+  container.innerHTML = events.map(e => `
+    <div class="class-summary-item">
+      <div><strong>${e.date}</strong> - ${e.title} ${e.isDayOff ? '(No School)' : '(Special Schedule)'}</div>
+      ${userRole === 'admin' ? `<button onclick="deleteCalendarDate('${e.date}')" class="delete-btn">Remove</button>` : ''}
+    </div>
+  `).join('');
+}
+
+// ADMIN FUNCTIONS
+async function applySchedulePreset(preset) {
+  if (!confirm(`Apply the ${preset} schedule preset to the entire app?`)) return;
+  const res = await authFetch('/api/admin/master-schedule/preset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ preset })
+  });
+
+  if (res.ok) {
+    showToast(`Preset "${preset}" applied!`, 'success');
+    initApp();
+  }
+}
+
+async function updateUserRole(targetUserId, newRole) {
+  const res = await authFetch(`/api/admin/users/${targetUserId}/role`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: newRole })
+  });
+  if (res.ok) {
+    showToast('User role updated', 'success');
+    loadAdminData();
+  }
+}
+
+async function adminResetPassword(targetUserId) {
+  const newPassword = prompt("Enter new password for this user:");
+  if (!newPassword) return;
+
+  const res = await authFetch(`/api/admin/users/${targetUserId}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newPassword })
+  });
+  if (res.ok) showToast('Password reset successfully', 'success');
+}
+
+async function checkMaintenanceStatus() {
+  const res = await authFetch('/api/config/maintenance');
+  if (res.ok) {
+    const data = await res.json();
+    if (userRole === 'admin') {
+      const toggle = document.getElementById('maintActiveToggle');
+      const notice = document.getElementById('maintNoticeInput');
+      const time = document.getElementById('maintTimeInput');
+      if (toggle) toggle.checked = data.active || false;
+      if (notice) notice.value = data.message || '';
+      if (time) time.value = data.estimatedTime || '';
+    }
+  }
+}
+
+const maintForm = document.getElementById('adminMaintenanceForm');
+if (maintForm) {
+  maintForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const active = document.getElementById('maintActiveToggle').checked;
+    const message = document.getElementById('maintNoticeInput').value;
+    const estimatedTime = document.getElementById('maintTimeInput').value;
+
+    const res = await authFetch('/api/admin/maintenance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active, message, estimatedTime })
+    });
+
+    if (res.ok) {
+      showToast('Maintenance settings saved', 'success');
+      checkMaintenanceStatus();
+    }
+  });
+}
+
+async function loadAdminData() {
+  checkMaintenanceStatus();
+  loadResourcesList();
+
+  const res = await authFetch('/api/admin/users');
+  if (res.ok) {
+    const users = await res.json();
+    document.getElementById('adminUsersTableBody').innerHTML = users.map(u => `
+      <tr>
+        <td><span onclick="openProfileModal('${u._id}')" style="cursor: pointer; text-decoration: underline;">${u.username}</span></td>
+        <td>${u.name}</td>
+        <td>
+          <select onchange="updateUserRole('${u._id}', this.value)" style="background:#111; color:#fff; border:1px solid #222; padding:0.3rem; border-radius:4px;">
+            <option value="student" ${u.role === 'student' ? 'selected' : ''}>Student</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+        </td>
+        <td style="display: flex; gap: 0.4rem;">
+          <button onclick="adminResetPassword('${u._id}')" class="action-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Reset Pass</button>
+          <button onclick="deleteUser('${u._id}')" class="delete-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function deleteUser(id) {
+  if (confirm("Delete this user account?")) {
+    const res = await authFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('User account deleted', 'info');
+      loadAdminData();
+    }
+  }
+}
+
+initApp();
