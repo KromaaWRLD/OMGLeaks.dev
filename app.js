@@ -1,5 +1,5 @@
-const userId = localStorage.getItem('uhs_user_id');
-const userRole = localStorage.getItem('uhs_user_role');
+let userId = localStorage.getItem('uhs_user_id');
+let userRole = localStorage.getItem('uhs_user_role');
 
 if (!userId && !window.location.pathname.includes('login.html')) {
   window.location.href = 'login.html';
@@ -19,8 +19,29 @@ let chatPollingInterval = null;
 let typingTimeout = null;
 let attachedBase64Image = null;
 let selectedModalUserId = null;
+let calcExpr = '';
 
-if (userRole === 'admin' && adminNavItem) {
+// INSTANT ROLE PERMISSION SYNC
+function updateRoleUI(newRole) {
+  if (userRole !== newRole) {
+    userRole = newRole;
+    localStorage.setItem('uhs_user_role', newRole);
+    showToast(`Permissions updated: Role is now ${newRole.toUpperCase()}`, 'info');
+  }
+
+  if (adminNavItem) {
+    if (userRole === 'admin') {
+      adminNavItem.style.display = 'flex';
+    } else {
+      adminNavItem.style.display = 'none';
+      if (document.getElementById('view-admin').style.display !== 'none') {
+        document.querySelector('[data-path="dashboard"]').click();
+      }
+    }
+  }
+}
+
+if (adminNavItem && userRole === 'admin') {
   adminNavItem.style.display = 'flex';
 }
 
@@ -121,7 +142,9 @@ navItems.forEach(item => {
       stopLiveChatPolling();
     }
 
+    if (path === 'suggestions') loadSuggestionsList();
     if (path === 'resources') loadResourcesList();
+    if (path === 'admin') loadAdminData();
     if (sidenav.classList.contains('open')) toggleSidebar();
   });
 });
@@ -135,7 +158,7 @@ if (logoutBtn) {
   });
 }
 
-// INITIALIZATION
+// INITIALIZATION & REAL-TIME BACKGROUND POLLING
 async function initApp() {
   if (!userId) return;
 
@@ -144,6 +167,8 @@ async function initApp() {
     const user = await userRes.json();
     document.getElementById('userName').innerText = user.name;
     
+    updateRoleUI(user.role);
+
     const firstLetter = (user.name || 'U').charAt(0).toUpperCase();
     document.getElementById('navPfpDisplay').innerText = firstLetter;
     document.getElementById('pfpPreview').innerText = firstLetter;
@@ -167,12 +192,69 @@ async function initApp() {
 
   loadActivePoll();
   loadUnreadBadgeCount();
-  setInterval(loadUnreadBadgeCount, 3000);
+
+  // Background polling every 3s for instant permissions, poll updates, and message badges
+  setInterval(backgroundRealtimeSync, 3000);
 
   if (userRole === 'admin') loadAdminData();
 }
 
-// COMMUNITY POLL SYSTEM
+async function backgroundRealtimeSync() {
+  if (!userId) return;
+
+  // Sync current user role
+  const res = await authFetch(`/api/users/${userId}`);
+  if (res.ok) {
+    const user = await res.json();
+    if (user && user.role) updateRoleUI(user.role);
+  }
+
+  loadUnreadBadgeCount();
+
+  // Refresh visible admin components in real time
+  if (document.getElementById('view-admin').style.display !== 'none' && userRole === 'admin') {
+    loadAdminData();
+  }
+}
+
+// CALCULATOR TOOL
+function calcNum(num) {
+  const display = document.getElementById('calcDisplay');
+  if (display.value === '0' || display.value === 'Error') calcExpr = '';
+  calcExpr += num;
+  display.value = calcExpr;
+}
+
+function calcOp(op) {
+  const display = document.getElementById('calcDisplay');
+  calcExpr += ` ${op} `;
+  display.value = calcExpr;
+}
+
+function calcClear() {
+  calcExpr = '';
+  document.getElementById('calcDisplay').value = '0';
+}
+
+function calcBackspace() {
+  const display = document.getElementById('calcDisplay');
+  calcExpr = calcExpr.trimEnd().slice(0, -1);
+  display.value = calcExpr || '0';
+}
+
+function calcEquals() {
+  const display = document.getElementById('calcDisplay');
+  try {
+    const result = Function(`'use strict'; return (${calcExpr})`)();
+    display.value = result;
+    calcExpr = result.toString();
+  } catch (err) {
+    display.value = 'Error';
+    calcExpr = '';
+  }
+}
+
+// COMMUNITY POLL SYSTEM WITH ADMIN STATS & SELECTOR
 async function loadActivePoll() {
   const container = document.getElementById('activePollContainer');
   const res = await authFetch('/api/polls/active');
@@ -225,7 +307,101 @@ async function submitPollVote(pollId, optionIndex) {
   }
 }
 
-// FEEDBACK & SUGGESTION SYSTEM
+// ADMIN POLL MANAGEMENT WITH LIVE ANALYTICS & ACTIVE SELECTOR
+const createPollForm = document.getElementById('createPollForm');
+if (createPollForm) {
+  createPollForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const question = document.getElementById('pollQuestionInput').value.trim();
+    const rawOptions = document.getElementById('pollOptionsInput').value;
+    const options = rawOptions.split(',').map(o => o.trim()).filter(o => o.length > 0);
+
+    if (options.length < 2) return showToast('Please enter at least 2 options.', 'error');
+
+    const res = await authFetch('/api/admin/polls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, options })
+    });
+
+    if (res.ok) {
+      document.getElementById('pollQuestionInput').value = '';
+      document.getElementById('pollOptionsInput').value = '';
+      showToast('Poll created and set active!', 'success');
+      loadActivePoll();
+      loadAdminPolls();
+    }
+  });
+}
+
+async function loadAdminPolls() {
+  const container = document.getElementById('adminPollsList');
+  if (!container) return;
+
+  const res = await authFetch('/api/admin/polls');
+  if (res.ok) {
+    const polls = await res.json();
+    if (polls.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No polls created yet.</p>';
+      return;
+    }
+
+    container.innerHTML = polls.map(p => {
+      const totalVotes = p.options.reduce((sum, opt) => sum + (opt.votes ? opt.votes.length : 0), 0);
+
+      return `
+        <div class="class-summary-item" style="flex-direction: column; align-items: flex-start; gap: 0.6rem;">
+          <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+            <div>
+              <strong>${p.question}</strong>
+              ${p.active ? '<span style="color:#55ff55; font-size: 0.75rem; margin-left: 0.5rem; font-weight: bold;">(Active Poll)</span>' : '<span style="color:#888; font-size: 0.75rem; margin-left: 0.5rem;">(Inactive)</span>'}
+            </div>
+            <div style="display: flex; gap: 0.4rem;">
+              ${!p.active ? `<button onclick="setPollActive('${p._id}')" class="action-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Make Active</button>` : ''}
+              <button onclick="deletePoll('${p._id}')" class="delete-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Delete</button>
+            </div>
+          </div>
+
+          <!-- Detailed Stats Breakdown -->
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.25rem;">
+            ${p.options.map(opt => {
+              const votes = opt.votes ? opt.votes.length : 0;
+              const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+              return `
+                <div style="font-size: 0.8rem; display: flex; justify-content: space-between; background: #111; padding: 0.3rem 0.6rem; border-radius: 4px;">
+                  <span>${opt.text}</span>
+                  <span style="color: #ffaa00; font-weight: bold;">${pct}% (${votes} votes)</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div style="font-size: 0.75rem; color: #666; align-self: flex-end;">Total Votes Collected: ${totalVotes}</div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+async function setPollActive(pollId) {
+  const res = await authFetch(`/api/admin/polls/${pollId}/activate`, { method: 'POST' });
+  if (res.ok) {
+    showToast('Active poll updated', 'success');
+    loadActivePoll();
+    loadAdminPolls();
+  }
+}
+
+async function deletePoll(pollId) {
+  if (!confirm("Delete this poll?")) return;
+  const res = await authFetch(`/api/admin/polls/${pollId}`, { method: 'DELETE' });
+  if (res.ok) {
+    showToast('Poll deleted', 'info');
+    loadActivePoll();
+    loadAdminPolls();
+  }
+}
+
+// DEDICATED SUGGESTION & FEEDBACK TAB LOGIC
 document.getElementById('submitSuggestionForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = document.getElementById('suggestionTitle').value.trim();
@@ -247,37 +423,46 @@ document.getElementById('submitSuggestionForm').addEventListener('submit', async
   if (res.ok) {
     document.getElementById('suggestionTitle').value = '';
     document.getElementById('suggestionDesc').value = '';
-    showToast('Suggestion submitted to admins!', 'success');
+    showToast('Suggestion submitted!', 'success');
+    loadSuggestionsList();
   }
 });
 
-async function loadAdminSuggestions() {
-  const container = document.getElementById('adminSuggestionsList');
-  const res = await authFetch('/api/admin/suggestions');
-  if (!res.ok) return container.innerHTML = '<p class="empty-msg">Error loading inbox.</p>';
+async function loadSuggestionsList() {
+  const container = document.getElementById('publicSuggestionsList');
+  const res = await authFetch('/api/suggestions');
+  if (!res.ok) return container.innerHTML = '<p class="empty-msg">Error loading suggestions.</p>';
 
   const suggestions = await res.json();
   if (suggestions.length === 0) {
-    container.innerHTML = '<p class="empty-msg">No suggestions submitted yet.</p>';
+    container.innerHTML = '<p class="empty-msg">No suggestions submitted yet. Be the first!</p>';
     return;
   }
 
-  container.innerHTML = suggestions.map(s => `
-    <div class="class-summary-item" style="flex-direction: column; align-items: flex-start; gap: 0.4rem;">
-      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-        <strong>${s.title}</strong>
-        <span style="font-size: 0.75rem; background: #222; padding: 0.2rem 0.5rem; border-radius: 4px; color: ${s.status === 'Approved' ? '#55ff55' : s.status === 'Rejected' ? '#ff5555' : '#ffaa00'};">${s.status}</span>
-      </div>
-      <p style="font-size: 0.85rem; color: #ccc; margin: 0;">${s.description}</p>
-      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 0.25rem;">
-        <span style="font-size: 0.75rem; color: #777;">By: ${s.authorName}</span>
-        <div style="display: flex; gap: 0.4rem;">
-          <button onclick="updateSuggestionStatus('${s._id}', 'Approved')" class="action-btn" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; background: #225522;">Approve</button>
-          <button onclick="updateSuggestionStatus('${s._id}', 'Rejected')" class="delete-btn" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">Reject</button>
+  container.innerHTML = suggestions.map(s => {
+    const isOwner = s.authorId === userId;
+    const canManage = userRole === 'admin' || isOwner;
+
+    return `
+      <div class="class-summary-item" style="flex-direction: column; align-items: flex-start; gap: 0.4rem;">
+        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+          <strong>${s.title}</strong>
+          <span style="font-size: 0.75rem; background: #222; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: bold; color: ${s.status === 'Approved' ? '#55ff55' : s.status === 'Rejected' ? '#ff5555' : '#ffaa00'};">${s.status}</span>
+        </div>
+        <p style="font-size: 0.85rem; color: #ccc; margin: 0; white-space: pre-wrap;">${s.description}</p>
+        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 0.25rem;">
+          <span style="font-size: 0.75rem; color: #777;">By: <span onclick="openProfileModal('${s.authorId}')" style="cursor: pointer; text-decoration: underline;">${s.authorName}</span></span>
+          <div style="display: flex; gap: 0.4rem;">
+            ${userRole === 'admin' ? `
+              <button onclick="updateSuggestionStatus('${s._id}', 'Approved')" class="action-btn" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; background: #225522;">Approve</button>
+              <button onclick="updateSuggestionStatus('${s._id}', 'Rejected')" class="delete-btn" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">Reject</button>
+            ` : ''}
+            ${canManage ? `<button onclick="deleteSuggestion('${s._id}')" class="delete-btn" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;"><i class="fa-solid fa-trash"></i></button>` : ''}
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 async function updateSuggestionStatus(id, status) {
@@ -289,7 +474,16 @@ async function updateSuggestionStatus(id, status) {
 
   if (res.ok) {
     showToast(`Suggestion marked as ${status}`, 'info');
-    loadAdminSuggestions();
+    loadSuggestionsList();
+  }
+}
+
+async function deleteSuggestion(id) {
+  if (!confirm("Delete this suggestion?")) return;
+  const res = await authFetch(`/api/suggestions/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    showToast('Suggestion deleted', 'info');
+    loadSuggestionsList();
   }
 }
 
@@ -965,66 +1159,6 @@ function renderCalendarEvents(events) {
 }
 
 // ADMIN FUNCTIONS
-const createPollForm = document.getElementById('createPollForm');
-if (createPollForm) {
-  createPollForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const question = document.getElementById('pollQuestionInput').value.trim();
-    const rawOptions = document.getElementById('pollOptionsInput').value;
-    const options = rawOptions.split(',').map(o => o.trim()).filter(o => o.length > 0);
-
-    if (options.length < 2) return showToast('Please enter at least 2 options.', 'error');
-
-    const res = await authFetch('/api/admin/polls', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, options })
-    });
-
-    if (res.ok) {
-      document.getElementById('pollQuestionInput').value = '';
-      document.getElementById('pollOptionsInput').value = '';
-      showToast('Poll created and set active!', 'success');
-      loadActivePoll();
-      loadAdminPolls();
-    }
-  });
-}
-
-async function loadAdminPolls() {
-  const container = document.getElementById('adminPollsList');
-  if (!container) return;
-
-  const res = await authFetch('/api/admin/polls');
-  if (res.ok) {
-    const polls = await res.json();
-    if (polls.length === 0) {
-      container.innerHTML = '<p class="empty-msg">No polls created yet.</p>';
-      return;
-    }
-
-    container.innerHTML = polls.map(p => `
-      <div class="class-summary-item">
-        <div>
-          <strong>${p.question}</strong>
-          ${p.active ? '<span style="color:#55ff55; font-size: 0.75rem; margin-left: 0.5rem;">(Active)</span>' : ''}
-        </div>
-        <button onclick="deletePoll('${p._id}')" class="delete-btn">Delete</button>
-      </div>
-    `).join('');
-  }
-}
-
-async function deletePoll(pollId) {
-  if (!confirm("Delete this poll?")) return;
-  const res = await authFetch(`/api/admin/polls/${pollId}`, { method: 'DELETE' });
-  if (res.ok) {
-    showToast('Poll deleted', 'info');
-    loadActivePoll();
-    loadAdminPolls();
-  }
-}
-
 async function applySchedulePreset(preset) {
   if (!confirm(`Apply the ${preset} schedule preset to the entire app?`)) return;
   const res = await authFetch('/api/admin/master-schedule/preset', {
@@ -1046,7 +1180,7 @@ async function updateUserRole(targetUserId, newRole) {
     body: JSON.stringify({ role: newRole })
   });
   if (res.ok) {
-    showToast('User role updated', 'success');
+    showToast('Role updated! Take effect on user end in 3s.', 'success');
     loadAdminData();
   }
 }
@@ -1103,7 +1237,6 @@ async function loadAdminData() {
   checkMaintenanceStatus();
   loadResourcesList();
   loadAdminPolls();
-  loadAdminSuggestions();
 
   const res = await authFetch('/api/admin/users');
   if (res.ok) {
