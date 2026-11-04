@@ -52,6 +52,12 @@ const MasterScheduleSchema = new mongoose.Schema({
   label: String
 });
 
+// RECURRING DAY RULES SCHEMA
+const DayRuleSchema = new mongoose.Schema({
+  dayOfWeek: { type: Number, required: true, unique: true }, // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+  preset: { type: String, required: true }
+});
+
 const ChatChannelSchema = new mongoose.Schema({
   name: String,
   isGroup: { type: Boolean, default: false },
@@ -101,6 +107,7 @@ const SystemConfigSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 const CalendarEvent = mongoose.model('CalendarEvent', CalendarEventSchema);
 const MasterSchedule = mongoose.model('MasterSchedule', MasterScheduleSchema);
+const DayRule = mongoose.model('DayRule', DayRuleSchema);
 const ChatChannel = mongoose.model('ChatChannel', ChatChannelSchema);
 const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 const ResourceLink = mongoose.model('ResourceLink', ResourceLinkSchema);
@@ -109,6 +116,72 @@ const Suggestion = mongoose.model('Suggestion', SuggestionSchema);
 const SystemConfig = mongoose.model('SystemConfig', SystemConfigSchema);
 
 const typingState = {};
+
+// RECURRING DAY RULES LOADER HELPER
+async function generatePresetSlots(preset) {
+  switch (preset) {
+    case 'climbertime':
+      return [
+        { period: '1st Period', startTime: '07:35 AM', endTime: '08:15 AM', label: 'Class Period' },
+        { period: '2nd Period', startTime: '08:19 AM', endTime: '08:59 AM', label: 'Class Period' },
+        { period: '3rd Period', startTime: '09:03 AM', endTime: '09:43 AM', label: 'Class Period' },
+        { period: 'ClimberTime', startTime: '09:47 AM', endTime: '10:43 AM', label: 'ClimberTime Period' },
+        { period: '4th Period', startTime: '10:47 AM', endTime: '11:27 AM', label: 'Class Period' },
+        { period: '5th Period (Lunch)', startTime: '11:31 AM', endTime: '12:16 PM', label: '1st Lunch' },
+        { period: '6th Period (2nd Lunch)', startTime: '12:20 PM', endTime: '01:05 PM', label: '2nd Lunch' },
+        { period: '7th Period', startTime: '01:09 PM', endTime: '01:49 PM', label: 'Class Period' },
+        { period: '8th Period', startTime: '01:53 PM', endTime: '02:37 PM', label: 'Class Period' }
+      ];
+    case 'delay2hr':
+      return [
+        { period: '1st Period', startTime: '09:35 AM', endTime: '10:05 AM', label: '2-Hr Delay Class' },
+        { period: '2nd Period', startTime: '10:09 AM', endTime: '10:39 AM', label: '2-Hr Delay Class' },
+        { period: '3rd Period', startTime: '10:43 AM', endTime: '11:13 AM', label: '2-Hr Delay Class' },
+        { period: '4th Period', startTime: '11:17 AM', endTime: '11:47 AM', label: '2-Hr Delay Class' },
+        { period: '5th Period (Lunch)', startTime: '11:51 AM', endTime: '12:36 PM', label: '1st Lunch' },
+        { period: '6th Period (2nd Lunch)', startTime: '12:40 PM', endTime: '01:25 PM', label: '2nd Lunch' },
+        { period: '7th Period', startTime: '01:29 PM', endTime: '01:59 PM', label: '2-Hr Delay Class' },
+        { period: '8th Period', startTime: '02:03 PM', endTime: '02:37 PM', label: '2-Hr Delay Class' }
+      ];
+    case 'pm_assembly':
+      return [
+        { period: '1st Period', startTime: '07:35 AM', endTime: '08:20 AM', label: 'Class Period' },
+        { period: '2nd Period', startTime: '08:24 AM', endTime: '09:09 AM', label: 'Class Period' },
+        { period: '3rd Period', startTime: '09:13 AM', endTime: '09:58 AM', label: 'Class Period' },
+        { period: '4th Period', startTime: '10:02 AM', endTime: '10:47 AM', label: 'Class Period' },
+        { period: '5th Period', startTime: '10:51 AM', endTime: '11:36 AM', label: '1st Lunch' },
+        { period: '6th Period', startTime: '11:40 AM', endTime: '12:25 PM', label: '2nd Lunch' },
+        { period: '7th Period', startTime: '12:29 PM', endTime: '01:13 PM', label: 'Class Period' },
+        { period: '8th Period', startTime: '01:17 PM', endTime: '02:01 PM', label: 'Class Period' },
+        { period: 'Activity Period', startTime: '02:05 PM', endTime: '02:37 PM', label: 'Assembly / Pep Rally' }
+      ];
+    case 'activity':
+      return [
+        { period: '1st Period', startTime: '07:35 AM', endTime: '08:15 AM', label: 'Class Period' },
+        { period: '2nd Period', startTime: '08:19 AM', endTime: '08:58 AM', label: 'Class Period' },
+        { period: '3rd Period', startTime: '09:02 AM', endTime: '09:41 AM', label: 'Class Period' },
+        { period: '4th Period', startTime: '09:45 AM', endTime: '10:24 AM', label: 'Class Period' },
+        { period: '7th Period', startTime: '10:28 AM', endTime: '11:08 AM', label: 'Class Period' },
+        { period: '5th Period', startTime: '11:12 AM', endTime: '12:57 PM', label: 'Lunch / Class' },
+        { period: '6th Period', startTime: '12:01 PM', endTime: '12:46 PM', label: 'Lunch / Class' },
+        { period: '8th Period', startTime: '12:50 PM', endTime: '01:30 PM', label: 'Class Period' },
+        { period: 'Activity Period', startTime: '02:05 PM', endTime: '02:37 PM', label: 'Activity Period' }
+      ];
+    case 'normal':
+    default:
+      return [
+        { period: 'Homeroom', startTime: '07:35 AM', endTime: '07:50 AM', label: 'Homeroom' },
+        { period: '1st Period', startTime: '07:54 AM', endTime: '08:41 AM', label: 'Class Period' },
+        { period: '2nd Period', startTime: '08:45 AM', endTime: '09:32 AM', label: 'Class Period' },
+        { period: '3rd Period', startTime: '09:36 AM', endTime: '10:23 AM', label: 'Class Period' },
+        { period: '4th Period', startTime: '10:27 AM', endTime: '11:15 AM', label: 'Class Period' },
+        { period: '5th Period (Lunch)', startTime: '11:19 AM', endTime: '12:04 PM', label: '1st Lunch' },
+        { period: '6th Period (2nd Lunch)', startTime: '12:08 PM', endTime: '12:53 PM', label: '2nd Lunch' },
+        { period: '7th Period', startTime: '12:57 PM', endTime: '01:44 PM', label: 'Class Period' },
+        { period: '8th Period', startTime: '01:48 PM', endTime: '02:37 PM', label: 'Class Period' }
+      ];
+  }
+}
 
 // MAINTENANCE MIDDLEWARE
 app.use(async (req, res, next) => {
@@ -217,6 +290,36 @@ app.delete('/api/users/:id', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete account.' });
   }
+});
+
+// RECURRING DAY RULES API
+app.get('/api/admin/day-rules', async (req, res) => {
+  res.json(await DayRule.find().sort({ dayOfWeek: 1 }));
+});
+
+app.post('/api/admin/day-rules', async (req, res) => {
+  const { dayOfWeek, preset } = req.body;
+  const rule = await DayRule.findOneAndUpdate({ dayOfWeek }, { dayOfWeek, preset }, { upsert: true, new: true });
+  res.json(rule);
+});
+
+app.delete('/api/admin/day-rules/:id', async (req, res) => {
+  await DayRule.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
+
+app.post('/api/master-schedule/check-day-rules', async (req, res) => {
+  const todayOfWeek = new Date().getDay();
+  const rule = await DayRule.findOne({ dayOfWeek: todayOfWeek });
+
+  if (rule) {
+    await MasterSchedule.deleteMany({});
+    const slots = await generatePresetSlots(rule.preset);
+    await MasterSchedule.insertMany(slots);
+    return res.json({ appliedRule: true, preset: rule.preset });
+  }
+
+  res.json({ appliedRule: false });
 });
 
 // COMMUNITY POLL ROUTES
@@ -530,106 +633,7 @@ app.post('/api/admin/users/:id/reset-password', async (req, res) => {
 app.post('/api/admin/master-schedule/preset', async (req, res) => {
   const { preset } = req.body;
   await MasterSchedule.deleteMany({});
-
-  let slots = [];
-  switch (preset) {
-    case 'normal':
-      slots = [
-        { period: 'Homeroom', startTime: '07:35 AM', endTime: '07:50 AM', label: 'Homeroom' },
-        { period: '1st Period', startTime: '07:54 AM', endTime: '08:41 AM', label: 'Class Period' },
-        { period: '2nd Period', startTime: '08:45 AM', endTime: '09:32 AM', label: 'Class Period' },
-        { period: '3rd Period', startTime: '09:36 AM', endTime: '10:23 AM', label: 'Class Period' },
-        { period: '4th Period', startTime: '10:27 AM', endTime: '11:15 AM', label: 'Class Period' },
-        { period: '5th Period (Lunch)', startTime: '11:19 AM', endTime: '12:04 PM', label: '1st Lunch' },
-        { period: '6th Period (2nd Lunch)', startTime: '12:08 PM', endTime: '12:53 PM', label: '2nd Lunch' },
-        { period: '7th Period', startTime: '12:57 PM', endTime: '01:44 PM', label: 'Class Period' },
-        { period: '8th Period', startTime: '01:48 PM', endTime: '02:37 PM', label: 'Class Period' }
-      ];
-      break;
-
-    case 'delay2hr':
-      slots = [
-        { period: '1st Period', startTime: '09:35 AM', endTime: '10:05 AM', label: '2-Hr Delay Class' },
-        { period: '2nd Period', startTime: '10:09 AM', endTime: '10:39 AM', label: '2-Hr Delay Class' },
-        { period: '3rd Period', startTime: '10:43 AM', endTime: '11:13 AM', label: '2-Hr Delay Class' },
-        { period: '4th Period', startTime: '11:17 AM', endTime: '11:47 AM', label: '2-Hr Delay Class' },
-        { period: '5th Period (Lunch)', startTime: '11:51 AM', endTime: '12:36 PM', label: '1st Lunch' },
-        { period: '6th Period (2nd Lunch)', startTime: '12:40 PM', endTime: '01:25 PM', label: '2nd Lunch' },
-        { period: '7th Period', startTime: '01:29 PM', endTime: '01:59 PM', label: '2-Hr Delay Class' },
-        { period: '8th Period', startTime: '02:03 PM', endTime: '02:37 PM', label: '2-Hr Delay Class' }
-      ];
-      break;
-
-    case 'climbertime':
-      slots = [
-        { period: '1st Period', startTime: '07:35 AM', endTime: '08:15 AM', label: 'Class Period' },
-        { period: '2nd Period', startTime: '08:19 AM', endTime: '08:59 AM', label: 'Class Period' },
-        { period: '3rd Period', startTime: '09:03 AM', endTime: '09:43 AM', label: 'Class Period' },
-        { period: 'ClimberTime', startTime: '09:47 AM', endTime: '10:43 AM', label: 'ClimberTime Period' },
-        { period: '4th Period', startTime: '10:47 AM', endTime: '11:27 AM', label: 'Class Period' },
-        { period: '5th Period (Lunch)', startTime: '11:31 AM', endTime: '12:16 PM', label: '1st Lunch' },
-        { period: '6th Period (2nd Lunch)', startTime: '12:20 PM', endTime: '01:05 PM', label: '2nd Lunch' },
-        { period: '7th Period', startTime: '01:09 PM', endTime: '01:49 PM', label: 'Class Period' },
-        { period: '8th Period', startTime: '01:53 PM', endTime: '02:37 PM', label: 'Class Period' }
-      ];
-      break;
-
-    case 'pm_assembly':
-      slots = [
-        { period: '1st Period', startTime: '07:35 AM', endTime: '08:20 AM', label: 'Class Period' },
-        { period: '2nd Period', startTime: '08:24 AM', endTime: '09:09 AM', label: 'Class Period' },
-        { period: '3rd Period', startTime: '09:13 AM', endTime: '09:58 AM', label: 'Class Period' },
-        { period: '4th Period', startTime: '10:02 AM', endTime: '10:47 AM', label: 'Class Period' },
-        { period: '5th Period', startTime: '10:51 AM', endTime: '11:36 AM', label: '1st Lunch' },
-        { period: '6th Period', startTime: '11:40 AM', endTime: '12:25 PM', label: '2nd Lunch' },
-        { period: '7th Period', startTime: '12:29 PM', endTime: '01:13 PM', label: 'Class Period' },
-        { period: '8th Period', startTime: '01:17 PM', endTime: '02:01 PM', label: 'Class Period' },
-        { period: 'Activity Period', startTime: '02:05 PM', endTime: '02:37 PM', label: 'Assembly / Pep Rally' }
-      ];
-      break;
-
-    case 'activity':
-      slots = [
-        { period: '1st Period', startTime: '07:35 AM', endTime: '08:15 AM', label: 'Class Period' },
-        { period: '2nd Period', startTime: '08:19 AM', endTime: '08:58 AM', label: 'Class Period' },
-        { period: '3rd Period', startTime: '09:02 AM', endTime: '09:41 AM', label: 'Class Period' },
-        { period: '4th Period', startTime: '09:45 AM', endTime: '10:24 AM', label: 'Class Period' },
-        { period: '7th Period', startTime: '10:28 AM', endTime: '11:08 AM', label: 'Class Period' },
-        { period: '5th Period', startTime: '11:12 AM', endTime: '12:57 PM', label: 'Lunch / Class' },
-        { period: '6th Period', startTime: '12:01 PM', endTime: '12:46 PM', label: 'Lunch / Class' },
-        { period: '8th Period', startTime: '12:50 PM', endTime: '01:30 PM', label: 'Class Period' },
-        { period: 'Activity Period', startTime: '02:05 PM', endTime: '02:37 PM', label: 'Activity Period' }
-      ];
-      break;
-
-    case 'exam1':
-      slots = [
-        { period: 'Period 1 Exam', startTime: '07:35 AM', endTime: '09:05 AM', label: 'Midterm/Final Exam' },
-        { period: 'Period 3 Exam', startTime: '09:10 AM', endTime: '10:40 AM', label: 'Midterm/Final Exam' },
-        { period: 'Period 5 Exam', startTime: '10:45 AM', endTime: '12:15 PM', label: 'Midterm/Final Exam' }
-      ];
-      break;
-
-    case 'exam2':
-      slots = [
-        { period: 'Period 2 Exam', startTime: '07:35 AM', endTime: '09:05 AM', label: 'Midterm/Final Exam' },
-        { period: 'Period 4 Exam', startTime: '09:10 AM', endTime: '10:40 AM', label: 'Midterm/Final Exam' },
-        { period: 'Period 6 Exam', startTime: '10:45 AM', endTime: '12:15 PM', label: 'Midterm/Final Exam' }
-      ];
-      break;
-
-    case 'exam3':
-      slots = [
-        { period: 'Period 7 Exam', startTime: '07:35 AM', endTime: '09:05 AM', label: 'Midterm/Final Exam' },
-        { period: 'Period 8 Exam', startTime: '09:10 AM', endTime: '10:40 AM', label: 'Midterm/Final Exam' },
-        { period: 'Make Up Exams', startTime: '10:45 AM', endTime: '12:15 PM', label: 'Exam Make-Up Slot' }
-      ];
-      break;
-
-    default:
-      return res.status(400).json({ error: 'Invalid preset option.' });
-  }
-
+  const slots = await generatePresetSlots(preset);
   const created = await MasterSchedule.insertMany(slots);
   res.json(created);
 });
