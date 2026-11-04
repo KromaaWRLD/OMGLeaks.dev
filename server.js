@@ -67,7 +67,7 @@ const ChatMessageSchema = new mongoose.Schema({
   imageUrl: String,
   edited: { type: Boolean, default: false },
   readBy: [String],
-  createdAt: { type: Date, default: Date.now, expires: 86400 } // Auto-deletes after 24 hours
+  createdAt: { type: Date, default: Date.now, expires: 86400 }
 });
 
 const ResourceLinkSchema = new mongoose.Schema({
@@ -76,23 +76,21 @@ const ResourceLinkSchema = new mongoose.Schema({
   icon: String
 });
 
-// COMMUNITY POLL SCHEMA
 const PollSchema = new mongoose.Schema({
   question: { type: String, required: true },
   options: [{
     text: String,
-    votes: [String] // Array of user IDs
+    votes: [String]
   }],
   active: { type: Boolean, default: true }
 }, { timestamps: true });
 
-// FEEDBACK & SUGGESTIONS SCHEMA
 const SuggestionSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   authorName: String,
   authorId: String,
-  status: { type: String, default: 'Pending' } // Pending, Approved, Rejected
+  status: { type: String, default: 'Pending' }
 }, { timestamps: true });
 
 const SystemConfigSchema = new mongoose.Schema({
@@ -236,12 +234,10 @@ app.post('/api/polls/:id/vote', async (req, res) => {
   const poll = await Poll.findById(req.params.id);
   if (!poll) return res.status(404).json({ error: 'Poll not found' });
 
-  // Remove existing vote from any option
   poll.options.forEach(opt => {
     opt.votes = opt.votes.filter(id => id !== userId);
   });
 
-  // Add new vote
   if (poll.options[optionIndex]) {
     poll.options[optionIndex].votes.push(userId);
   }
@@ -252,12 +248,18 @@ app.post('/api/polls/:id/vote', async (req, res) => {
 
 app.post('/api/admin/polls', async (req, res) => {
   const { question, options } = req.body;
-  await Poll.updateMany({}, { active: false }); // Deactivate previous polls
+  await Poll.updateMany({}, { active: false });
 
   const formattedOptions = options.map(optText => ({ text: optText, votes: [] }));
   const newPoll = await Poll.create({ question, options: formattedOptions, active: true });
 
   res.json(newPoll);
+});
+
+app.post('/api/admin/polls/:id/activate', async (req, res) => {
+  await Poll.updateMany({}, { active: false });
+  const activated = await Poll.findByIdAndUpdate(req.params.id, { active: true }, { new: true });
+  res.json(activated);
 });
 
 app.get('/api/admin/polls', async (req, res) => {
@@ -269,15 +271,30 @@ app.delete('/api/admin/polls/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// SUGGESTION / FEEDBACK ROUTES
+// SUGGESTION & FEEDBACK ROUTES
+app.get('/api/suggestions', async (req, res) => {
+  res.json(await Suggestion.find().sort({ createdAt: -1 }));
+});
+
 app.post('/api/suggestions', async (req, res) => {
   const { title, description, authorName, authorId } = req.body;
   const suggestion = await Suggestion.create({ title, description, authorName, authorId });
   res.json(suggestion);
 });
 
-app.get('/api/admin/suggestions', async (req, res) => {
-  res.json(await Suggestion.find().sort({ createdAt: -1 }));
+app.delete('/api/suggestions/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  const suggestion = await Suggestion.findById(req.params.id);
+  
+  if (!suggestion) return res.status(404).json({ error: 'Suggestion not found' });
+
+  const user = await User.findById(userId);
+  if (suggestion.authorId !== userId && (!user || user.role !== 'admin')) {
+    return res.status(403).json({ error: 'Unauthorized delete' });
+  }
+
+  await Suggestion.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
 });
 
 app.post('/api/admin/suggestions/:id/status', async (req, res) => {
