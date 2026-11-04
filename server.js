@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, default: 'student' },
   avatarBg: { type: String, default: '#ffffff' },
   avatarColor: { type: String, default: '#000000' },
-  badges: [{ type: String }] // Verification Badges
+  badges: [{ type: String }]
 }, { timestamps: true });
 
 const CalendarEventSchema = new mongoose.Schema({
@@ -59,7 +59,6 @@ const ChatChannelSchema = new mongoose.Schema({
   adminId: String
 });
 
-// CHAT MESSAGE SCHEMA WITH 24-HOUR AUTO-DELETE EXPIRATION
 const ChatMessageSchema = new mongoose.Schema({
   channelId: String,
   senderId: String,
@@ -68,7 +67,7 @@ const ChatMessageSchema = new mongoose.Schema({
   imageUrl: String,
   edited: { type: Boolean, default: false },
   readBy: [String],
-  createdAt: { type: Date, default: Date.now, expires: 86400 } // Auto-deletes after 24 hours (86,400 seconds)
+  createdAt: { type: Date, default: Date.now, expires: 86400 } // Auto-deletes after 24 hours
 });
 
 const ResourceLinkSchema = new mongoose.Schema({
@@ -76,6 +75,25 @@ const ResourceLinkSchema = new mongoose.Schema({
   url: String,
   icon: String
 });
+
+// COMMUNITY POLL SCHEMA
+const PollSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  options: [{
+    text: String,
+    votes: [String] // Array of user IDs
+  }],
+  active: { type: Boolean, default: true }
+}, { timestamps: true });
+
+// FEEDBACK & SUGGESTIONS SCHEMA
+const SuggestionSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  authorName: String,
+  authorId: String,
+  status: { type: String, default: 'Pending' } // Pending, Approved, Rejected
+}, { timestamps: true });
 
 const SystemConfigSchema = new mongoose.Schema({
   key: { type: String, unique: true },
@@ -88,6 +106,8 @@ const MasterSchedule = mongoose.model('MasterSchedule', MasterScheduleSchema);
 const ChatChannel = mongoose.model('ChatChannel', ChatChannelSchema);
 const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 const ResourceLink = mongoose.model('ResourceLink', ResourceLinkSchema);
+const Poll = mongoose.model('Poll', PollSchema);
+const Suggestion = mongoose.model('Suggestion', SuggestionSchema);
 const SystemConfig = mongoose.model('SystemConfig', SystemConfigSchema);
 
 const typingState = {};
@@ -199,6 +219,71 @@ app.delete('/api/users/:id', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete account.' });
   }
+});
+
+// COMMUNITY POLL ROUTES
+app.get('/api/polls/active', async (req, res) => {
+  const activePoll = await Poll.findOne({ active: true }).sort({ createdAt: -1 });
+  res.json(activePoll);
+});
+
+app.post('/api/polls/:id/vote', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  const { optionIndex } = req.body;
+
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+  const poll = await Poll.findById(req.params.id);
+  if (!poll) return res.status(404).json({ error: 'Poll not found' });
+
+  // Remove existing vote from any option
+  poll.options.forEach(opt => {
+    opt.votes = opt.votes.filter(id => id !== userId);
+  });
+
+  // Add new vote
+  if (poll.options[optionIndex]) {
+    poll.options[optionIndex].votes.push(userId);
+  }
+
+  await poll.save();
+  res.json(poll);
+});
+
+app.post('/api/admin/polls', async (req, res) => {
+  const { question, options } = req.body;
+  await Poll.updateMany({}, { active: false }); // Deactivate previous polls
+
+  const formattedOptions = options.map(optText => ({ text: optText, votes: [] }));
+  const newPoll = await Poll.create({ question, options: formattedOptions, active: true });
+
+  res.json(newPoll);
+});
+
+app.get('/api/admin/polls', async (req, res) => {
+  res.json(await Poll.find().sort({ createdAt: -1 }));
+});
+
+app.delete('/api/admin/polls/:id', async (req, res) => {
+  await Poll.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
+
+// SUGGESTION / FEEDBACK ROUTES
+app.post('/api/suggestions', async (req, res) => {
+  const { title, description, authorName, authorId } = req.body;
+  const suggestion = await Suggestion.create({ title, description, authorName, authorId });
+  res.json(suggestion);
+});
+
+app.get('/api/admin/suggestions', async (req, res) => {
+  res.json(await Suggestion.find().sort({ createdAt: -1 }));
+});
+
+app.post('/api/admin/suggestions/:id/status', async (req, res) => {
+  const { status } = req.body;
+  const updated = await Suggestion.findByIdAndUpdate(req.params.id, { status }, { new: true });
+  res.json(updated);
 });
 
 // ADMIN USER BADGE MANAGEMENT
