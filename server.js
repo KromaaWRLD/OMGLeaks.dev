@@ -684,6 +684,48 @@ app.post('/api/admin/calendar', async (req, res) => {
   res.json(event);
 });
 
+app.post('/api/users/:id/update-profile', async (req, res) => {
+  try {
+    const { name, newUsername, pfpUrl, chatBgColor, chatBubbleColor } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    let updates = {};
+
+    if (name) updates.name = name.trim();
+    if (pfpUrl !== undefined) updates.pfpUrl = pfpUrl;
+    if (chatBgColor) updates.chatBgColor = chatBgColor;
+    if (chatBubbleColor) updates.chatBubbleColor = chatBubbleColor;
+
+    // Handle 7-Day Username Rule
+    if (newUsername && newUsername.toLowerCase() !== user.username) {
+      const cleanNewUsername = newUsername.trim().toLowerCase();
+      
+      const now = new Date();
+      if (user.lastUsernameChange) {
+        const daysPassed = (now - new Date(user.lastUsernameChange)) / (1000 * 60 * 60 * 24);
+        if (daysPassed < 7) {
+          const daysLeft = Math.ceil(7 - daysPassed);
+          return res.status(400).json({ 
+            error: `You can only change your username once every 7 days. Try again in ${daysLeft} day(s).` 
+          });
+        }
+      }
+
+      const existing = await User.findOne({ username: cleanNewUsername });
+      if (existing) return res.status(400).json({ error: 'Username already taken.' });
+
+      updates.username = cleanNewUsername;
+      updates.lastUsernameChange = now;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update profile: ' + err.message });
+  }
+});
+
 app.delete('/api/admin/calendar/:date', async (req, res) => {
   await CalendarEvent.deleteOne({ date: req.params.date });
   res.json({ success: true });
