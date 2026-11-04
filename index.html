@@ -15,6 +15,9 @@
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
+
   <!-- Side Navigation -->
   <aside class="sidenav" id="sidenav">
     <div class="nav-header">
@@ -26,7 +29,7 @@
         </div>
       </div>
 
-      <div class="user-card" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;" onclick="openUserProfileModal(userId)">
+      <div class="user-card" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;" onclick="openProfileModal(userId)">
         <div class="pfp-avatar" id="navPfpDisplay" style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">U</div>
         <div>
           <div class="user-name" id="userName">Loading Student...</div>
@@ -84,6 +87,23 @@
           <div class="card-title"><i class="fa-solid fa-calendar-day"></i> Today's Status</div>
           <div class="card-value" id="dashTodayStatus" style="font-size: 1.25rem;">Checking...</div>
         </div>
+      </div>
+
+      <!-- Active Community Poll Widget -->
+      <div class="content-block">
+        <h3><i class="fa-solid fa-poll"></i> Active Community Poll</h3>
+        <div id="activePollContainer">Loading poll...</div>
+      </div>
+
+      <!-- Feedback / Suggestion Box Widget -->
+      <div class="content-block">
+        <h3><i class="fa-solid fa-lightbulb"></i> Submit Feedback & Suggestions</h3>
+        <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Have an idea or feedback for Urbana High Hub? Let us know below.</p>
+        <form id="submitSuggestionForm" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <input type="text" id="suggestionTitle" placeholder="Title (e.g. Add Gaming Club Channel)" required style="flex: 1; min-width: 200px; background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
+          <input type="text" id="suggestionDesc" placeholder="Brief description..." required style="flex: 2; min-width: 250px; background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
+          <button type="submit" class="action-btn">Submit Suggestion</button>
+        </form>
       </div>
 
       <div class="content-block">
@@ -221,7 +241,24 @@
     <!-- ADMIN PANEL VIEW -->
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
-      <p class="subtitle">Broadcast announcements, manage users, set schedule presets, assign verification badges, and edit resources.</p>
+      <p class="subtitle">Broadcast announcements, manage users, set schedule presets, manage polls, and view feedback.</p>
+
+      <!-- Admin Poll Creation Manager -->
+      <div class="content-block">
+        <h3><i class="fa-solid fa-poll"></i> Community Poll Manager</h3>
+        <form id="createPollForm" style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 500px; margin-top: 1rem;">
+          <input type="text" id="pollQuestionInput" placeholder="Poll Question (e.g. Favorite Spirit Week Theme?)" required style="background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
+          <input type="text" id="pollOptionsInput" placeholder="Options separated by commas (e.g. Pajama Day, Retro Day, Sports Day)" required style="background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
+          <button type="submit" class="action-btn">Launch New Poll</button>
+        </form>
+        <div id="adminPollsList" style="margin-top: 1rem;"></div>
+      </div>
+
+      <!-- Admin Feedback / Suggestion Review Queue -->
+      <div class="content-block">
+        <h3><i class="fa-solid fa-lightbulb"></i> Student Suggestions & Feedback Inbox</h3>
+        <div id="adminSuggestionsList" style="margin-top: 1rem;">Loading inbox...</div>
+      </div>
 
       <div class="content-block">
         <h3><i class="fa-solid fa-sliders"></i> Schedule Preset Switcher</h3>
@@ -263,10 +300,10 @@
       </div>
 
       <div class="content-block">
-        <h3>Registered Accounts (Roles, Verification Badges & Passwords)</h3>
+        <h3>Registered Accounts (Role & Password Overrides)</h3>
         <table class="schedule-table">
           <thead>
-            <tr><th>Username</th><th>Name</th><th>Role</th><th>Verification Badge</th><th>Actions</th></tr>
+            <tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr>
           </thead>
           <tbody id="adminUsersTableBody"></tbody>
         </table>
@@ -276,28 +313,42 @@
   </main>
 
   <!-- USER PROFILE MODAL -->
-  <div id="userProfileModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center;">
-    <div class="content-block" style="width: 100%; max-width: 380px; text-align: center; margin-bottom: 0; padding: 2rem; position: relative;">
-      <button onclick="closeUserProfileModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #888; font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+  <div id="userProfileModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="content-block" style="width: 100%; max-width: 420px; margin-bottom: 0; padding: 1.5rem; position: relative;">
+      <button onclick="closeProfileModal()" class="delete-btn" style="position: absolute; top: 1rem; right: 1rem; padding: 0.2rem 0.5rem;"><i class="fa-solid fa-xmark"></i></button>
       
-      <div id="modalProfilePfp" style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: bold; background: #ffffff; color: #000000;">U</div>
-      
-      <h2 id="modalProfileName" style="margin-bottom: 0.25rem; font-size: 1.4rem;">Student Name</h2>
-      <div id="modalProfileUsername" style="color: #888; font-size: 0.85rem; margin-bottom: 0.75rem;">@username</div>
-      
-      <div id="modalProfileBadgeContainer" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.25rem; flex-wrap: wrap;"></div>
+      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.75rem;">
+        <div id="modalPfp" style="width: 72px; height: 72px; border-radius: 50%; background: #ffffff; color: #000000; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; border: 2px solid #333;">
+          U
+        </div>
+        <div>
+          <h2 id="modalName" style="margin: 0; font-size: 1.25rem;">User Name</h2>
+          <div id="modalUsername" style="font-size: 0.85rem; color: #888;">@username</div>
+        </div>
 
-      <div style="background: #111; padding: 0.75rem; border-radius: 6px; border: 1px solid #222; margin-bottom: 1.25rem; font-size: 0.8rem; color: #aaa;">
-        <div><i class="fa-solid fa-calendar-days" style="margin-right: 0.4rem;"></i> Account Created: <span id="modalProfileCreated" style="color: #fff;">-</span></div>
-        <div style="margin-top: 0.4rem;"><i class="fa-solid fa-user-shield" style="margin-right: 0.4rem;"></i> Access Role: <span id="modalProfileRole" style="color: #fff; text-transform: capitalize;">-</span></div>
+        <div id="modalRoleBadge" style="background: #222; border: 1px solid #444; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; color: #fff; font-weight: bold; text-transform: uppercase;">
+          STUDENT
+        </div>
+
+        <div style="width: 100%; margin-top: 0.5rem;">
+          <div style="font-size: 0.8rem; color: #aaa; margin-bottom: 0.4rem; text-align: left;">Badges & Verification:</div>
+          <div id="modalBadgesList" style="display: flex; flex-wrap: wrap; gap: 0.4rem;"></div>
+        </div>
+
+        <div style="width: 100%; font-size: 0.8rem; color: #666; text-align: left; margin-top: 0.5rem; border-top: 1px solid #222; padding-top: 0.75rem;">
+          <i class="fa-solid fa-calendar-check"></i> Account Created: <span id="modalCreatedDate">-</span>
+        </div>
+
+        <div id="adminBadgeControls" style="display: none; width: 100%; margin-top: 1rem; border-top: 1px solid #222; padding-top: 0.75rem; text-align: left;">
+          <div style="font-size: 0.8rem; color: #ffaa00; margin-bottom: 0.5rem; font-weight: bold;">Admin Badge Manager</div>
+          <div style="display: flex; gap: 0.4rem;">
+            <input type="text" id="newBadgeInput" placeholder="Add Badge (e.g. Verified Staff)" style="flex: 1; background: #111; border: 1px solid #222; color: #fff; padding: 0.4rem; border-radius: 4px; font-size: 0.8rem;">
+            <button onclick="addBadgeToUser()" class="action-btn" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;">Add</button>
+          </div>
+        </div>
       </div>
-
-      <div id="modalProfileActions"></div>
     </div>
   </div>
-
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none;"></div>
 
   <!-- MAINTENANCE LOCK OVERLAY -->
   <div id="maintenanceOverlay" style="display: none; position: fixed; inset: 0; background: #0a0a0a; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
