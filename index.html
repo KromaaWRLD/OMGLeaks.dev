@@ -49,6 +49,12 @@
         </div>
         <span class="badge" id="totalUnreadBadge" style="display: none; background: #ff3333; color: #fff;">0</span>
       </a>
+      <a href="#suggestions" class="nav-item" data-path="suggestions">
+        <div class="nav-item-content"><i class="fa-solid fa-lightbulb"></i><span>Feedback & Ideas</span></div>
+      </a>
+      <a href="#calculator" class="nav-item" data-path="calculator">
+        <div class="nav-item-content"><i class="fa-solid fa-calculator"></i><span>Calculator</span></div>
+      </a>
       <a href="#resources" class="nav-item" data-path="resources">
         <div class="nav-item-content"><i class="fa-solid fa-link"></i><span>Links & Resources</span></div>
       </a>
@@ -93,17 +99,6 @@
       <div class="content-block">
         <h3><i class="fa-solid fa-poll"></i> Active Community Poll</h3>
         <div id="activePollContainer">Loading poll...</div>
-      </div>
-
-      <!-- Feedback / Suggestion Box Widget -->
-      <div class="content-block">
-        <h3><i class="fa-solid fa-lightbulb"></i> Submit Feedback & Suggestions</h3>
-        <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Have an idea or feedback for Urbana High Hub? Let us know below.</p>
-        <form id="submitSuggestionForm" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <input type="text" id="suggestionTitle" placeholder="Title (e.g. Add Gaming Club Channel)" required style="flex: 1; min-width: 200px; background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
-          <input type="text" id="suggestionDesc" placeholder="Brief description..." required style="flex: 2; min-width: 250px; background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
-          <button type="submit" class="action-btn">Submit Suggestion</button>
-        </form>
       </div>
 
       <div class="content-block">
@@ -183,6 +178,61 @@
       </div>
     </section>
 
+    <!-- DEDICATED SUGGESTIONS & FEEDBACK TAB -->
+    <section id="view-suggestions" class="view-section" style="display: none;">
+      <h1>Feedback & Ideas Box</h1>
+      <p class="subtitle">Submit feature requests, report issues, or share ideas for Urbana High Hub.</p>
+
+      <div class="content-block">
+        <h3><i class="fa-solid fa-paper-plane"></i> Submit New Idea or Feedback</h3>
+        <form id="submitSuggestionForm" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+          <input type="text" id="suggestionTitle" placeholder="Title (e.g. Add Gaming Club Channel)" required style="background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
+          <textarea id="suggestionDesc" placeholder="Detailed explanation of your feedback..." required style="background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px; min-height: 90px; font-family: inherit;"></textarea>
+          <button type="submit" class="action-btn" style="align-self: flex-start;">Submit Suggestion</button>
+        </form>
+      </div>
+
+      <div class="content-block">
+        <h3><i class="fa-solid fa-list-check"></i> Community Submissions & Status</h3>
+        <div id="publicSuggestionsList" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">Loading feedback...</div>
+      </div>
+    </section>
+
+    <!-- CALCULATOR TAB -->
+    <section id="view-calculator" class="view-section" style="display: none;">
+      <h1>Calculator</h1>
+      <p class="subtitle">Quick math tool for classwork and calculations.</p>
+
+      <div class="content-block" style="max-width: 340px; margin: 0 auto; padding: 1.25rem;">
+        <input type="text" id="calcDisplay" readonly value="0" style="width: 100%; background: #000; border: 1px solid #333; color: #ffaa00; font-size: 2rem; text-align: right; padding: 0.75rem; border-radius: 8px; font-family: monospace; margin-bottom: 1rem; box-sizing: border-box;">
+        
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
+          <button onclick="calcClear()" class="delete-btn" style="grid-column: span 2; font-weight: bold;">C</button>
+          <button onclick="calcBackspace()" class="action-btn" style="background: #333; color: #fff;"><i class="fa-solid fa-backspace"></i></button>
+          <button onclick="calcOp('/')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">÷</button>
+
+          <button onclick="calcNum('7')" class="action-btn" style="background: #1a1a1a;">7</button>
+          <button onclick="calcNum('8')" class="action-btn" style="background: #1a1a1a;">8</button>
+          <button onclick="calcNum('9')" class="action-btn" style="background: #1a1a1a;">9</button>
+          <button onclick="calcOp('*')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">×</button>
+
+          <button onclick="calcNum('4')" class="action-btn" style="background: #1a1a1a;">4</button>
+          <button onclick="calcNum('5')" class="action-btn" style="background: #1a1a1a;">5</button>
+          <button onclick="calcNum('6')" class="action-btn" style="background: #1a1a1a;">6</button>
+          <button onclick="calcOp('-')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">-</button>
+
+          <button onclick="calcNum('1')" class="action-btn" style="background: #1a1a1a;">1</button>
+          <button onclick="calcNum('2')" class="action-btn" style="background: #1a1a1a;">2</button>
+          <button onclick="calcNum('3')" class="action-btn" style="background: #1a1a1a;">3</button>
+          <button onclick="calcOp('+')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">+</button>
+
+          <button onclick="calcNum('0')" class="action-btn" style="background: #1a1a1a; grid-column: span 2;">0</button>
+          <button onclick="calcNum('.')" class="action-btn" style="background: #1a1a1a;">.</button>
+          <button onclick="calcEquals()" class="action-btn" style="background: #55ff55; color: #000; font-weight: bold;">=</button>
+        </div>
+      </div>
+    </section>
+
     <!-- LINKS & RESOURCES VIEW -->
     <section id="view-resources" class="view-section" style="display: none;">
       <h1>Links & Resources</h1>
@@ -241,23 +291,19 @@
     <!-- ADMIN PANEL VIEW -->
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
-      <p class="subtitle">Broadcast announcements, manage users, set schedule presets, manage polls, and view feedback.</p>
+      <p class="subtitle">Broadcast announcements, manage users, set schedule presets, and control live polls.</p>
 
-      <!-- Admin Poll Creation Manager -->
+      <!-- Admin Poll Creation Manager with Stats -->
       <div class="content-block">
-        <h3><i class="fa-solid fa-poll"></i> Community Poll Manager</h3>
+        <h3><i class="fa-solid fa-poll"></i> Community Poll Manager & Real-Time Stats</h3>
         <form id="createPollForm" style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 500px; margin-top: 1rem;">
           <input type="text" id="pollQuestionInput" placeholder="Poll Question (e.g. Favorite Spirit Week Theme?)" required style="background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
           <input type="text" id="pollOptionsInput" placeholder="Options separated by commas (e.g. Pajama Day, Retro Day, Sports Day)" required style="background: #111; border: 1px solid #222; color: #fff; padding: 0.6rem; border-radius: 6px;">
           <button type="submit" class="action-btn">Launch New Poll</button>
         </form>
-        <div id="adminPollsList" style="margin-top: 1rem;"></div>
-      </div>
 
-      <!-- Admin Feedback / Suggestion Review Queue -->
-      <div class="content-block">
-        <h3><i class="fa-solid fa-lightbulb"></i> Student Suggestions & Feedback Inbox</h3>
-        <div id="adminSuggestionsList" style="margin-top: 1rem;">Loading inbox...</div>
+        <h4 style="margin-top: 1.5rem; font-size: 0.9rem; color: #aaa;">All Polls & Vote Analytics:</h4>
+        <div id="adminPollsList" style="display: flex; flex-direction: column; gap: 0.75rem;">Loading poll statistics...</div>
       </div>
 
       <div class="content-block">
