@@ -51,6 +51,27 @@ const MasterScheduleSchema = new mongoose.Schema({
   endTime: String,
   label: String
 });
+// Updated UserSchema
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true, trim: true },
+  role: { type: String, default: 'student' },
+  avatarBg: { type: String, default: '#ffffff' },
+  avatarColor: { type: String, default: '#000000' },
+  pfpUrl: { type: String, default: '' }, // Custom PFP image URL
+  chatBgColor: { type: String, default: '#0a0a0a' }, // Custom Chat Background
+  chatBubbleColor: { type: String, default: '#1a1a1a' }, // Custom Bubble Color
+  lastUsernameChange: { type: Date, default: null }, // 7-day restriction tracker
+  badges: [{ type: String }]
+}, { timestamps: true });
+
+// Announcement Schema
+const AnnouncementSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+const Announcement = mongoose.model('Announcement', AnnouncementSchema);
 
 // RECURRING DAY RULES SCHEMA
 const DayRuleSchema = new mongoose.Schema({
