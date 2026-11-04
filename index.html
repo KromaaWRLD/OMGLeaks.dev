@@ -291,7 +291,35 @@
     <!-- ADMIN PANEL VIEW -->
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
-      <p class="subtitle">Broadcast announcements, manage users, set schedule presets, and control live polls.</p>
+      <p class="subtitle">Broadcast announcements, manage users, set fixed recurring weekday rules, and control live polls.</p>
+
+      <!-- Recurring Weekday Schedule Rules Manager -->
+      <div class="content-block">
+        <h3><i class="fa-solid fa-repeat"></i> Recurring Weekday Schedule Rules</h3>
+        <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.75rem;">Set automatic fixed schedules for specific weekdays (e.g. Wednesday = ClimberTime). These automatically apply every week until removed.</p>
+        
+        <form id="addDayRuleForm" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <select id="ruleWeekdaySelect" style="background: #111; color: #fff; border: 1px solid #222; padding: 0.6rem; border-radius: 6px;">
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3" selected>Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+          </select>
+
+          <select id="rulePresetSelect" style="background: #111; color: #fff; border: 1px solid #222; padding: 0.6rem; border-radius: 6px;">
+            <option value="climbertime">ClimberTime</option>
+            <option value="normal">Standard Bell</option>
+            <option value="delay2hr">2-Hr Delay</option>
+            <option value="pm_assembly">PM Assembly</option>
+            <option value="activity">Activity Day</option>
+          </select>
+
+          <button type="submit" class="action-btn">Add Weekday Rule</button>
+        </form>
+
+        <div id="adminDayRulesList" style="display: flex; flex-direction: column; gap: 0.5rem;">Loading recurring rules...</div>
+      </div>
 
       <!-- Admin Poll Creation Manager with Stats -->
       <div class="content-block">
