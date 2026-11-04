@@ -165,10 +165,132 @@ async function initApp() {
   checkTodayStatus(events, cachedMasterSchedule);
   startPeriodCountdown();
 
+  loadActivePoll();
   loadUnreadBadgeCount();
   setInterval(loadUnreadBadgeCount, 3000);
 
   if (userRole === 'admin') loadAdminData();
+}
+
+// COMMUNITY POLL SYSTEM
+async function loadActivePoll() {
+  const container = document.getElementById('activePollContainer');
+  const res = await authFetch('/api/polls/active');
+  if (!res.ok) return container.innerHTML = '<p class="empty-msg">Error loading poll.</p>';
+
+  const poll = await res.json();
+  if (!poll) {
+    container.innerHTML = '<p class="empty-msg">No active community poll right now. Check back later!</p>';
+    return;
+  }
+
+  const totalVotes = poll.options.reduce((sum, opt) => sum + (opt.votes ? opt.votes.length : 0), 0);
+  const userVotedOptionIndex = poll.options.findIndex(opt => opt.votes && opt.votes.includes(userId));
+
+  container.innerHTML = `
+    <div style="font-weight: bold; font-size: 1rem; margin-bottom: 0.75rem;">${poll.question}</div>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+      ${poll.options.map((opt, idx) => {
+        const votes = opt.votes ? opt.votes.length : 0;
+        const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+        const isUserPick = userVotedOptionIndex === idx;
+
+        return `
+          <div onclick="submitPollVote('${poll._id}', ${idx})" style="cursor: pointer; background: #111; border: 1px solid ${isUserPick ? '#ffaa00' : '#222'}; padding: 0.6rem; border-radius: 6px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top:0; left:0; bottom:0; width: ${pct}%; background: rgba(255, 170, 0, 0.15); z-index: 0;"></div>
+            <div style="position: relative; z-index: 1; display: flex; justify-content: space-between; font-size: 0.85rem;">
+              <span>${isUserPick ? '<i class="fa-solid fa-circle-check" style="color:#ffaa00;"></i> ' : ''}${opt.text}</span>
+              <span style="font-weight: bold; color: #aaa;">${pct}% (${votes})</span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <div style="font-size: 0.75rem; color: #888; margin-top: 0.5rem; text-align: right;">Total Votes: ${totalVotes}</div>
+  `;
+}
+
+async function submitPollVote(pollId, optionIndex) {
+  const res = await authFetch(`/api/polls/${pollId}/vote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ optionIndex })
+  });
+
+  if (res.ok) {
+    showToast('Vote recorded!', 'success');
+    loadActivePoll();
+  } else {
+    showToast('Failed to record vote.', 'error');
+  }
+}
+
+// FEEDBACK & SUGGESTION SYSTEM
+document.getElementById('submitSuggestionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = document.getElementById('suggestionTitle').value.trim();
+  const description = document.getElementById('suggestionDesc').value.trim();
+
+  if (!title || !description) return;
+
+  const res = await authFetch('/api/suggestions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title,
+      description,
+      authorName: document.getElementById('userName').innerText,
+      authorId: userId
+    })
+  });
+
+  if (res.ok) {
+    document.getElementById('suggestionTitle').value = '';
+    document.getElementById('suggestionDesc').value = '';
+    showToast('Suggestion submitted to admins!', 'success');
+  }
+});
+
+async function loadAdminSuggestions() {
+  const container = document.getElementById('adminSuggestionsList');
+  const res = await authFetch('/api/admin/suggestions');
+  if (!res.ok) return container.innerHTML = '<p class="empty-msg">Error loading inbox.</p>';
+
+  const suggestions = await res.json();
+  if (suggestions.length === 0) {
+    container.innerHTML = '<p class="empty-msg">No suggestions submitted yet.</p>';
+    return;
+  }
+
+  container.innerHTML = suggestions.map(s => `
+    <div class="class-summary-item" style="flex-direction: column; align-items: flex-start; gap: 0.4rem;">
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+        <strong>${s.title}</strong>
+        <span style="font-size: 0.75rem; background: #222; padding: 0.2rem 0.5rem; border-radius: 4px; color: ${s.status === 'Approved' ? '#55ff55' : s.status === 'Rejected' ? '#ff5555' : '#ffaa00'};">${s.status}</span>
+      </div>
+      <p style="font-size: 0.85rem; color: #ccc; margin: 0;">${s.description}</p>
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 0.25rem;">
+        <span style="font-size: 0.75rem; color: #777;">By: ${s.authorName}</span>
+        <div style="display: flex; gap: 0.4rem;">
+          <button onclick="updateSuggestionStatus('${s._id}', 'Approved')" class="action-btn" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; background: #225522;">Approve</button>
+          <button onclick="updateSuggestionStatus('${s._id}', 'Rejected')" class="delete-btn" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">Reject</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function updateSuggestionStatus(id, status) {
+  const res = await authFetch(`/api/admin/suggestions/${id}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+
+  if (res.ok) {
+    showToast(`Suggestion marked as ${status}`, 'info');
+    loadAdminSuggestions();
+  }
 }
 
 // USER PROFILE MODAL & BADGES
@@ -188,14 +310,11 @@ async function openProfileModal(targetUserId) {
   document.getElementById('modalUsername').innerText = `@${user.username}`;
   document.getElementById('modalRoleBadge').innerText = user.role || 'STUDENT';
 
-  // Created date formatting
   const createdDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown';
   document.getElementById('modalCreatedDate').innerText = createdDate;
 
-  // Render Badges
   renderModalBadges(user.badges || []);
 
-  // Show Admin badge controls if viewing as Admin
   const adminControls = document.getElementById('adminBadgeControls');
   adminControls.style.display = (userRole === 'admin') ? 'block' : 'none';
 
@@ -846,6 +965,66 @@ function renderCalendarEvents(events) {
 }
 
 // ADMIN FUNCTIONS
+const createPollForm = document.getElementById('createPollForm');
+if (createPollForm) {
+  createPollForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const question = document.getElementById('pollQuestionInput').value.trim();
+    const rawOptions = document.getElementById('pollOptionsInput').value;
+    const options = rawOptions.split(',').map(o => o.trim()).filter(o => o.length > 0);
+
+    if (options.length < 2) return showToast('Please enter at least 2 options.', 'error');
+
+    const res = await authFetch('/api/admin/polls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, options })
+    });
+
+    if (res.ok) {
+      document.getElementById('pollQuestionInput').value = '';
+      document.getElementById('pollOptionsInput').value = '';
+      showToast('Poll created and set active!', 'success');
+      loadActivePoll();
+      loadAdminPolls();
+    }
+  });
+}
+
+async function loadAdminPolls() {
+  const container = document.getElementById('adminPollsList');
+  if (!container) return;
+
+  const res = await authFetch('/api/admin/polls');
+  if (res.ok) {
+    const polls = await res.json();
+    if (polls.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No polls created yet.</p>';
+      return;
+    }
+
+    container.innerHTML = polls.map(p => `
+      <div class="class-summary-item">
+        <div>
+          <strong>${p.question}</strong>
+          ${p.active ? '<span style="color:#55ff55; font-size: 0.75rem; margin-left: 0.5rem;">(Active)</span>' : ''}
+        </div>
+        <button onclick="deletePoll('${p._id}')" class="delete-btn">Delete</button>
+      </div>
+    `).join('');
+  }
+}
+
+async function deletePoll(pollId) {
+  if (!confirm("Delete this poll?")) return;
+  const res = await authFetch(`/api/admin/polls/${pollId}`, { method: 'DELETE' });
+  if (res.ok) {
+    showToast('Poll deleted', 'info');
+    loadActivePoll();
+    loadAdminPolls();
+  }
+}
+
 async function applySchedulePreset(preset) {
   if (!confirm(`Apply the ${preset} schedule preset to the entire app?`)) return;
   const res = await authFetch('/api/admin/master-schedule/preset', {
@@ -923,6 +1102,8 @@ if (maintForm) {
 async function loadAdminData() {
   checkMaintenanceStatus();
   loadResourcesList();
+  loadAdminPolls();
+  loadAdminSuggestions();
 
   const res = await authFetch('/api/admin/users');
   if (res.ok) {
