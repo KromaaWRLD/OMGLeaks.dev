@@ -79,9 +79,15 @@
 
     <!-- DASHBOARD VIEW -->
     <section id="view-dashboard" class="view-section">
+      <div id="announcementBanner" style="display: none; background: #ffaa00; color: #000; padding: 0.75rem 1rem; border-radius: 8px; font-weight: bold; margin-bottom: 1rem; align-items: center; gap: 0.5rem;">
+  <i class="fa-solid fa-bullhorn"></i> <span id="announcementText"></span>
+</div>
+      
       <h1>Dashboard</h1>
       <p class="subtitle">Welcome back! Here is your daily overview at Urbana High.</p>
 
+
+      
       <div class="dashboard-grid">
         <div class="dash-card">
           <div class="card-title"><i class="fa-solid fa-stopwatch"></i> Period Countdown</div>
@@ -395,9 +401,8 @@
           <tbody id="adminUsersTableBody"></tbody>
         </table>
       </div>
-    </section>
 
-<!-- Admin Announcement Control -->
+      <!-- Admin Announcement Control -->
 <div class="content-block">
   <h3><i class="fa-solid fa-bullhorn"></i> Broadcast Announcement</h3>
   <form id="broadcastAnnouncementForm" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
@@ -405,6 +410,10 @@
     <button type="submit" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">Broadcast</button>
   </form>
 </div>
+      
+    </section>
+
+
 
   </main>
 
