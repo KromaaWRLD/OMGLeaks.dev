@@ -21,6 +21,8 @@ let attachedBase64Image = null;
 let selectedModalUserId = null;
 let calcExpr = '';
 
+const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 // INSTANT ROLE PERMISSION SYNC
 function updateRoleUI(newRole) {
   if (userRole !== newRole) {
@@ -178,6 +180,9 @@ async function initApp() {
     }
   }
 
+  // Trigger recurring weekday schedule rule check
+  await authFetch('/api/master-schedule/check-day-rules', { method: 'POST' });
+
   const [calRes, masterRes] = await Promise.all([
     authFetch('/api/calendar'),
     authFetch('/api/master-schedule')
@@ -193,7 +198,6 @@ async function initApp() {
   loadActivePoll();
   loadUnreadBadgeCount();
 
-  // Background polling every 3s for instant permissions, poll updates, and message badges
   setInterval(backgroundRealtimeSync, 3000);
 
   if (userRole === 'admin') loadAdminData();
@@ -202,7 +206,6 @@ async function initApp() {
 async function backgroundRealtimeSync() {
   if (!userId) return;
 
-  // Sync current user role
   const res = await authFetch(`/api/users/${userId}`);
   if (res.ok) {
     const user = await res.json();
@@ -211,9 +214,63 @@ async function backgroundRealtimeSync() {
 
   loadUnreadBadgeCount();
 
-  // Refresh visible admin components in real time
   if (document.getElementById('view-admin').style.display !== 'none' && userRole === 'admin') {
     loadAdminData();
+  }
+}
+
+// RECURRING WEEKDAY SCHEDULE RULES
+const addDayRuleForm = document.getElementById('addDayRuleForm');
+if (addDayRuleForm) {
+  addDayRuleForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const dayOfWeek = parseInt(document.getElementById('ruleWeekdaySelect').value);
+    const preset = document.getElementById('rulePresetSelect').value;
+
+    const res = await authFetch('/api/admin/day-rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dayOfWeek, preset })
+    });
+
+    if (res.ok) {
+      showToast(`Rule added! ${weekdayNames[dayOfWeek]}s now default to ${preset}`, 'success');
+      initApp();
+      loadAdminDayRules();
+    }
+  });
+}
+
+async function loadAdminDayRules() {
+  const container = document.getElementById('adminDayRulesList');
+  if (!container) return;
+
+  const res = await authFetch('/api/admin/day-rules');
+  if (res.ok) {
+    const rules = await res.json();
+    if (rules.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No recurring weekday rules set. Add one above!</p>';
+      return;
+    }
+
+    container.innerHTML = rules.map(r => `
+      <div class="class-summary-item">
+        <div>
+          <strong>${weekdayNames[r.dayOfWeek]}s</strong> automatically set to
+          <span style="color: #ffaa00; font-weight: bold;">${r.preset.toUpperCase()}</span> schedule
+        </div>
+        <button onclick="deleteDayRule('${r._id}')" class="delete-btn">Remove Rule</button>
+      </div>
+    `).join('');
+  }
+}
+
+async function deleteDayRule(id) {
+  const res = await authFetch(`/api/admin/day-rules/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    showToast('Weekday rule removed', 'info');
+    initApp();
+    loadAdminDayRules();
   }
 }
 
@@ -362,7 +419,6 @@ async function loadAdminPolls() {
             </div>
           </div>
 
-          <!-- Detailed Stats Breakdown -->
           <div style="width: 100%; display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.25rem;">
             ${p.options.map(opt => {
               const votes = opt.votes ? opt.votes.length : 0;
@@ -1237,6 +1293,7 @@ async function loadAdminData() {
   checkMaintenanceStatus();
   loadResourcesList();
   loadAdminPolls();
+  loadAdminDayRules();
 
   const res = await authFetch('/api/admin/users');
   if (res.ok) {
