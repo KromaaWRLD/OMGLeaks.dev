@@ -144,15 +144,40 @@
             <button type="button" onclick="cancelImageAttachment()" class="delete-btn" style="padding: 0.2rem 0.4rem;"><i class="fa-solid fa-xmark"></i></button>
           </div>
 
-          <form id="sendMessageForm" style="display: flex; gap: 0.5rem; align-items: center;">
-            <label class="action-btn" style="padding: 0.6rem 0.8rem; cursor: pointer;">
-              <i class="fa-solid fa-image"></i>
-              <input type="file" id="chatImageInput" accept="image/*" style="display: none;">
-            </label>
+          <form id="sendMessageForm" style="display: flex; gap: 0.5rem; align-items: center; position: relative;">
+  <!-- Image Upload Button -->
+  <label class="action-btn" style="padding: 0.6rem 0.8rem; cursor: pointer; border: 1px solid #222; border-radius: 6px; background: #111; color: #fff;">
+    <i class="fa-solid fa-image"></i>
+    <input type="file" id="chatImageInput" accept="image/*" style="display: none;">
+  </label>
 
-            <input type="text" id="chatInput" placeholder="Type your message..." required style="flex: 1; background: #111111; border: 1px solid #222222; color: #ffffff; padding: 0.6rem; border-radius: 6px;">
-            <button type="submit" class="action-btn">Send</button>
-          </form>
+  <!-- Emoji Picker Trigger -->
+  <button type="button" id="emojiBtn" class="action-btn" style="padding: 0.6rem 0.8rem; border: 1px solid #222; border-radius: 6px; background: #111; color: #fff; cursor: pointer;">
+    <i class="fa-solid fa-face-smile"></i>
+  </button>
+
+  <!-- GIF Picker Trigger -->
+  <button type="button" id="gifBtn" class="action-btn" style="padding: 0.6rem 0.8rem; border: 1px solid #222; border-radius: 6px; background: #111; color: #fff; font-weight: bold; font-size: 0.75rem; cursor: pointer;">
+    GIF
+  </button>
+
+  <!-- Message Text Input -->
+  <input type="text" id="chatInput" placeholder="Type your message..." required style="flex: 1; background: #111111; border: 1px solid #222222; color: #ffffff; padding: 0.6rem; border-radius: 6px;">
+  
+  <button type="submit" class="action-btn" style="padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer;">Send</button>
+
+  <!-- Emoji Popover Container -->
+  <div id="emojiPicker" style="display: none; position: absolute; bottom: 50px; left: 45px; background: #111; border: 1px solid #333; border-radius: 8px; padding: 0.5rem; width: 220px; max-height: 180px; overflow-y: auto; z-index: 100; gap: 0.4rem; grid-template-columns: repeat(5, 1fr); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+  </div>
+
+  <!-- GIF Search Popover Container -->
+  <div id="gifPicker" style="display: none; position: absolute; bottom: 50px; left: 90px; background: #111; border: 1px solid #333; border-radius: 8px; padding: 0.5rem; width: 260px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+    <input type="text" id="gifSearchInput" placeholder="Search GIFs..." style="width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 0.4rem; border-radius: 4px; font-size: 0.8rem; margin-bottom: 0.5rem; box-sizing: border-box;">
+    <div id="gifResults" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; max-height: 160px; overflow-y: auto;">
+      <p style="font-size: 0.75rem; color: #888; grid-column: span 2; margin: 0; text-align: center;">Type to search GIFs</p>
+    </div>
+  </div>
+</form>
         </div>
 
       </div>
