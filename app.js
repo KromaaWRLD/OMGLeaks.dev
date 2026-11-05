@@ -20,7 +20,6 @@ let typingTimeout = null;
 let attachedBase64Image = null;
 let profilePfpBase64 = null;
 let selectedModalUserId = null;
-let calcExpr = '';
 
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -183,17 +182,18 @@ async function initApp() {
   // Check automated recurring weekday schedule rules
   await authFetch('/api/master-schedule/check-day-rules', { method: 'POST' });
 
-  const [calRes, masterRes, announcementRes] = await Promise.all([
-    authFetch('/api/calendar'),
+  const [masterRes, announcementRes] = await Promise.all([
     authFetch('/api/master-schedule'),
     authFetch('/api/announcements/latest')
   ]);
 
-  const events = calRes.ok ? await calRes.json() : [];
-  const masterData = masterRes.ok ? await masterRes.json() : { presetName: 'Standard Bell', slots: [] };
+  const masterData = masterRes.ok ? await masterRes.json() : { presetName: 'Standard Bell Schedule', slots: [] };
   
   cachedMasterSchedule = masterData.slots || [];
-  document.getElementById('schedulePresetTitle').innerText = masterData.presetName || 'Standard Bell';
+  const scheduleName = masterData.presetName || 'Standard Bell Schedule';
+  document.getElementById('schedulePresetTitle').innerText = scheduleName;
+  document.getElementById('dashTodayStatus').innerText = scheduleName;
+  document.getElementById('dashTodayStatus').style.color = '#55ff55';
 
   if (announcementRes.ok) {
     const announcement = await announcementRes.json();
@@ -206,8 +206,7 @@ async function initApp() {
     }
   }
 
-  renderCalendarEvents(events);
-  checkTodayStatus(events, cachedMasterSchedule);
+  renderMasterSchedule(cachedMasterSchedule);
   startPeriodCountdown();
 
   loadActivePoll();
@@ -362,43 +361,6 @@ async function deleteDayRule(id) {
   }
 }
 
-// CALCULATOR TOOL
-function calcNum(num) {
-  const display = document.getElementById('calcDisplay');
-  if (display.value === '0' || display.value === 'Error') calcExpr = '';
-  calcExpr += num;
-  display.value = calcExpr;
-}
-
-function calcOp(op) {
-  const display = document.getElementById('calcDisplay');
-  calcExpr += ` ${op} `;
-  display.value = calcExpr;
-}
-
-function calcClear() {
-  calcExpr = '';
-  document.getElementById('calcDisplay').value = '0';
-}
-
-function calcBackspace() {
-  const display = document.getElementById('calcDisplay');
-  calcExpr = calcExpr.trimEnd().slice(0, -1);
-  display.value = calcExpr || '0';
-}
-
-function calcEquals() {
-  const display = document.getElementById('calcDisplay');
-  try {
-    const result = Function(`'use strict'; return (${calcExpr})`)();
-    display.value = result;
-    calcExpr = result.toString();
-  } catch (err) {
-    display.value = 'Error';
-    calcExpr = '';
-  }
-}
-
 // COMMUNITY POLL SYSTEM WITH ADMIN STATS
 async function loadActivePoll() {
   const container = document.getElementById('activePollContainer');
@@ -545,7 +507,7 @@ async function deletePoll(pollId) {
   }
 }
 
-// DEDICATED SUGGESTION & FEEDBACK TAB LOGIC
+// SUGGESTION & FEEDBACK TAB LOGIC
 document.getElementById('submitSuggestionForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = document.getElementById('suggestionTitle').value.trim();
@@ -634,10 +596,12 @@ async function deleteSuggestion(id) {
 // PROFILE MODAL & BADGE ICON MAPPING
 function getBadgeIcon(badgeText) {
   const lower = badgeText.toLowerCase();
-  if (lower.includes('staff') || lower.includes('admin')) return 'fa-shield-halved';
-  if (lower.includes('council') || lower.includes('leader')) return 'fa-crown';
-  if (lower.includes('honor') || lower.includes('scholar')) return 'fa-award';
+  if (lower.includes('staff') || lower.includes('admin') || lower.includes('teacher')) return 'fa-shield-halved';
+  if (lower.includes('council') || lower.includes('leader') || lower.includes('president')) return 'fa-crown';
+  if (lower.includes('honor') || lower.includes('scholar') || lower.includes('gpa')) return 'fa-award';
   if (lower.includes('verified')) return 'fa-circle-check';
+  if (lower.includes('athlete') || lower.includes('sports') || lower.includes('captain')) return 'fa-trophy';
+  if (lower.includes('art') || lower.includes('drama') || lower.includes('music')) return 'fa-palette';
   return 'fa-star'; // Basic default icon for custom badges
 }
 
@@ -1015,7 +979,7 @@ async function fetchTypingStatus() {
   }
 }
 
-// MESSAGES HISTORY RENDER WITH TIMESTAMPS AND CUSTOM BUBBLES
+// MESSAGES HISTORY RENDER WITH PFP AVATARS, TIMESTAMPS, AND CUSTOM BUBBLES
 async function loadMessages(isSilent = false) {
   if (!currentActiveChatId) return;
   const historyEl = document.getElementById('messageHistory');
@@ -1040,18 +1004,34 @@ async function loadMessages(isSilent = false) {
       const bubbleBg = isMine ? (m.senderBubbleColor || '#ffffff') : '#1a1a1a';
       const textColor = isMine ? (bubbleBg === '#ffffff' ? '#000000' : '#ffffff') : '#ffffff';
 
+      // PFP Avatar Element
+      const pfpStyle = m.senderPfpUrl 
+        ? `background-image: url(${m.senderPfpUrl}); background-size: cover; background-position: center; color: transparent;` 
+        : `background: #ffffff; color: #000000;`;
+      const pfpInitial = m.senderPfpUrl ? '' : (m.senderName || 'U').charAt(0).toUpperCase();
+      
+      const pfpAvatarHtml = `
+        <div onclick="openProfileModal('${m.senderId}')" style="width: 32px; height: 32px; border-radius: 50%; ${pfpStyle} display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; cursor: pointer; flex-shrink: 0;">
+          ${pfpInitial}
+        </div>
+      `;
+
       return `
-        <div style="align-self: ${isMine ? 'flex-end' : 'flex-start'}; max-width: 75%; background: ${bubbleBg}; color: ${textColor}; padding: 0.6rem 0.8rem; border-radius: 8px;">
-          <div style="font-size: 0.7rem; color: ${isMine ? '#888' : '#aaa'}; font-weight: bold; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.2rem;">
-            <span onclick="openProfileModal('${m.senderId}')" style="cursor: pointer; text-decoration: underline;">${m.senderName} ${m.edited ? '(edited)' : ''}</span>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <span style="font-size: 0.65rem; opacity: 0.8;">${timeStr}</span>
-              ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer;"></i>` : ''}
-              ${canDelete ? `<i onclick="deleteMessage('${m._id}')" class="fa-solid fa-trash" style="cursor: pointer; color: #ff5555;"></i>` : ''}
+        <div style="display: flex; gap: 0.6rem; align-items: flex-end; justify-content: ${isMine ? 'flex-end' : 'flex-start'};">
+          ${!isMine ? pfpAvatarHtml : ''}
+          <div style="max-width: 75%; background: ${bubbleBg}; color: ${textColor}; padding: 0.6rem 0.8rem; border-radius: 8px;">
+            <div style="font-size: 0.7rem; color: ${isMine ? '#888' : '#aaa'}; font-weight: bold; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.2rem;">
+              <span onclick="openProfileModal('${m.senderId}')" style="cursor: pointer; text-decoration: underline;">${m.senderName} ${m.edited ? '(edited)' : ''}</span>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="font-size: 0.65rem; opacity: 0.8;">${timeStr}</span>
+                ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer;"></i>` : ''}
+                ${canDelete ? `<i onclick="deleteMessage('${m._id}')" class="fa-solid fa-trash" style="cursor: pointer; color: #ff5555;"></i>` : ''}
+              </div>
             </div>
+            ${m.text ? `<div style="word-break: break-word;">${m.text}</div>` : ''}
+            ${m.imageUrl ? `<img src="${m.imageUrl}" style="max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 0.5rem; display: block;">` : ''}
           </div>
-          ${m.text ? `<div style="word-break: break-word;">${m.text}</div>` : ''}
-          ${m.imageUrl ? `<img src="${m.imageUrl}" style="max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 0.5rem; display: block;">` : ''}
+          ${isMine ? pfpAvatarHtml : ''}
         </div>
       `;
     }).join('');
@@ -1247,29 +1227,6 @@ async function deleteResourceLink(id) {
 }
 
 // DASHBOARD SCHEDULE HELPERS
-function checkTodayStatus(events, masterSchedule) {
-  const today = new Date().toISOString().split('T')[0];
-  const dayEvent = events.find(e => e.date === today);
-  const statusEl = document.getElementById('dashTodayStatus');
-
-  if (dayEvent && dayEvent.isDayOff) {
-    statusEl.innerText = `NO SCHOOL: ${dayEvent.title}`;
-    statusEl.style.color = '#ff5555';
-    document.getElementById('dashMasterSchedule').innerHTML = `<div class="content-block"><p class="empty-msg">No classes scheduled today due to <strong>${dayEvent.title}</strong>.</p></div>`;
-    return;
-  }
-
-  if (dayEvent && !dayEvent.isDayOff) {
-    statusEl.innerText = `Special Schedule: ${dayEvent.title}`;
-    statusEl.style.color = '#ffaa00';
-  } else {
-    statusEl.innerText = 'Regular Everyday Schedule';
-    statusEl.style.color = '#55ff55';
-  }
-
-  renderMasterSchedule(masterSchedule);
-}
-
 function renderMasterSchedule(master) {
   const container = document.getElementById('dashMasterSchedule');
   if (!master || master.length === 0) {
@@ -1284,20 +1241,6 @@ function renderMasterSchedule(master) {
         <span style="font-size: 0.8rem; color: #888; margin-left: 0.5rem;">(${m.label || 'Standard Class'})</span>
       </div>
       ${userRole === 'admin' ? `<button onclick="deleteMasterSlot('${m._id}')" class="delete-btn">Delete Slot</button>` : ''}
-    </div>
-  `).join('');
-}
-
-function renderCalendarEvents(events) {
-  const container = document.getElementById('calendarList');
-  if (events.length === 0) {
-    container.innerHTML = '<p class="empty-msg">No upcoming days off listed.</p>';
-    return;
-  }
-  container.innerHTML = events.map(e => `
-    <div class="class-summary-item">
-      <div><strong>${e.date}</strong> - ${e.title} ${e.isDayOff ? '(No School)' : '(Special Schedule)'}</div>
-      ${userRole === 'admin' ? `<button onclick="deleteCalendarDate('${e.date}')" class="delete-btn">Remove</button>` : ''}
     </div>
   `).join('');
 }
@@ -1326,6 +1269,25 @@ async function updateUserRole(targetUserId, newRole) {
   if (res.ok) {
     showToast('Role updated! Take effect on user end in 3s.', 'success');
     loadAdminData();
+  }
+}
+
+async function adminResetUsername(targetUserId, currentUsername) {
+  const newUsername = prompt("Enter new username for this user:", currentUsername);
+  if (!newUsername || newUsername.trim() === "") return;
+
+  const res = await authFetch(`/api/admin/users/${targetUserId}/reset-username`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newUsername: newUsername.trim() })
+  });
+
+  if (res.ok) {
+    showToast('Username reset successfully!', 'success');
+    loadAdminData();
+  } else {
+    const err = await res.json();
+    showToast(err.error || 'Failed to reset username.', 'error');
   }
 }
 
@@ -1397,6 +1359,7 @@ async function loadAdminData() {
           </select>
         </td>
         <td style="display: flex; gap: 0.4rem;">
+          <button onclick="adminResetUsername('${u._id}', '${u.username}')" class="action-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #5599ff; color: #fff;">Edit Username</button>
           <button onclick="adminResetPassword('${u._id}')" class="action-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Reset Pass</button>
           <button onclick="deleteUser('${u._id}')" class="delete-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Delete</button>
         </td>
