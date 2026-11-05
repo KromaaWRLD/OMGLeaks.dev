@@ -36,6 +36,10 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, default: 'student' },
   avatarBg: { type: String, default: '#ffffff' },
   avatarColor: { type: String, default: '#000000' },
+  pfpUrl: { type: String, default: '' },
+  chatBgColor: { type: String, default: '#0a0a0a' },
+  chatBubbleColor: { type: String, default: '#ffffff' },
+  lastUsernameChange: { type: Date, default: null },
   badges: [{ type: String }]
 }, { timestamps: true });
 
@@ -46,36 +50,15 @@ const CalendarEventSchema = new mongoose.Schema({
 });
 
 const MasterScheduleSchema = new mongoose.Schema({
+  presetName: { type: String, default: 'Standard Bell' },
   period: String,
   startTime: String,
   endTime: String,
   label: String
 });
-// Updated UserSchema
-const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
-  name: { type: String, required: true, trim: true },
-  role: { type: String, default: 'student' },
-  avatarBg: { type: String, default: '#ffffff' },
-  avatarColor: { type: String, default: '#000000' },
-  pfpUrl: { type: String, default: '' }, // Custom PFP image URL
-  chatBgColor: { type: String, default: '#0a0a0a' }, // Custom Chat Background
-  chatBubbleColor: { type: String, default: '#1a1a1a' }, // Custom Bubble Color
-  lastUsernameChange: { type: Date, default: null }, // 7-day restriction tracker
-  badges: [{ type: String }]
-}, { timestamps: true });
 
-// Announcement Schema
-const AnnouncementSchema = new mongoose.Schema({
-  text: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
-const Announcement = mongoose.model('Announcement', AnnouncementSchema);
-
-// RECURRING DAY RULES SCHEMA
 const DayRuleSchema = new mongoose.Schema({
-  dayOfWeek: { type: Number, required: true, unique: true }, // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+  dayOfWeek: { type: Number, required: true, unique: true },
   preset: { type: String, required: true }
 });
 
@@ -90,6 +73,7 @@ const ChatMessageSchema = new mongoose.Schema({
   channelId: String,
   senderId: String,
   senderName: String,
+  senderBubbleColor: String,
   text: String,
   imageUrl: String,
   edited: { type: Boolean, default: false },
@@ -125,6 +109,11 @@ const SystemConfigSchema = new mongoose.Schema({
   value: mongoose.Schema.Types.Mixed
 });
 
+const AnnouncementSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model('User', UserSchema);
 const CalendarEvent = mongoose.model('CalendarEvent', CalendarEventSchema);
 const MasterSchedule = mongoose.model('MasterSchedule', MasterScheduleSchema);
@@ -135,14 +124,19 @@ const ResourceLink = mongoose.model('ResourceLink', ResourceLinkSchema);
 const Poll = mongoose.model('Poll', PollSchema);
 const Suggestion = mongoose.model('Suggestion', SuggestionSchema);
 const SystemConfig = mongoose.model('SystemConfig', SystemConfigSchema);
+const Announcement = mongoose.model('Announcement', AnnouncementSchema);
 
 const typingState = {};
 
-// RECURRING DAY RULES LOADER HELPER
+// RECURRING PRESET SLOTS GENERATOR
 async function generatePresetSlots(preset) {
+  let name = 'Standard Bell';
+  let slots = [];
+
   switch (preset) {
     case 'climbertime':
-      return [
+      name = 'ClimberTime Schedule';
+      slots = [
         { period: '1st Period', startTime: '07:35 AM', endTime: '08:15 AM', label: 'Class Period' },
         { period: '2nd Period', startTime: '08:19 AM', endTime: '08:59 AM', label: 'Class Period' },
         { period: '3rd Period', startTime: '09:03 AM', endTime: '09:43 AM', label: 'Class Period' },
@@ -153,8 +147,10 @@ async function generatePresetSlots(preset) {
         { period: '7th Period', startTime: '01:09 PM', endTime: '01:49 PM', label: 'Class Period' },
         { period: '8th Period', startTime: '01:53 PM', endTime: '02:37 PM', label: 'Class Period' }
       ];
+      break;
     case 'delay2hr':
-      return [
+      name = '2-Hour Delay Schedule';
+      slots = [
         { period: '1st Period', startTime: '09:35 AM', endTime: '10:05 AM', label: '2-Hr Delay Class' },
         { period: '2nd Period', startTime: '10:09 AM', endTime: '10:39 AM', label: '2-Hr Delay Class' },
         { period: '3rd Period', startTime: '10:43 AM', endTime: '11:13 AM', label: '2-Hr Delay Class' },
@@ -164,8 +160,10 @@ async function generatePresetSlots(preset) {
         { period: '7th Period', startTime: '01:29 PM', endTime: '01:59 PM', label: '2-Hr Delay Class' },
         { period: '8th Period', startTime: '02:03 PM', endTime: '02:37 PM', label: '2-Hr Delay Class' }
       ];
+      break;
     case 'pm_assembly':
-      return [
+      name = 'PM Assembly Schedule';
+      slots = [
         { period: '1st Period', startTime: '07:35 AM', endTime: '08:20 AM', label: 'Class Period' },
         { period: '2nd Period', startTime: '08:24 AM', endTime: '09:09 AM', label: 'Class Period' },
         { period: '3rd Period', startTime: '09:13 AM', endTime: '09:58 AM', label: 'Class Period' },
@@ -176,21 +174,11 @@ async function generatePresetSlots(preset) {
         { period: '8th Period', startTime: '01:17 PM', endTime: '02:01 PM', label: 'Class Period' },
         { period: 'Activity Period', startTime: '02:05 PM', endTime: '02:37 PM', label: 'Assembly / Pep Rally' }
       ];
-    case 'activity':
-      return [
-        { period: '1st Period', startTime: '07:35 AM', endTime: '08:15 AM', label: 'Class Period' },
-        { period: '2nd Period', startTime: '08:19 AM', endTime: '08:58 AM', label: 'Class Period' },
-        { period: '3rd Period', startTime: '09:02 AM', endTime: '09:41 AM', label: 'Class Period' },
-        { period: '4th Period', startTime: '09:45 AM', endTime: '10:24 AM', label: 'Class Period' },
-        { period: '7th Period', startTime: '10:28 AM', endTime: '11:08 AM', label: 'Class Period' },
-        { period: '5th Period', startTime: '11:12 AM', endTime: '12:57 PM', label: 'Lunch / Class' },
-        { period: '6th Period', startTime: '12:01 PM', endTime: '12:46 PM', label: 'Lunch / Class' },
-        { period: '8th Period', startTime: '12:50 PM', endTime: '01:30 PM', label: 'Class Period' },
-        { period: 'Activity Period', startTime: '02:05 PM', endTime: '02:37 PM', label: 'Activity Period' }
-      ];
+      break;
     case 'normal':
     default:
-      return [
+      name = 'Standard Bell Schedule';
+      slots = [
         { period: 'Homeroom', startTime: '07:35 AM', endTime: '07:50 AM', label: 'Homeroom' },
         { period: '1st Period', startTime: '07:54 AM', endTime: '08:41 AM', label: 'Class Period' },
         { period: '2nd Period', startTime: '08:45 AM', endTime: '09:32 AM', label: 'Class Period' },
@@ -201,7 +189,10 @@ async function generatePresetSlots(preset) {
         { period: '7th Period', startTime: '12:57 PM', endTime: '01:44 PM', label: 'Class Period' },
         { period: '8th Period', startTime: '01:48 PM', endTime: '02:37 PM', label: 'Class Period' }
       ];
+      break;
   }
+
+  return { presetName: name, slots: slots.map(s => ({ ...s, presetName: name })) };
 }
 
 // MAINTENANCE MIDDLEWARE
@@ -242,7 +233,7 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html'))
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// AUTHENTICATION & USER MANAGEMENT
+// AUTHENTICATION & USER PROFILE
 app.post('/api/register', async (req, res) => {
   try {
     const { username, password, name } = req.body;
@@ -290,10 +281,45 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
-app.post('/api/users/:id/avatar', async (req, res) => {
-  const { avatarBg, avatarColor } = req.body;
-  await User.findByIdAndUpdate(req.params.id, { avatarBg, avatarColor });
-  res.json({ success: true });
+// PROFILE UPDATE WITH 7-DAY USERNAME LIMIT
+app.post('/api/users/:id/update-profile', async (req, res) => {
+  try {
+    const { name, newUsername, pfpUrl, chatBgColor, chatBubbleColor } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    let updates = {};
+    if (name) updates.name = name.trim();
+    if (pfpUrl !== undefined) updates.pfpUrl = pfpUrl;
+    if (chatBgColor) updates.chatBgColor = chatBgColor;
+    if (chatBubbleColor) updates.chatBubbleColor = chatBubbleColor;
+
+    if (newUsername && newUsername.toLowerCase() !== user.username) {
+      const cleanNewUsername = newUsername.trim().toLowerCase();
+      const now = new Date();
+
+      if (user.lastUsernameChange) {
+        const daysPassed = (now - new Date(user.lastUsernameChange)) / (1000 * 60 * 60 * 24);
+        if (daysPassed < 7) {
+          const daysLeft = Math.ceil(7 - daysPassed);
+          return res.status(400).json({ 
+            error: `Usernames can only be changed once every 7 days. Try again in ${daysLeft} day(s).` 
+          });
+        }
+      }
+
+      const existing = await User.findOne({ username: cleanNewUsername });
+      if (existing) return res.status(400).json({ error: 'Username already taken.' });
+
+      updates.username = cleanNewUsername;
+      updates.lastUsernameChange = now;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update profile: ' + err.message });
+  }
 });
 
 app.delete('/api/users/:id', async (req, res) => {
@@ -311,6 +337,18 @@ app.delete('/api/users/:id', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete account.' });
   }
+});
+
+// ANNOUNCEMENT BANNER ROUTES
+app.get('/api/announcements/latest', async (req, res) => {
+  const latest = await Announcement.findOne().sort({ createdAt: -1 });
+  res.json(latest || { text: '' });
+});
+
+app.post('/api/admin/announcements', async (req, res) => {
+  const { text } = req.body;
+  const announcement = await Announcement.create({ text });
+  res.json(announcement);
 });
 
 // RECURRING DAY RULES API
@@ -335,8 +373,8 @@ app.post('/api/master-schedule/check-day-rules', async (req, res) => {
 
   if (rule) {
     await MasterSchedule.deleteMany({});
-    const slots = await generatePresetSlots(rule.preset);
-    await MasterSchedule.insertMany(slots);
+    const presetData = await generatePresetSlots(rule.preset);
+    await MasterSchedule.insertMany(presetData.slots);
     return res.json({ appliedRule: true, preset: rule.preset });
   }
 
@@ -427,7 +465,7 @@ app.post('/api/admin/suggestions/:id/status', async (req, res) => {
   res.json(updated);
 });
 
-// ADMIN USER BADGE MANAGEMENT
+// BADGE MANAGEMENT
 app.post('/api/admin/users/:id/badges', async (req, res) => {
   const { badge } = req.body;
   const user = await User.findByIdAndUpdate(
@@ -555,10 +593,15 @@ app.get('/api/chat/messages/:channelId', async (req, res) => {
 
 app.post('/api/chat/messages', async (req, res) => {
   const { channelId, senderId, senderName, text, imageUrl } = req.body;
+  
+  const sender = await User.findById(senderId);
+  const senderBubbleColor = sender ? sender.chatBubbleColor : '#ffffff';
+
   const message = await ChatMessage.create({
     channelId,
     senderId,
     senderName,
+    senderBubbleColor,
     text,
     imageUrl,
     readBy: [senderId]
@@ -654,9 +697,9 @@ app.post('/api/admin/users/:id/reset-password', async (req, res) => {
 app.post('/api/admin/master-schedule/preset', async (req, res) => {
   const { preset } = req.body;
   await MasterSchedule.deleteMany({});
-  const slots = await generatePresetSlots(preset);
-  const created = await MasterSchedule.insertMany(slots);
-  res.json(created);
+  const presetData = await generatePresetSlots(preset);
+  await MasterSchedule.insertMany(presetData.slots);
+  res.json({ presetName: presetData.presetName, slots: presetData.slots });
 });
 
 // MAINTENANCE CONFIG
@@ -677,67 +720,19 @@ app.post('/api/admin/maintenance', async (req, res) => {
 
 // CALENDAR & MASTER SCHEDULE
 app.get('/api/calendar', async (req, res) => res.json(await CalendarEvent.find()));
-app.get('/api/master-schedule', async (req, res) => res.json(await MasterSchedule.find()));
+app.get('/api/master-schedule', async (req, res) => {
+  const slots = await MasterSchedule.find();
+  const presetName = slots.length > 0 && slots[0].presetName ? slots[0].presetName : 'Standard Bell Schedule';
+  res.json({ presetName, slots });
+});
 
 app.post('/api/admin/calendar', async (req, res) => {
   const event = await CalendarEvent.findOneAndUpdate({ date: req.body.date }, req.body, { upsert: true, new: true });
   res.json(event);
 });
 
-app.post('/api/users/:id/update-profile', async (req, res) => {
-  try {
-    const { name, newUsername, pfpUrl, chatBgColor, chatBubbleColor } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    let updates = {};
-
-    if (name) updates.name = name.trim();
-    if (pfpUrl !== undefined) updates.pfpUrl = pfpUrl;
-    if (chatBgColor) updates.chatBgColor = chatBgColor;
-    if (chatBubbleColor) updates.chatBubbleColor = chatBubbleColor;
-
-    // Handle 7-Day Username Rule
-    if (newUsername && newUsername.toLowerCase() !== user.username) {
-      const cleanNewUsername = newUsername.trim().toLowerCase();
-      
-      const now = new Date();
-      if (user.lastUsernameChange) {
-        const daysPassed = (now - new Date(user.lastUsernameChange)) / (1000 * 60 * 60 * 24);
-        if (daysPassed < 7) {
-          const daysLeft = Math.ceil(7 - daysPassed);
-          return res.status(400).json({ 
-            error: `You can only change your username once every 7 days. Try again in ${daysLeft} day(s).` 
-          });
-        }
-      }
-
-      const existing = await User.findOne({ username: cleanNewUsername });
-      if (existing) return res.status(400).json({ error: 'Username already taken.' });
-
-      updates.username = cleanNewUsername;
-      updates.lastUsernameChange = now;
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
-    res.json(updatedUser);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update profile: ' + err.message });
-  }
-});
-
 app.delete('/api/admin/calendar/:date', async (req, res) => {
   await CalendarEvent.deleteOne({ date: req.params.date });
-  res.json({ success: true });
-});
-
-app.post('/api/admin/master-schedule', async (req, res) => {
-  const slot = await MasterSchedule.create(req.body);
-  res.json(slot);
-});
-
-app.delete('/api/admin/master-schedule/:id', async (req, res) => {
-  await MasterSchedule.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 });
 
