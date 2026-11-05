@@ -1377,5 +1377,108 @@ async function deleteUser(id) {
     }
   }
 }
+// ==========================================
+// EMOJI & GIF PICKER LOGIC
+// ==========================================
+const commonEmojis = ['😂', '💀', '🔥', '😭', '👍', '❤️', '😎', '🎉', '🤡', '👀', '💯', '🙏', '🫡', '🙄', '✨'];
+
+const emojiBtn = document.getElementById('emojiBtn');
+const emojiPicker = document.getElementById('emojiPicker');
+const gifBtn = document.getElementById('gifBtn');
+const gifPicker = document.getElementById('gifPicker');
+const chatInput = document.getElementById('chatInput');
+
+// 1. Populate the Emoji Grid
+if (emojiPicker) {
+  emojiPicker.innerHTML = commonEmojis.map(emoji => `
+    <span onclick="insertEmoji('${emoji}')" style="font-size: 1.25rem; cursor: pointer; text-align: center; padding: 0.2rem; display: inline-block;">${emoji}</span>
+  `).join('');
+}
+
+// 2. Toggle Menus
+if (emojiBtn) {
+  emojiBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    gifPicker.style.display = 'none';
+    emojiPicker.style.display = (emojiPicker.style.display === 'grid') ? 'none' : 'grid';
+  });
+}
+
+if (gifBtn) {
+  gifBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    emojiPicker.style.display = 'none';
+    gifPicker.style.display = (gifPicker.style.display === 'block') ? 'none' : 'block';
+  });
+}
+
+// Close pickers if clicking outside
+document.addEventListener('click', (e) => {
+  if (emojiPicker && !emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+    emojiPicker.style.display = 'none';
+  }
+  if (gifPicker && !gifPicker.contains(e.target) && e.target !== gifBtn) {
+    gifPicker.style.display = 'none';
+  }
+});
+
+// 3. Insert Emoji into Input Field
+function insertEmoji(emoji) {
+  chatInput.value += emoji;
+  emojiPicker.style.display = 'none';
+  chatInput.focus();
+}
+
+// 4. Live GIF Search
+const gifSearchInput = document.getElementById('gifSearchInput');
+if (gifSearchInput) {
+  let gifDebounce = null;
+  gifSearchInput.addEventListener('input', (e) => {
+    clearTimeout(gifDebounce);
+    const query = e.target.value.trim();
+    if (!query) return;
+
+    gifDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(query)}&limit=6`);
+        const data = await res.json();
+        const resultsContainer = document.getElementById('gifResults');
+        
+        if (data.data && data.data.length > 0) {
+          resultsContainer.innerHTML = data.data.map(g => `
+            <img src="${g.images.fixed_height_small.url}" onclick="sendGifMessage('${g.images.fixed_height.url}')" style="width: 100%; height: 70px; object-fit: cover; border-radius: 4px; cursor: pointer;">
+          `).join('');
+        } else {
+          resultsContainer.innerHTML = '<p style="font-size: 0.75rem; color: #888; grid-column: span 2; text-align: center;">No GIFs found.</p>';
+        }
+      } catch (err) {
+        console.error('GIF fetch error:', err);
+      }
+    }, 400);
+  });
+}
+
+// 5. Send Selected GIF Directly
+async function sendGifMessage(gifUrl) {
+  gifPicker.style.display = 'none';
+  if (!currentActiveChatId) return showToast('Select a chat channel first.', 'error');
+
+  const res = await authFetch('/api/chat/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      channelId: currentActiveChatId,
+      senderId: userId,
+      senderName: document.getElementById('userName').innerText,
+      text: '',
+      imageUrl: gifUrl
+    })
+  });
+
+  if (res.ok) {
+    loadMessages(false);
+  }
+}
+
 
 initApp();
