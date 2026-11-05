@@ -1440,7 +1440,7 @@ if (gifSearchInput) {
 
     gifDebounce = setTimeout(async () => {
       try {
-        const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(query)}&limit=6`);
+        const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=Y6D0pSM24Z6dfKuUB9epG3Sd0ajcC2ro&q=${encodeURIComponent(query)}&limit=6`);
         const data = await res.json();
         const resultsContainer = document.getElementById('gifResults');
         
