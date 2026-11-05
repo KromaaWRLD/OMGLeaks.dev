@@ -52,14 +52,8 @@
       <a href="#suggestions" class="nav-item" data-path="suggestions">
         <div class="nav-item-content"><i class="fa-solid fa-lightbulb"></i><span>Feedback & Ideas</span></div>
       </a>
-      <a href="#calculator" class="nav-item" data-path="calculator">
-        <div class="nav-item-content"><i class="fa-solid fa-calculator"></i><span>Calculator</span></div>
-      </a>
       <a href="#resources" class="nav-item" data-path="resources">
         <div class="nav-item-content"><i class="fa-solid fa-link"></i><span>Links & Resources</span></div>
-      </a>
-      <a href="#calendar" class="nav-item" data-path="calendar">
-        <div class="nav-item-content"><i class="fa-solid fa-calendar"></i><span>School Calendar</span></div>
       </a>
       <a href="#settings" class="nav-item" data-path="settings">
         <div class="nav-item-content"><i class="fa-solid fa-gear"></i><span>Profile & Settings</span></div>
@@ -95,7 +89,7 @@
         </div>
 
         <div class="dash-card">
-          <div class="card-title"><i class="fa-solid fa-calendar-day"></i> Today's Status</div>
+          <div class="card-title"><i class="fa-solid fa-calendar-day"></i> Today's Schedule Status</div>
           <div class="card-value" id="dashTodayStatus" style="font-size: 1.25rem;">Checking...</div>
         </div>
       </div>
@@ -106,7 +100,7 @@
       </div>
 
       <div class="content-block">
-        <h3><i class="fa-solid fa-clock"></i> Today's Bell Schedule: <span id="schedulePresetTitle" style="color: #ffaa00;">Standard Bell</span></h3>
+        <h3><i class="fa-solid fa-clock"></i> Today's Bell Schedule: <span id="schedulePresetTitle" style="color: #ffaa00;">Standard Bell Schedule</span></h3>
         <div id="dashMasterSchedule">Loading schedule...</div>
       </div>
     </section>
@@ -202,41 +196,6 @@
       </div>
     </section>
 
-    <!-- CALCULATOR TAB -->
-    <section id="view-calculator" class="view-section" style="display: none;">
-      <h1>Calculator</h1>
-      <p class="subtitle">Quick math tool for classwork and calculations.</p>
-
-      <div class="content-block" style="max-width: 340px; margin: 0 auto; padding: 1.25rem;">
-        <input type="text" id="calcDisplay" readonly value="0" style="width: 100%; background: #000; border: 1px solid #333; color: #ffaa00; font-size: 2rem; text-align: right; padding: 0.75rem; border-radius: 8px; font-family: monospace; margin-bottom: 1rem; box-sizing: border-box;">
-        
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
-          <button onclick="calcClear()" class="delete-btn" style="grid-column: span 2; font-weight: bold;">C</button>
-          <button onclick="calcBackspace()" class="action-btn" style="background: #333; color: #fff;"><i class="fa-solid fa-backspace"></i></button>
-          <button onclick="calcOp('/')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">÷</button>
-
-          <button onclick="calcNum('7')" class="action-btn" style="background: #1a1a1a;">7</button>
-          <button onclick="calcNum('8')" class="action-btn" style="background: #1a1a1a;">8</button>
-          <button onclick="calcNum('9')" class="action-btn" style="background: #1a1a1a;">9</button>
-          <button onclick="calcOp('*')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">×</button>
-
-          <button onclick="calcNum('4')" class="action-btn" style="background: #1a1a1a;">4</button>
-          <button onclick="calcNum('5')" class="action-btn" style="background: #1a1a1a;">5</button>
-          <button onclick="calcNum('6')" class="action-btn" style="background: #1a1a1a;">6</button>
-          <button onclick="calcOp('-')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">-</button>
-
-          <button onclick="calcNum('1')" class="action-btn" style="background: #1a1a1a;">1</button>
-          <button onclick="calcNum('2')" class="action-btn" style="background: #1a1a1a;">2</button>
-          <button onclick="calcNum('3')" class="action-btn" style="background: #1a1a1a;">3</button>
-          <button onclick="calcOp('+')" class="action-btn" style="background: #ffaa00; color: #000; font-weight: bold;">+</button>
-
-          <button onclick="calcNum('0')" class="action-btn" style="background: #1a1a1a; grid-column: span 2;">0</button>
-          <button onclick="calcNum('.')" class="action-btn" style="background: #1a1a1a;">.</button>
-          <button onclick="calcEquals()" class="action-btn" style="background: #55ff55; color: #000; font-weight: bold;">=</button>
-        </div>
-      </div>
-    </section>
-
     <!-- LINKS & RESOURCES VIEW -->
     <section id="view-resources" class="view-section" style="display: none;">
       <h1>Links & Resources</h1>
@@ -247,16 +206,6 @@
         <div id="publicResourcesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
           <p class="empty-msg">Loading links...</p>
         </div>
-      </div>
-    </section>
-
-    <!-- CALENDAR VIEW -->
-    <section id="view-calendar" class="view-section" style="display: none;">
-      <h1>School Calendar</h1>
-      <p class="subtitle">Check holidays, teacher workdays, and special schedule days.</p>
-      <div class="content-block">
-        <h3>Upcoming Scheduled Overrides & Days Off</h3>
-        <div id="calendarList">Loading calendar...</div>
       </div>
     </section>
 
@@ -279,7 +228,7 @@
           </div>
 
           <div>
-            <label style="font-size: 0.8rem; color: #aaa;">Upload PFP Picture:</label>
+            <label style="font-size: 0.8rem; color: #aaa;">Upload Profile Picture (PFP):</label>
             <input type="file" id="pfpFileInput" accept="image/*" style="width: 100%; background: #111; border: 1px solid #222; color: #fff; padding: 0.4rem; border-radius: 6px;">
           </div>
 
@@ -311,6 +260,21 @@
     <section id="view-admin" class="view-section" style="display: none;">
       <h1>Admin Control Panel</h1>
       <p class="subtitle">Broadcast announcements, manage users, set fixed recurring weekday rules, and control live polls.</p>
+
+      <!-- Badge Icon Keywords Guide -->
+      <div class="content-block" style="border-color: #334455;">
+        <h3 style="color: #5599ff;"><i class="fa-solid fa-circle-info"></i> Guide: Badge Icon Keywords</h3>
+        <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 0.5rem;">When assigning badges to user profiles, including any of these keywords will automatically assign special FontAwesome icons:</p>
+        <ul style="font-size: 0.8rem; color: #aaa; margin-left: 1.25rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.4rem;">
+          <li><i class="fa-solid fa-shield-halved" style="color:#55ff55;"></i> <strong>Staff / Admin / Teacher</strong></li>
+          <li><i class="fa-solid fa-crown" style="color:#ffaa00;"></i> <strong>Council / Leader / President</strong></li>
+          <li><i class="fa-solid fa-award" style="color:#aa55ff;"></i> <strong>Honor / Scholar / GPA</strong></li>
+          <li><i class="fa-solid fa-circle-check" style="color:#5599ff;"></i> <strong>Verified</strong></li>
+          <li><i class="fa-solid fa-trophy" style="color:#ffaa00;"></i> <strong>Athlete / Sports / Captain</strong></li>
+          <li><i class="fa-solid fa-palette" style="color:#ff5555;"></i> <strong>Art / Drama / Music</strong></li>
+          <li><i class="fa-solid fa-star" style="color:#888;"></i> <em>Custom titles default to Star</em></li>
+        </ul>
+      </div>
 
       <div class="content-block">
         <h3><i class="fa-solid fa-bullhorn"></i> Broadcast Announcement</h3>
@@ -399,7 +363,7 @@
       </div>
 
       <div class="content-block">
-        <h3>Registered Accounts (Role & Password Overrides)</h3>
+        <h3>Registered Accounts (Role, Username & Password Management)</h3>
         <table class="schedule-table">
           <thead>
             <tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr>
