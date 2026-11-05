@@ -18,6 +18,7 @@ let cachedMasterSchedule = [];
 let chatPollingInterval = null;
 let typingTimeout = null;
 let attachedBase64Image = null;
+let profilePfpBase64 = null;
 let selectedModalUserId = null;
 let calcExpr = '';
 
@@ -168,28 +169,42 @@ async function initApp() {
   if (userRes.ok) {
     const user = await userRes.json();
     document.getElementById('userName').innerText = user.name;
+    document.getElementById('editDisplayName').value = user.name;
+    document.getElementById('editUsername').value = user.username;
     
+    if (user.chatBgColor) document.getElementById('editChatBg').value = user.chatBgColor;
+    if (user.chatBubbleColor) document.getElementById('editBubbleBg').value = user.chatBubbleColor;
+    if (user.chatBgColor) document.getElementById('chatWorkspace').style.background = user.chatBgColor;
+
     updateRoleUI(user.role);
-
-    const firstLetter = (user.name || 'U').charAt(0).toUpperCase();
-    document.getElementById('navPfpDisplay').innerText = firstLetter;
-    document.getElementById('pfpPreview').innerText = firstLetter;
-
-    if (user.avatarBg) {
-      applyAvatarStyling(user.avatarBg, user.avatarColor || '#000000');
-    }
+    renderUserPfp(user);
   }
 
-  // Trigger recurring weekday schedule rule check
+  // Check automated recurring weekday schedule rules
   await authFetch('/api/master-schedule/check-day-rules', { method: 'POST' });
 
-  const [calRes, masterRes] = await Promise.all([
+  const [calRes, masterRes, announcementRes] = await Promise.all([
     authFetch('/api/calendar'),
-    authFetch('/api/master-schedule')
+    authFetch('/api/master-schedule'),
+    authFetch('/api/announcements/latest')
   ]);
 
   const events = calRes.ok ? await calRes.json() : [];
-  cachedMasterSchedule = masterRes.ok ? await masterRes.json() : [];
+  const masterData = masterRes.ok ? await masterRes.json() : { presetName: 'Standard Bell', slots: [] };
+  
+  cachedMasterSchedule = masterData.slots || [];
+  document.getElementById('schedulePresetTitle').innerText = masterData.presetName || 'Standard Bell';
+
+  if (announcementRes.ok) {
+    const announcement = await announcementRes.json();
+    const banner = document.getElementById('announcementBanner');
+    if (announcement && announcement.text) {
+      document.getElementById('announcementText').innerText = announcement.text;
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
 
   renderCalendarEvents(events);
   checkTodayStatus(events, cachedMasterSchedule);
@@ -201,6 +216,17 @@ async function initApp() {
   setInterval(backgroundRealtimeSync, 3000);
 
   if (userRole === 'admin') loadAdminData();
+}
+
+function renderUserPfp(user) {
+  const navPfp = document.getElementById('navPfpDisplay');
+  if (user.pfpUrl) {
+    navPfp.style.backgroundImage = `url(${user.pfpUrl})`;
+    navPfp.innerText = '';
+  } else {
+    navPfp.style.backgroundImage = 'none';
+    navPfp.innerText = (user.name || 'U').charAt(0).toUpperCase();
+  }
 }
 
 async function backgroundRealtimeSync() {
@@ -217,6 +243,68 @@ async function backgroundRealtimeSync() {
   if (document.getElementById('view-admin').style.display !== 'none' && userRole === 'admin') {
     loadAdminData();
   }
+}
+
+// PROFILE UPDATES & 7-DAY USERNAME RULE
+document.getElementById('pfpFileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    profilePfpBase64 = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('updateProfileForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('editDisplayName').value.trim();
+  const newUsername = document.getElementById('editUsername').value.trim();
+  const chatBgColor = document.getElementById('editChatBg').value;
+  const chatBubbleColor = document.getElementById('editBubbleBg').value;
+
+  const res = await authFetch(`/api/users/${userId}/update-profile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      newUsername,
+      pfpUrl: profilePfpBase64 !== null ? profilePfpBase64 : undefined,
+      chatBgColor,
+      chatBubbleColor
+    })
+  });
+
+  if (res.ok) {
+    showToast('Profile settings saved successfully!', 'success');
+    initApp();
+  } else {
+    const err = await res.json();
+    showToast(err.error || 'Failed to update profile.', 'error');
+  }
+});
+
+// BROADCAST ANNOUNCEMENT LOGIC
+const broadcastForm = document.getElementById('broadcastAnnouncementForm');
+if (broadcastForm) {
+  broadcastForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = document.getElementById('announcementInput').value.trim();
+    if (!text) return;
+
+    const res = await authFetch('/api/admin/announcements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    if (res.ok) {
+      document.getElementById('announcementInput').value = '';
+      showToast('Announcement broadcasted!', 'success');
+      initApp();
+    }
+  });
 }
 
 // RECURRING WEEKDAY SCHEDULE RULES
@@ -311,7 +399,7 @@ function calcEquals() {
   }
 }
 
-// COMMUNITY POLL SYSTEM WITH ADMIN STATS & SELECTOR
+// COMMUNITY POLL SYSTEM WITH ADMIN STATS
 async function loadActivePoll() {
   const container = document.getElementById('activePollContainer');
   const res = await authFetch('/api/polls/active');
@@ -364,7 +452,7 @@ async function submitPollVote(pollId, optionIndex) {
   }
 }
 
-// ADMIN POLL MANAGEMENT WITH LIVE ANALYTICS & ACTIVE SELECTOR
+// ADMIN POLL MANAGEMENT WITH LIVE ANALYTICS
 const createPollForm = document.getElementById('createPollForm');
 if (createPollForm) {
   createPollForm.addEventListener('submit', async (e) => {
@@ -543,7 +631,16 @@ async function deleteSuggestion(id) {
   }
 }
 
-// USER PROFILE MODAL & BADGES
+// PROFILE MODAL & BADGE ICON MAPPING
+function getBadgeIcon(badgeText) {
+  const lower = badgeText.toLowerCase();
+  if (lower.includes('staff') || lower.includes('admin')) return 'fa-shield-halved';
+  if (lower.includes('council') || lower.includes('leader')) return 'fa-crown';
+  if (lower.includes('honor') || lower.includes('scholar')) return 'fa-award';
+  if (lower.includes('verified')) return 'fa-circle-check';
+  return 'fa-star'; // Basic default icon for custom badges
+}
+
 async function openProfileModal(targetUserId) {
   selectedModalUserId = targetUserId;
   const res = await authFetch(`/api/users/${targetUserId}`);
@@ -552,9 +649,15 @@ async function openProfileModal(targetUserId) {
   const user = await res.json();
   
   const pfp = document.getElementById('modalPfp');
-  pfp.innerText = (user.name || 'U').charAt(0).toUpperCase();
-  pfp.style.background = user.avatarBg || '#ffffff';
-  pfp.style.color = user.avatarColor || '#000000';
+  if (user.pfpUrl) {
+    pfp.style.backgroundImage = `url(${user.pfpUrl})`;
+    pfp.innerText = '';
+  } else {
+    pfp.style.backgroundImage = 'none';
+    pfp.innerText = (user.name || 'U').charAt(0).toUpperCase();
+    pfp.style.background = user.avatarBg || '#ffffff';
+    pfp.style.color = user.avatarColor || '#000000';
+  }
 
   document.getElementById('modalName').innerText = user.name;
   document.getElementById('modalUsername').innerText = `@${user.username}`;
@@ -579,8 +682,8 @@ function renderModalBadges(badges) {
   }
 
   listContainer.innerHTML = badges.map(b => `
-    <span style="background: #111; border: 1px solid #333; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; color: #ffaa00; display: inline-flex; align-items: center; gap: 0.3rem;">
-      <i class="fa-solid fa-certificate"></i> ${b}
+    <span style="background: #111; border: 1px solid #333; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; color: #ffaa00; display: inline-flex; align-items: center; gap: 0.35rem;">
+      <i class="fa-solid ${getBadgeIcon(b)}"></i> ${b}
       ${userRole === 'admin' ? `<i onclick="removeBadgeFromUser('${b}')" class="fa-solid fa-xmark" style="cursor: pointer; color: #ff5555; margin-left: 0.2rem;"></i>` : ''}
     </span>
   `).join('');
@@ -715,28 +818,7 @@ function timeToMinutes(timeStr) {
   return hours * 60 + minutes;
 }
 
-// AVATAR SETTINGS
-async function setAvatarTheme(bgColor, textColor) {
-  applyAvatarStyling(bgColor, textColor);
-  const res = await authFetch(`/api/users/${userId}/avatar`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ avatarBg: bgColor, avatarColor: textColor })
-  });
-  if (res.ok) showToast('Avatar styling updated', 'success');
-}
-
-function applyAvatarStyling(bg, color) {
-  const navPfp = document.getElementById('navPfpDisplay');
-  const previewPfp = document.getElementById('pfpPreview');
-
-  navPfp.style.background = bg;
-  navPfp.style.color = color;
-  previewPfp.style.background = bg;
-  previewPfp.style.color = color;
-}
-
-// DIRECT MESSAGING & CHAT CHANNELS
+// CHAT & DIRECT MESSAGING
 async function loadDMStudentList() {
   const container = document.getElementById('dmStudentList');
   const res = await authFetch('/api/admin/users');
@@ -760,7 +842,7 @@ async function openDirectMessage(targetUserId) {
 
   if (res.ok) {
     const channel = await res.json();
-    loadChatChannels();
+    await loadChatChannels();
     selectChatChannel(channel._id);
     showToast('Direct message opened', 'info');
   }
@@ -848,8 +930,9 @@ async function selectChatChannel(channelId) {
     document.getElementById('activeChatHeader').querySelector('span').innerText = currentActiveChannelObj ? currentActiveChannelObj.name : 'Chat';
   }
 
-  loadMessages(false);
-  loadChatChannels();
+  // Instantly load messages upon channel click
+  await loadMessages(false);
+  renderChatChannelsList(await (await authFetch(`/api/chat/channels/${userId}`)).json());
   loadUnreadBadgeCount();
 }
 
@@ -932,7 +1015,7 @@ async function fetchTypingStatus() {
   }
 }
 
-// MESSAGES LOG
+// MESSAGES HISTORY RENDER WITH TIMESTAMPS AND CUSTOM BUBBLES
 async function loadMessages(isSilent = false) {
   if (!currentActiveChatId) return;
   const historyEl = document.getElementById('messageHistory');
@@ -953,16 +1036,21 @@ async function loadMessages(isSilent = false) {
       const isSiteAdmin = userRole === 'admin';
       const canDelete = isMine || isGroupAdmin || isSiteAdmin;
 
+      const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const bubbleBg = isMine ? (m.senderBubbleColor || '#ffffff') : '#1a1a1a';
+      const textColor = isMine ? (bubbleBg === '#ffffff' ? '#000000' : '#ffffff') : '#ffffff';
+
       return `
-        <div style="align-self: ${isMine ? 'flex-end' : 'flex-start'}; max-width: 75%; background: ${isMine ? '#ffffff' : '#1a1a1a'}; color: ${isMine ? '#000000' : '#ffffff'}; padding: 0.6rem 0.8rem; border-radius: 8px;" class="chat-bubble">
-          <div style="font-size: 0.7rem; color: ${isMine ? '#555' : '#aaa'}; font-weight: bold; display: flex; justify-content: space-between; gap: 1rem;">
+        <div style="align-self: ${isMine ? 'flex-end' : 'flex-start'}; max-width: 75%; background: ${bubbleBg}; color: ${textColor}; padding: 0.6rem 0.8rem; border-radius: 8px;">
+          <div style="font-size: 0.7rem; color: ${isMine ? '#888' : '#aaa'}; font-weight: bold; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.2rem;">
             <span onclick="openProfileModal('${m.senderId}')" style="cursor: pointer; text-decoration: underline;">${m.senderName} ${m.edited ? '(edited)' : ''}</span>
-            <div>
-              ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer; margin-right: 0.4rem;"></i>` : ''}
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="font-size: 0.65rem; opacity: 0.8;">${timeStr}</span>
+              ${isMine ? `<i onclick="editMessagePrompt('${m._id}', '${m.text}')" class="fa-solid fa-pen" style="cursor: pointer;"></i>` : ''}
               ${canDelete ? `<i onclick="deleteMessage('${m._id}')" class="fa-solid fa-trash" style="cursor: pointer; color: #ff5555;"></i>` : ''}
             </div>
           </div>
-          ${m.text ? `<div style="margin-top: 0.25rem;">${m.text}</div>` : ''}
+          ${m.text ? `<div style="word-break: break-word;">${m.text}</div>` : ''}
           ${m.imageUrl ? `<img src="${m.imageUrl}" style="max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 0.5rem; display: block;">` : ''}
         </div>
       `;
