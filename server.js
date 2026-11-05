@@ -43,14 +43,8 @@ const UserSchema = new mongoose.Schema({
   badges: [{ type: String }]
 }, { timestamps: true });
 
-const CalendarEventSchema = new mongoose.Schema({
-  date: { type: String, required: true, unique: true },
-  isDayOff: { type: Boolean, default: true },
-  title: String
-});
-
 const MasterScheduleSchema = new mongoose.Schema({
-  presetName: { type: String, default: 'Standard Bell' },
+  presetName: { type: String, default: 'Standard Bell Schedule' },
   period: String,
   startTime: String,
   endTime: String,
@@ -73,6 +67,7 @@ const ChatMessageSchema = new mongoose.Schema({
   channelId: String,
   senderId: String,
   senderName: String,
+  senderPfpUrl: String,
   senderBubbleColor: String,
   text: String,
   imageUrl: String,
@@ -115,7 +110,6 @@ const AnnouncementSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', UserSchema);
-const CalendarEvent = mongoose.model('CalendarEvent', CalendarEventSchema);
 const MasterSchedule = mongoose.model('MasterSchedule', MasterScheduleSchema);
 const DayRule = mongoose.model('DayRule', DayRuleSchema);
 const ChatChannel = mongoose.model('ChatChannel', ChatChannelSchema);
@@ -130,7 +124,7 @@ const typingState = {};
 
 // RECURRING PRESET SLOTS GENERATOR
 async function generatePresetSlots(preset) {
-  let name = 'Standard Bell';
+  let name = 'Standard Bell Schedule';
   let slots = [];
 
   switch (preset) {
@@ -281,7 +275,7 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
-// PROFILE UPDATE WITH 7-DAY USERNAME LIMIT
+// USER PROFILE UPDATES WITH 7-DAY USERNAME LIMIT
 app.post('/api/users/:id/update-profile', async (req, res) => {
   try {
     const { name, newUsername, pfpUrl, chatBgColor, chatBubbleColor } = req.body;
@@ -336,6 +330,27 @@ app.delete('/api/users/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete account.' });
+  }
+});
+
+// ADMIN OVERRIDE USERNAME RESET ROUTE
+app.post('/api/admin/users/:id/reset-username', async (req, res) => {
+  try {
+    const { newUsername } = req.body;
+    if (!newUsername) return res.status(400).json({ error: 'New username required.' });
+
+    const cleanNewUsername = newUsername.trim().toLowerCase();
+    const existing = await User.findOne({ username: cleanNewUsername, _id: { $ne: req.params.id } });
+    if (existing) return res.status(400).json({ error: 'Username already taken.' });
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { username: cleanNewUsername, lastUsernameChange: new Date() },
+      { new: true }
+    );
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to reset username: ' + err.message });
   }
 });
 
@@ -596,11 +611,13 @@ app.post('/api/chat/messages', async (req, res) => {
   
   const sender = await User.findById(senderId);
   const senderBubbleColor = sender ? sender.chatBubbleColor : '#ffffff';
+  const senderPfpUrl = sender ? sender.pfpUrl : '';
 
   const message = await ChatMessage.create({
     channelId,
     senderId,
     senderName,
+    senderPfpUrl,
     senderBubbleColor,
     text,
     imageUrl,
@@ -718,22 +735,11 @@ app.post('/api/admin/maintenance', async (req, res) => {
   res.json({ success: true, maintenance: config.value });
 });
 
-// CALENDAR & MASTER SCHEDULE
-app.get('/api/calendar', async (req, res) => res.json(await CalendarEvent.find()));
+// MASTER SCHEDULE API
 app.get('/api/master-schedule', async (req, res) => {
   const slots = await MasterSchedule.find();
   const presetName = slots.length > 0 && slots[0].presetName ? slots[0].presetName : 'Standard Bell Schedule';
   res.json({ presetName, slots });
-});
-
-app.post('/api/admin/calendar', async (req, res) => {
-  const event = await CalendarEvent.findOneAndUpdate({ date: req.body.date }, req.body, { upsert: true, new: true });
-  res.json(event);
-});
-
-app.delete('/api/admin/calendar/:date', async (req, res) => {
-  await CalendarEvent.deleteOne({ date: req.params.date });
-  res.json({ success: true });
 });
 
 app.get('/api/admin/users', async (req, res) => res.json(await User.find({}, '-password')));
