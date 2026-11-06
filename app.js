@@ -972,7 +972,7 @@ async function fetchTypingStatus() {
     const data = await res.json();
     const banner = document.getElementById('typingBanner');
     if (data.typers && data.typers.length > 0) {
-      banner.innerText = `${data.typers.join(', ')} ${data.typers.length > 1 ? 'are' : 'is'} typing...`;
+      banner.innerText = `${data.typers.join(', ')} ${data.typers.length > 1 ? 'are' : 'is'} yapping...`;
     } else {
       banner.innerText = '';
     }
@@ -1062,6 +1062,7 @@ function cancelImageAttachment() {
   document.getElementById('imagePreviewContainer').style.display = 'none';
 }
 
+// Submit Message Handler (Allows Image-Only or Text-Only)
 document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentActiveChatId) return showToast('Please select a chat channel first.', 'error');
@@ -1069,6 +1070,7 @@ document.getElementById('sendMessageForm').addEventListener('submit', async (e) 
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
 
+  // Block sending only if BOTH text and image attachment are empty
   if (!text && !attachedBase64Image) return;
 
   const res = await authFetch('/api/chat/messages', {
@@ -1078,7 +1080,7 @@ document.getElementById('sendMessageForm').addEventListener('submit', async (e) 
       channelId: currentActiveChatId,
       senderId: userId,
       senderName: document.getElementById('userName').innerText,
-      text,
+      text: text, // Can be an empty string if only sending an image
       imageUrl: attachedBase64Image
     })
   });
