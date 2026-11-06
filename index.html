@@ -161,16 +161,16 @@
     GIF
   </button>
 
-  <!-- Message Text Input -->
-  <input type="text" id="chatInput" placeholder="Type your message..." required style="flex: 1; background: #111111; border: 1px solid #222222; color: #ffffff; padding: 0.6rem; border-radius: 6px;">
+  <!-- Text Input (removed 'required' attribute) -->
+  <input type="text" id="chatInput" placeholder="Type your message..." style="flex: 1; background: #111111; border: 1px solid #222222; color: #ffffff; padding: 0.6rem; border-radius: 6px;">
   
   <button type="submit" class="action-btn" style="padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer;">Send</button>
 
-  <!-- Emoji Popover Container -->
+  <!-- Emoji Popover -->
   <div id="emojiPicker" style="display: none; position: absolute; bottom: 50px; left: 45px; background: #111; border: 1px solid #333; border-radius: 8px; padding: 0.5rem; width: 220px; max-height: 180px; overflow-y: auto; z-index: 100; gap: 0.4rem; grid-template-columns: repeat(5, 1fr); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
   </div>
 
-  <!-- GIF Search Popover Container -->
+  <!-- GIF Search Popover -->
   <div id="gifPicker" style="display: none; position: absolute; bottom: 50px; left: 90px; background: #111; border: 1px solid #333; border-radius: 8px; padding: 0.5rem; width: 260px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
     <input type="text" id="gifSearchInput" placeholder="Search GIFs..." style="width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 0.4rem; border-radius: 4px; font-size: 0.8rem; margin-bottom: 0.5rem; box-sizing: border-box;">
     <div id="gifResults" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; max-height: 160px; overflow-y: auto;">
